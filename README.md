@@ -2,10 +2,36 @@
 
 Language for modelling 3D shapes. This is to be treated as a meta-language, from which certain specific 3D Visual programming languages can be derived. Targets:
 
-1) 3D CSG
+1) 3D CSG Variants
 2) ShapeAssembly
 3) GeoCode
 
+## Priority TODO
+
+1) Fill in some SDF functions.
+   1) SuperQuad / CSGStump / Curves
+2) Get all csg languages in.
+   1) primalCSG
+   2) LeafAffineCSG
+   3) HierarchicalCSG
+   4) MacroCSG
+   5) GeoCode / SA ? 
+
+3) Converters:
+   1) Blender Graph. 
+   2) OpenSCAD
+   3) Mesh.
+
+## Lower priority TODO
+
+1) Move away from SYMPY to AST.
+## Execute into
+
+1) SDF Function
+2) Blender Graph
+3) openSCAD program / FREECAD program
+4) Mesh / SDF grid / Point cloud / Occupancy grid
+5) GLSL code generator?
 ## Next steps
 
 1) Get P-CSG and M-CSG working.
@@ -80,3 +106,10 @@ def shape_expr():
 
     return shape
 ```
+
+
+# Other works:
+
+1) Geometry script
+2) openPySCAD
+3) sdf-torch

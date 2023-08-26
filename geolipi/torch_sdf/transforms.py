@@ -4,7 +4,23 @@ from .common import EPSILON
 
 CONVENTION = ("X", "Y", "Z")
 
-# Taken from: https://github.com/facebookresearch/pytorch3d/blob/main/pytorch3d/transforms/rotation_conversions.py#L461
+
+def get_affine_translate(matrix, param):
+    if not isinstance(param, th.Tensor):
+        param = th.tensor(param, dtype=matrix.dtype, device=matrix.device)
+    matrix[:3, 3] = -param
+    return matrix
+
+
+def get_affine_scale(matrix, param):
+    if not isinstance(param, th.Tensor):
+        param = th.tensor(param, dtype=matrix.dtype, device=matrix.device)
+    matrix[0, 0] = 1 / (EPSILON + param[0])
+    matrix[1, 1] = 1 / (EPSILON + param[1])
+    matrix[2, 2] = 1 / (EPSILON + param[2])
+    return matrix
+
+# Source: https://github.com/facebookresearch/pytorch3d/blob/main/pytorch3d/transforms/rotation_conversions.py#L461
 
 
 def _axis_angle_rotation(axis: str, angle: th.Tensor) -> th.Tensor:
@@ -26,22 +42,6 @@ def _axis_angle_rotation(axis: str, angle: th.Tensor) -> th.Tensor:
     return th.stack(R_flat, -1).reshape(angle.shape + (3, 3))
 
 
-def get_affine_translate(matrix, param):
-    if not isinstance(param, th.Tensor):
-        param = th.tensor(param, dtype=matrix.dtype, device=matrix.device)
-    matrix[:3, 3] = -param
-    return matrix
-
-
-def get_affine_scale(matrix, param):
-    if not isinstance(param, th.Tensor):
-        param = th.tensor(param, dtype=matrix.dtype, device=matrix.device)
-    matrix[0, 0] = 1 / (EPSILON + param[0])
-    matrix[1, 1] = 1 / (EPSILON + param[1])
-    matrix[2, 2] = 1 / (EPSILON + param[2])
-    return matrix
-
-
 def get_affine_rotate_euler(matrix, param):
     if not isinstance(param, th.Tensor):
         param = th.tensor(param, dtype=matrix.dtype, device=matrix.device)
@@ -54,4 +54,3 @@ def get_affine_rotate_euler(matrix, param):
 
     matrix[:3, :3] = rotation_matrix
     return matrix
-
