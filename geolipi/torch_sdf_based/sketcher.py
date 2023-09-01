@@ -34,6 +34,12 @@ class Sketcher:
         """
         return self.homogeneous_identity.clone().detach()  # .detach()
 
+    def get_color_canvas(self):
+        zeros = th.ones_like(self.coords[..., :1])
+        canvas = th.cat(
+            [zeros.clone(), zeros.clone(), zeros.clone()], dim=-1)
+        return canvas
+
     def create_coords(self):
         res = self.resolution
         mesh_grid_inp = [range(res), ] * self.n_dims

@@ -1,23 +1,45 @@
 from geolipi.symbolic import  *
-from geolipi.languages.primal_csg import str_to_expr
-from geolipi.torch_sdf.sketcher import Sketcher
-from geolipi.torch_sdf.evaluate import expr_to_sdf, compile_expr, expr_prim_count, expr_to_dnf
-from geolipi.torch_sdf.evaluate import create_evaluation_batches, batch_evaluate
+# from geolipi.languages.primal_csg3d import str_to_expr
+# from geolipi.languages.macro_csg3d import str_to_expr
+from geolipi.languages.cp_fusion import str_to_expr
 
-demo_file = "/media/aditya/DATA/data/synthetic_data/PCSG3D_data/synthetic/four_ops/expressions.txt"
+from geolipi.symbolic.utils import resolve_macros
+import numpy as np
+import torch as th
+from sympy import Symbol
+from geolipi.torch_sdf_based.sketcher import Sketcher
+from geolipi.torch_sdf_based.evaluate_sdf import expr_to_sdf
+from geolipi.torch_sdf_based.evaluate_color import expr_to_colored_canvas
+from geolipi.torch_sdf_based.compile_expression import compile_expr, expr_prim_count, expr_to_dnf
+from geolipi.torch_sdf_based.compile_expression import create_evaluation_batches, batch_evaluate
+import _pickle as cPickle
+demo_file = "/media/aditya/DATA/data/synthetic_data/MCSG3D_data/synthetic/four_ops/expressions.txt"
+demo_file = "/home/aditya/projects/edit_vpi/ProgFixer/executors/data/toy_fix_train.txt"
+# np_var = np.random.uniform(size=(1))
+# variable = th.from_numpy(np_var).float().cuda()
+
+# expr = Scale2D(TriangleEquilateral2D(variable), th.tensor([0.5, 0.5], dtype=th.float32).cuda())
+# expr = ColorTree2D(TranslationSymmetry2D(expr, th.tensor([0.2, 0.2], dtype=th.float32).cuda(), 3), Symbol("GREEN"))
+sketcher = Sketcher(device="cuda", resolution=64, n_dims=2)
+
+# sdf = expr_to_colored_canvas(expr, sketcher=sketcher, rectify_transform=True)
+# sdf = sdf.cpu().numpy()
 
 expressions = open(demo_file, 'r').readlines()
-expressions = [x.strip().split("__") for x in expressions]
+# expressions = [x.strip().split("__") for x in expressions]
+expressions = [x.strip().split(" ") for x in expressions]
 
-sketcher = Sketcher(device="cuda", resolution=64)
 stack = []
 ## Data loading
-for expression in expressions[:100]:
-    parsed_expr, var_dict = str_to_expr(expression, to_cuda=True)
-
+for expression in expressions[2:10000]:
+    parsed_expr = str_to_expr(expression, to_cuda=True)
+    
+    parsed_expr = resolve_macros(parsed_expr, device="cuda")
+    sdf = expr_to_colored_canvas(parsed_expr, sketcher=sketcher, rectify_transform=True)
+    
     prim_count = expr_prim_count(parsed_expr)
 
-    compiled_expr = compile_expr(parsed_expr, var_dict, prim_count, sketcher=sketcher, rectify_transform=True)
+    compiled_expr = compile_expr(parsed_expr, prim_count, sketcher=sketcher, rectify_transform=True)
     expr = compiled_expr[0]
     resolved_expr = expr_to_dnf(expr)
     transforms_in_numpy = {x:y.detach().cpu().numpy() for x, y in compiled_expr[1].items()}

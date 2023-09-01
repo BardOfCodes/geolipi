@@ -1,150 +1,19 @@
 
 
 from typing import Dict, List, Tuple, Union as type_union
-from sympy import Expr, Symbol, Function
-import inspect
-import torch as th
-import numpy as np
-import rustworkx as rx
 from collections import defaultdict
-from geolipi.symbolic import Primitive3D, Combinator, Transform, Modifier
-from geolipi.symbolic.primitives_3d import Cuboid, Sphere, Cylinder, Cone, NoParamSphere, NoParamCylinder, NoParamCuboid
-from geolipi.symbolic.combinators import Union, Intersection, Difference, Complement
-from geolipi.symbolic.transforms import Translate, EulerRotate, QuaternionRotate, Scale
+import numpy as np
+import torch as th
+import inspect
+from sympy import Symbol
+import rustworkx as rx
+from geolipi.symbolic import Combinator, Difference, Intersection, Union
+from geolipi.symbolic.base_symbolic import GLExpr
 from .sketcher import Sketcher
-from .transforms import get_affine_translate, get_affine_scale, get_affine_rotate_euler
-from .sdf_functions import sdf_cuboid, sdf_sphere, sdf_cylinder, no_param_cuboid, no_param_cylinder, no_param_sphere
-from .sdf_functions import sdf_union, sdf_intersection, sdf_difference, sdf_complement
+from .utils import MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE, MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP
+from .utils import INVERTED_MAP, NORMAL_MAP, PrimitiveSpec, ONLY_SIMPLIFY_RULES, ALL_RULES 
 
-# TODO: Clean the usage of primitives with params.
-
-PARAM_TYPE = type_union[np.ndarray, th.Tensor]
-MODIFIER_MAP = {
-    Translate: get_affine_translate,
-    EulerRotate: get_affine_rotate_euler,
-    Scale: get_affine_scale,
-}
-PRIMITIVE_MAP = {
-    Cuboid: sdf_cuboid,
-    Sphere: sdf_sphere,
-    Cylinder: sdf_cylinder,
-    NoParamCuboid: no_param_cuboid,
-    NoParamSphere: no_param_sphere,
-    NoParamCylinder: no_param_cylinder,
-}
-
-COMBINATOR_MAP = {
-    Union: sdf_union,
-    Intersection: sdf_intersection,
-    Difference: sdf_difference,
-    Complement: sdf_complement,
-}
-
-# Fore resolution:
-
-INVERTED_MAP = {
-    Union: Intersection,
-    Intersection: Union,
-    Difference: Union,
-}
-NORMAL_MAP = {
-    Union: Union,
-    Intersection: Intersection,
-    Difference: Intersection,
-}
-# ONLY_SIMPLIFY_RULES = set(["ii", "uu"])
-
-ONLY_SIMPLIFY_RULES = set([(Intersection, Intersection), (Union, Union)])
-ALL_RULES = set([(Intersection, Intersection), (Union, Union), (Intersection, Union)])
-
-class PrimitiveSpec(Function):
-    @classmethod
-    def eval(cls, prim_type: type, shift: int):
-        return None
-
-def expr_to_sdf(*args, mode: str = 'naive', **kawrgs):
-    if mode == 'naive':
-        return naive_expr_to_sdf(*args, **kawrgs)
-    elif mode == 'fast':
-        compiled_obj = fast_compile(*args, **kawrgs)
-        return fast_execute(compiled_obj)
-    else:
-        raise ValueError(f'Unknown mode {mode}')
-
-# TODO: Create a recursive version. Simpler to understand.
-
-# polish notation stack based parser.
-def naive_expr_to_sdf(expression: Expr, var_dict: Dict[Expr, PARAM_TYPE] = None,
-                      sketcher: Sketcher = None, rectify_transform=False):
-    transforms_stack = [sketcher.get_affine_identity()]
-    execution_stack = []
-    operator_stack = []
-    operator_nargs_stack = []
-    execution_pointer_index = []
-    if rectify_transform:
-        scale_stack = [sketcher.get_scale_identity()]
-    parser_list = [expression]
-    while (parser_list):
-        cur_expr = parser_list.pop()
-        if isinstance(cur_expr, Combinator):
-            operator_stack.append(type(cur_expr))
-            n_args = len(cur_expr.args)
-            operator_nargs_stack.append(n_args)
-            transform = transforms_stack.pop()
-            transform_chain = [transform.clone() for x in range(n_args)]
-            transforms_stack.extend(transform_chain)
-            if rectify_transform:
-                scale = scale_stack.pop()
-                scale_chain = [scale.clone() for x in range(n_args)]
-                scale_stack.extend(scale_chain)
-            next_to_parse = cur_expr.args[::-1]
-            parser_list.extend(next_to_parse)
-            execution_pointer_index.append(len(execution_stack))
-        elif isinstance(cur_expr, Modifier):
-            params = cur_expr.args[1]
-            if isinstance(params, Symbol):
-                params = var_dict[params.name]
-            if rectify_transform:
-                if isinstance(cur_expr, Translate):
-                    scale = scale_stack[-1]
-                    params = params / scale
-                elif isinstance(cur_expr, Scale):
-                    scale_stack[-1] *= params
-            transform = transforms_stack.pop()
-            identity_mat = sketcher.get_affine_identity()
-            new_transform = MODIFIER_MAP[type(cur_expr)](identity_mat, params)
-            transform = th.matmul(new_transform, transform)
-            transforms_stack.append(transform)
-            next_to_parse = cur_expr.args[0]
-            parser_list.append(next_to_parse)
-        elif isinstance(cur_expr, Primitive3D):
-            transform = transforms_stack.pop()
-            if rectify_transform:
-                _ = scale_stack.pop()
-            coords = sketcher.get_coords(transform)
-            params = cur_expr.args
-            if params:
-                if isinstance(params, Symbol):
-                    params = var_dict[params.name]
-            execution = PRIMITIVE_MAP[type(cur_expr)](coords, params)
-            execution_stack.append(execution)
-        else:
-            raise ValueError(f'Unknown expression type {type(cur_expr)}')
-
-        while (operator_stack and len(execution_stack) - execution_pointer_index[-1] >= operator_nargs_stack[-1]):
-            n_args = operator_nargs_stack.pop()
-            operator = operator_stack.pop()
-            _ = execution_pointer_index.pop()
-            args = execution_stack[-n_args:]
-            new_canvas = COMBINATOR_MAP[operator](*args)
-            execution_stack = execution_stack[:-n_args] + [new_canvas]
-
-    assert len(execution_stack) == 1
-    sdf = execution_stack[0]
-    return sdf
-
-
-def expr_prim_count(expression: Expr):
+def expr_prim_count(expression: GLExpr):
     """Get the number of primitives of each kind in the expression."""
     prim_count_dict = defaultdict(int)
     parser_list = [expression]
@@ -153,18 +22,18 @@ def expr_prim_count(expression: Expr):
         if isinstance(cur_expr, Combinator):
             next_to_parse = cur_expr.args[::-1]
             parser_list.extend(next_to_parse)
-        elif isinstance(cur_expr, Modifier):
+        elif isinstance(cur_expr, MOD_TYPE):
             next_to_parse = cur_expr.args[0]
             parser_list.append(next_to_parse)
-        elif isinstance(cur_expr, Primitive3D):
+        elif isinstance(cur_expr, PRIM_TYPE):
             prim_count_dict[type(cur_expr)] += 1
         else:
             raise ValueError(f'Unknown expression type {type(cur_expr)}')
     return prim_count_dict
 
 
-def compile_expr(expression: Expr, var_dict: Dict[Expr, PARAM_TYPE], prim_count_dict: Dict[str, int],
-                                 sketcher: Sketcher=None, rectify_transform=False):
+def compile_expr(expression: GLExpr, prim_count_dict: Dict[str, int],
+                 sketcher: Sketcher = None, rectify_transform=False):
     """Gather & Compute the transforms, Gather the primitive_params, Remove Difference, and Resolve Complement,"""
 
     # trasforms
@@ -176,16 +45,16 @@ def compile_expr(expression: Expr, var_dict: Dict[Expr, PARAM_TYPE], prim_count_
     prim_transforms = dict()
     prim_inversions = dict()
     prim_params = dict()
-    prim_counter = {x:0 for x in prim_count_dict.keys()}
+    prim_counter = {x: 0 for x in prim_count_dict.keys()}
     for prim_type, prim_count in prim_count_dict.items():
         prim_transforms[prim_type] = th.zeros((prim_count, 4, 4),
-            dtype=sketcher.dtype, device=sketcher.device)
+                                              dtype=sketcher.dtype, device=sketcher.device)
         prim_inversions[prim_type] = th.zeros((prim_count),
-            dtype=th.bool, device=sketcher.device)
+                                              dtype=th.bool, device=sketcher.device)
         n_params = len(inspect.signature(prim_type).parameters)
         if n_params > 0:
             prim_params[prim_type] = th.zeros((prim_count, n_params),
-                dtype=sketcher.dtype, device=sketcher.device)
+                                              dtype=sketcher.dtype, device=sketcher.device)
 
     execution_stack = []
     execution_pointer_index = []
@@ -198,7 +67,10 @@ def compile_expr(expression: Expr, var_dict: Dict[Expr, PARAM_TYPE], prim_count_
     while (parser_list):
         cur_expr = parser_list.pop()
         inversion_mode = inversion_stack.pop()
-        if isinstance(cur_expr, Combinator):
+        if isinstance(cur_expr, MACRO_TYPE):
+            raise ValueError('Direct use of Macros not supported in compile_expr. \
+                Resolve with resolve_macros first')
+        elif isinstance(cur_expr, Combinator):
             n_args = len(cur_expr.args)
             transform = transforms_stack.pop()
             transform_chain = [transform.clone() for x in range(n_args)]
@@ -225,15 +97,17 @@ def compile_expr(expression: Expr, var_dict: Dict[Expr, PARAM_TYPE], prim_count_
             next_to_parse = cur_expr.args[::-1]
             parser_list.extend(next_to_parse)
             execution_pointer_index.append(len(execution_stack))
-        elif isinstance(cur_expr, Modifier):
-            params = cur_expr.args[1]
+        elif isinstance(cur_expr, MOD_TYPE):
+            params = cur_expr.args
+            if params:
+                params = cur_expr.args[1]
             if isinstance(params, Symbol):
-                params = var_dict[params.name]
+                params = cur_expr.lookup_table[params]
             if rectify_transform:
-                if isinstance(cur_expr, Translate):
+                if isinstance(cur_expr, TRANSLATE_TYPE):
                     scale = scale_stack[-1]
                     params = params / scale
-                elif isinstance(cur_expr, Scale):
+                elif isinstance(cur_expr, SCALE_TYPE):
                     scale_stack[-1] *= params
             transform = transforms_stack.pop()
             identity_mat = sketcher.get_affine_identity()
@@ -243,7 +117,7 @@ def compile_expr(expression: Expr, var_dict: Dict[Expr, PARAM_TYPE], prim_count_
             inversion_stack.append(inversion_mode)
             next_to_parse = cur_expr.args[0]
             parser_list.append(next_to_parse)
-        elif isinstance(cur_expr, Primitive3D):
+        elif isinstance(cur_expr, PRIM_TYPE):
             transform = transforms_stack.pop()
             _ = scale_stack.pop()
             prim_type = type(cur_expr)
@@ -254,13 +128,13 @@ def compile_expr(expression: Expr, var_dict: Dict[Expr, PARAM_TYPE], prim_count_
             params = cur_expr.args
             if params:
                 if isinstance(params, Symbol):
-                    params = var_dict[params.name]
+                    params = cur_expr.lookup_table[params]
                 prim_params[prim_type][prim_id] = params
 
             prim_spec = PrimitiveSpec(prim_type, prim_id)
             execution_stack.append(prim_spec)
             prim_counter[prim_type] += 1
-            
+
         else:
             raise ValueError(f'Unknown expression type {type(cur_expr)}')
 
@@ -274,6 +148,7 @@ def compile_expr(expression: Expr, var_dict: Dict[Expr, PARAM_TYPE], prim_count_
 
     expression = execution_stack[0]
     return expression, prim_transforms, prim_inversions, prim_params
+
 
 def create_evaluation_batches(compiled_expr_list: List[object], convert_to_cuda=True):
     batch_limiter = []
@@ -305,8 +180,9 @@ def create_evaluation_batches(compiled_expr_list: List[object], convert_to_cuda=
             if prim_type in prim_param.keys():
                 np_array = np.concatenate(all_prim_param[prim_type], 0)
                 all_prim_param[prim_type] = th.from_numpy(np_array).cuda()
-            
+
     return all_expressions, all_prim_transforms, all_prim_inversion, all_prim_param, batch_limiter
+
 
 def batch_evaluate(expr_set: List[object], sketcher: Sketcher):
     """Batch evaluate a set of expressions.
@@ -324,9 +200,9 @@ def batch_evaluate(expr_set: List[object], sketcher: Sketcher):
     prim_inversions = expr_set[2]
     prim_params = expr_set[3]
     batch_limiter = expr_set[4]
-    
+
     points = sketcher.get_base_coords()
-    
+
     M = points.shape[0]
     # Add a fourth column of ones to the point cloud to make it homogeneous
     points_hom = th.cat([points, th.ones(M, 1).to(sketcher.device)], dim=1)
@@ -369,6 +245,7 @@ def batch_evaluate(expr_set: List[object], sketcher: Sketcher):
 
     return all_sdfs
 
+
 def execute_compiled_expression(expression, type_wise_primitives, type_wise_draw_count):
     execution_stack = []
     operator_stack = []
@@ -405,6 +282,7 @@ def execute_compiled_expression(expression, type_wise_primitives, type_wise_draw
     sdf = execution_stack[0]
     return sdf
 
+
 def expr_to_graph(expression):
     """Convert sympy expression to a rustworkx graph.
     Note it is only valid for compiled graph."""
@@ -412,7 +290,7 @@ def expr_to_graph(expression):
     graph = rx.PyDiGraph()
     parser_list = [expression]
     parent_ids = [None]
-    while(parser_list):
+    while (parser_list):
         cur_expr = parser_list.pop()
         parent_id = parent_ids.pop()
         if isinstance(cur_expr, Combinator):
@@ -427,16 +305,17 @@ def expr_to_graph(expression):
             graph.add_edge(parent_id, cur_id, None)
     return graph
 
+
 def graph_to_expr(graph):
     """Convert a rustworkx graph to a sympy expression."""
-    
+
     prim_stack = []
     prim_stack_pointer = []
     operator_stack = []
     operator_nargs_stack = []
-    
+
     parser_list = [0]
-    while(parser_list):
+    while (parser_list):
         cur_id = parser_list.pop()
         cur_node = graph[cur_id]
         c_type = cur_node['type']
@@ -449,7 +328,7 @@ def graph_to_expr(graph):
             operator_nargs_stack.append(n_args)
             parser_list.extend(next_to_parse)
             prim_stack_pointer.append(len(prim_stack))
-        
+
         while (operator_stack and len(prim_stack) - prim_stack_pointer[-1] >= operator_nargs_stack[-1]):
             n_args = operator_nargs_stack.pop()
             operator = operator_stack.pop()
@@ -464,13 +343,13 @@ def graph_to_expr(graph):
 def expr_to_dnf(expression):
     # convert to tree for easy usage:
     graph = expr_to_graph(expression)
-    # RULES: 
+    # RULES:
     # Intersection-> Intersection = collapse
     # Union -> union = collapse
     # Intersection -> Union = invert
     # Union -> Intersection = retain
     rule_match = None
-    while(True):
+    while (True):
         rule_match = get_rule_match(graph, only_simplify=True)
         if rule_match is None:
             rule_match = get_rule_match(graph, only_simplify=False)
@@ -483,11 +362,12 @@ def expr_to_dnf(expression):
     expression = graph_to_expr(graph)
     return expression
 
+
 def get_rule_match(graph, only_simplify=False):
     if only_simplify:
-        rule_set = ONLY_SIMPLIFY_RULES# ["i->i", "u->u"]
+        rule_set = ONLY_SIMPLIFY_RULES  # ["i->i", "u->u"]
     else:
-        rule_set = ALL_RULES#  ["i->i", "u->u", "i->u"]
+        rule_set = ALL_RULES  # ["i->i", "u->u", "i->u"]
     node_ids = [0]
     rule_match = None
     while node_ids:
@@ -508,13 +388,14 @@ def get_rule_match(graph, only_simplify=False):
 
     return rule_match
 
+
 def resolve_rule(graph, resolve_rule):
-    
+
     node_a_id = resolve_rule[0]
     node_b_id = resolve_rule[1]
     match_type = resolve_rule[2]
     node_a = graph[node_a_id]
-        
+
     if match_type in ONLY_SIMPLIFY_RULES:
         # append the children of the child node to the parent node
         for child_id in graph.successor_indices(node_b_id):
@@ -537,6 +418,5 @@ def resolve_rule(graph, resolve_rule):
                 graph.add_edge(new_id, not_b_child_id, None)
             graph.add_edge(node_a_id, new_id, None)
             # where each node has all the children of the i node <not U> and one child of the u node
-            
+
     return graph
-            
