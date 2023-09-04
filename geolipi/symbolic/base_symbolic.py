@@ -1,5 +1,5 @@
-from sympy import Function, Expr
-from typing import Dict
+from sympy import Function, Expr, Symbol, Tuple as SympyTuple, Integer as SympyInteger, Float as SympyFloat
+from typing import Dict, Tuple
 import torch
 import sympy
 import re
@@ -77,6 +77,10 @@ class GLExpr:
 
     def __repr__(self):
         return self.__str__()
+    
+    # TODO: Implement this.
+    def to(self):
+        raise NotImplementedError
 
 # Helper function to convert a tensor to a GLExpr
 
@@ -121,3 +125,27 @@ class GLFunction(Function):
     @classmethod
     def _should_evalf(cls, arg):
         return -1
+
+    def __str__(self):
+        args = self.args
+        replaced_args = [self.lookup_table.get(arg, arg) for arg in args]
+        return f"{self.func.__name__}({', '.join(map(str, replaced_args))})"
+    
+    
+    def to(self, device):
+        """convert the expression to cuda or cpu"""
+        resolved_args = []
+        for sub_expr in self.args:
+            if isinstance(sub_expr, GLFunction):
+                arg = sub_expr.to(device)
+            elif isinstance(sub_expr, Symbol):
+                if sub_expr in self.lookup_table.keys():
+                    arg = self.lookup_table[sub_expr].to(device)
+                else:
+                    arg = sub_expr
+            elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
+                arg = sub_expr
+            resolved_args.append(arg)
+
+        new_expr = type(self)(*resolved_args)
+        return new_expr

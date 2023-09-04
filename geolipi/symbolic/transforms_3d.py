@@ -29,12 +29,30 @@ class Translate3D(Transform3D):
         return sig_check([(expr, expr_type), (param, param_type_3D)])
 
 
-class EulerRotate3D(Translate3D):
-    ...
+class EulerRotate3D(Transform3D):
+    @classmethod
+    def eval(cls, *args, **kwargs):
+        if cls._signature_1(*args, **kwargs):
+            return None
+        else:
+            raise TypeError("Invalid arguments for the function.")
+
+    @staticmethod
+    def _signature_1(expr: expr_type, param: param_type_3D):
+        return sig_check([(expr, expr_type), (param, param_type_3D)])
 
 
-class Scale3D(Translate3D):
-    ...
+class Scale3D(Transform3D):
+    @classmethod
+    def eval(cls, *args, **kwargs):
+        if cls._signature_1(*args, **kwargs):
+            return None
+        else:
+            raise TypeError("Invalid arguments for the function.")
+
+    @staticmethod
+    def _signature_1(expr: expr_type, param: param_type_3D):
+        return sig_check([(expr, expr_type), (param, param_type_3D)])
 
 
 class QuaternionRotate3D(Transform3D):

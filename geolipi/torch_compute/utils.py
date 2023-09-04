@@ -28,6 +28,7 @@ from .sdf_functions import sdf_union, sdf_intersection, sdf_difference, sdf_comp
 PARAM_TYPE = type_union[np.ndarray, th.Tensor]
 MOD_TYPE = type_union[Modifier3D, Modifier2D]
 TRANSLATE_TYPE = type_union[Translate3D, Translate2D]
+ROTATE_TYPE = type_union[EulerRotate3D, EulerRotate2D]
 SCALE_TYPE = type_union[Scale3D, Scale2D]
 PRIM_TYPE = type_union[Primitive3D, Primitive2D]
 MACRO_TYPE = type_union[REFLECT_MACROS, SYM_MACROS, AXIAL_REFLECT_MACROS]
