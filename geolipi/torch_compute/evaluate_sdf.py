@@ -5,8 +5,9 @@ import torch as th
 import numpy as np
 from geolipi.symbolic import Combinator
 from geolipi.symbolic.utils import resolve_macros
+from geolipi.symbolic.utils import MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE
 from .sketcher import Sketcher
-from .utils import MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE, MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP
+from .utils import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP
 
 # TODO: A recursiver version
 

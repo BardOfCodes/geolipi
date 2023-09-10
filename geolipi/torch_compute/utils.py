@@ -13,7 +13,6 @@ from geolipi.symbolic.primitives_2d import Rectangle2D, Circle2D, NoParamRectang
 from geolipi.symbolic.combinators import Union, Intersection, Difference, Complement
 from geolipi.symbolic.transforms_3d import Translate3D, EulerRotate3D, Scale3D, ReflectCoords3D, ColorTree3D
 from geolipi.symbolic.transforms_2d import Translate2D, EulerRotate2D, Scale2D, ReflectCoords2D, ColorTree2D
-from geolipi.symbolic.utils import resolve_macros, REFLECT_MACROS, SYM_MACROS, AXIAL_REFLECT_MACROS
 
 from .sketcher import Sketcher
 from .transforms import get_affine_translate_3D, get_affine_scale_3D, get_affine_rotate_euler_3D, get_affine_reflection_3D
@@ -25,14 +24,6 @@ from .sdf_functions import sdf_union, sdf_intersection, sdf_difference, sdf_comp
 
 # TODO: Clean the usage of primitives with params.
 
-PARAM_TYPE = type_union[np.ndarray, th.Tensor]
-MOD_TYPE = type_union[Modifier3D, Modifier2D]
-TRANSLATE_TYPE = type_union[Translate3D, Translate2D]
-ROTATE_TYPE = type_union[EulerRotate3D, EulerRotate2D]
-SCALE_TYPE = type_union[Scale3D, Scale2D]
-PRIM_TYPE = type_union[Primitive3D, Primitive2D]
-MACRO_TYPE = type_union[REFLECT_MACROS, SYM_MACROS, AXIAL_REFLECT_MACROS]
-COLOR_TYPE = type_union[ColorTree2D, ColorTree3D]
 MODIFIER_MAP = {
     Translate3D: get_affine_translate_3D,
     EulerRotate3D: get_affine_rotate_euler_3D,

@@ -1,6 +1,6 @@
 from typing import Tuple, List
 from .base_symbolic import GLExpr, GLFunction
-from .types import param_type_1D, param_type_2D, param_type_3D, sig_check
+from .common import param_type_1D, param_type_2D, param_type_3D, sig_check
 
 
 class Primitive2D(GLFunction):

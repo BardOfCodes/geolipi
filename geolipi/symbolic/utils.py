@@ -5,7 +5,12 @@ from .transforms_3d import TranslationSymmetry3D, RotationSymmetry3D, ScaleSymme
 from .transforms_2d import Reflect2D, ReflectCoords2D, ReflectX2D, ReflectY2D
 from .transforms_2d import AxialReflect2D, Translate2D, EulerRotate2D, Scale2D
 from .transforms_2d import TranslationSymmetry2D, RotationSymmetry2D, ScaleSymmetry2D
-from .combinators import Union
+from .transforms_2d import Modifier2D, ColorTree2D
+from .transforms_3d import Modifier3D, ColorTree3D
+from .primitives_2d import Primitive2D
+from .primitives_3d import Primitive3D
+
+from .combinators import Union, Intersection, Difference, Complement
 from sympy import Symbol, Tuple as SympyTuple, Integer as SympyInteger
 import torch as th
 from typing import Union as type_union, Tuple
@@ -13,6 +18,7 @@ from sympy import Function, Expr
 from .base_symbolic import GLExpr, GLFunction
 import numpy as np
 import torch as th
+import re
 
 REFLECT_PARAM_MAP = {
     ReflectX3D: th.tensor([1, 0, 0], dtype=th.float32),
@@ -53,6 +59,16 @@ SYM_MACROS = type_union[TranslationSymmetry2D, TranslationSymmetry3D,
                        RotationSymmetry2D, RotationSymmetry3D, ScaleSymmetry2D, ScaleSymmetry3D]
 
 AXIAL_REFLECT_MACROS = type_union[AxialReflect2D, AxialReflect3D]
+
+PARAM_TYPE = type_union[np.ndarray, th.Tensor]
+MOD_TYPE = type_union[Modifier3D, Modifier2D]
+TRANSLATE_TYPE = type_union[Translate3D, Translate2D]
+ROTATE_TYPE = type_union[EulerRotate3D, EulerRotate2D]
+SCALE_TYPE = type_union[Scale3D, Scale2D]
+PRIM_TYPE = type_union[Primitive3D, Primitive2D]
+MACRO_TYPE = type_union[REFLECT_MACROS, SYM_MACROS, AXIAL_REFLECT_MACROS]
+COLOR_TYPE = type_union[ColorTree2D, ColorTree3D]
+COMBINATOR_TYPE = type_union[Union, Intersection, Difference, Complement]
 
 
 # TODO: Fix the issue of tensor missing.
@@ -103,3 +119,11 @@ def resolve_macros(expr: GLFunction, device):
 def pretty_print(expr: GLExpr):
     """To pretty print GLExprs."""
     ...
+
+
+def load_expr_from_str(expr_str: str, mapper, device):
+    """To load GLExprs from string."""
+    
+    expr = eval(expr_str, mapper)
+    expr = expr.to(device)
+    return expr

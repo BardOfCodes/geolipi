@@ -6,6 +6,8 @@ class Sketcher:
 
     def __init__(self, device="cuda", dtype=th.float32,
                  resolution=64, mode="direct", n_dims=3):
+        if dtype == "float32":
+            dtype = th.float32
         self.device = th.device(device)
         self.dtype = dtype
         self.resolution = resolution

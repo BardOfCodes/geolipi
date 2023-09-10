@@ -1,6 +1,7 @@
+import numpy as np
+import torch as th
 from sympy import Function, Expr, Symbol, Tuple as SympyTuple, Integer as SympyInteger, Float as SympyFloat
 from typing import Dict, Tuple
-import torch
 import sympy
 import re
 
@@ -85,7 +86,7 @@ class GLExpr:
 # Helper function to convert a tensor to a GLExpr
 
 
-def GLSymbol(tensor: torch.Tensor) -> GLExpr:
+def GLSymbol(tensor: th.Tensor) -> GLExpr:
     symbol = sympy.Symbol(f"tensor_{id(tensor)}")
     lookup_table = {symbol: tensor}
     return GLExpr(symbol, lookup_table)
@@ -103,7 +104,7 @@ class GLFunction(Function):
             elif isinstance(arg, GLFunction):
                 merged_lookup_table.update(arg.lookup_table)
                 new_args.append(arg)
-            elif isinstance(arg, torch.Tensor):
+            elif isinstance(arg, th.Tensor):
                 symbol = sympy.Symbol(cls._generate_symbol_name(arg))
                 new_args.append(symbol)
                 merged_lookup_table[symbol] = arg
@@ -145,6 +146,71 @@ class GLFunction(Function):
                     arg = sub_expr
             elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
                 arg = sub_expr
+            else:
+                raise ValueError(f"Error while converting {sub_expr} to device {device}.")
+            resolved_args.append(arg)
+
+        new_expr = type(self)(*resolved_args)
+        return new_expr
+    
+    def numpy(self):
+        # convert all Tensors to numpy arrays
+        resolved_args = []
+        for sub_expr in self.args:
+            if isinstance(sub_expr, GLFunction):
+                arg = sub_expr.numpy()
+            elif isinstance(sub_expr, Symbol):
+                if sub_expr in self.lookup_table.keys():
+                    arg = tuple(self.lookup_table[sub_expr].numpy())
+                else:
+                    arg = sub_expr
+            elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
+                arg = sub_expr
+            else:
+                raise ValueError(f"Cannot convert {sub_expr} to Sympy.")
+            resolved_args.append(arg)
+
+        new_expr = type(self)(*resolved_args)
+        return new_expr
+
+    def cuda(self):
+        # convert all Tensors to numpy arrays
+        resolved_args = []
+        for sub_expr in self.args:
+            if isinstance(sub_expr, GLFunction):
+                arg = sub_expr.cuda()
+            elif isinstance(sub_expr, Symbol):
+                if sub_expr in self.lookup_table.keys():
+                    arg = tuple(self.lookup_table[sub_expr])
+                else:
+                    arg = sub_expr
+            elif isinstance(sub_expr, (SympyInteger, SympyFloat)):
+                arg = sub_expr
+            elif isinstance(sub_expr, SympyTuple):
+                arg = th.tensor(list(sub_expr)).cuda()
+            else:
+                raise ValueError(f"Cannot convert {sub_expr} to Sympy.")
+            resolved_args.append(arg)
+
+        new_expr = type(self)(*resolved_args)
+        return new_expr
+        
+
+    def sympy(self):
+        # convert all Tensors to Sympy Tuples
+        resolved_args = []
+        for sub_expr in self.args:
+            if isinstance(sub_expr, GLFunction):
+                arg = sub_expr.to_sympy()
+            elif isinstance(sub_expr, Symbol):
+                if sub_expr in self.lookup_table.keys():
+                    arg = tuple(self.lookup_table[sub_expr].to("cpu").numpy().tolist())
+                else:
+                    arg = sub_expr
+            elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
+                arg = sub_expr
+            else:
+                raise ValueError(f"Cannot convert {sub_expr} to Sympy.")
             resolved_args.append(arg)
 
         new_expr = type(self)(*resolved_args)
