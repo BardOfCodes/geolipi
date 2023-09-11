@@ -38,8 +38,6 @@ def str_to_expr(expression_string_list: List[str], to_cuda=False, dtype=th.float
     """Parse a list of expression strings into a geolipi expression.
     """
     expr_stack = []
-    operator_stack = []
-    stack_pointer = []
 
     for expression_string in expression_string_list[::-1]:
         match = re.match(PATTERN, expression_string)
@@ -65,6 +63,8 @@ def str_to_expr(expression_string_list: List[str], to_cuda=False, dtype=th.float
             expr = expr_stack.pop()
             cmd = MACRO_MAP[expression_string](expr)
             expr_stack.append(cmd)
+        elif cmd_name == '$':
+            pass
         else:
             raise ValueError(f'Unknown command {expression_string}')
 

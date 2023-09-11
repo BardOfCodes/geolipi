@@ -6,59 +6,60 @@ import numpy as np
 from geolipi.symbolic import Combinator
 from geolipi.symbolic.utils import resolve_macros
 from geolipi.symbolic.utils import MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE
-from .utils import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP
-from .geonodes import import_bpy
+from geolipi.symbolic.combinators import Difference
+from .geonodes import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP
+from .geonodes import import_bpy, create_geonode_tree
+from .utils import BASE_COLORS
+from .materials import create_material_tree
 
 # TODO: Note - its always in the rectify transform mode.
 
-def expr_to_geonode_graph(expression: GLExpr, device, dummy_obj):
+def expr_to_geonode_graph(expression: GLExpr, dummy_obj, 
+                          device, create_material=True,
+                          colors=None):
     
-    bpy = import_bpy()
-    mod = dummy_obj.modifiers.new("CSG-GN", 'NODES')
-    
-    node_group = bpy.data.node_groups.new("CSG-Tree", 'GeometryNodeTree')
-    node_group.outputs.new('NodeSocketGeometry', "Geometry")
-    output_node = node_group.nodes.new('NodeGroupOutput')
-    output_node.is_active_output = True
-    output_node.select = False
-    mod.node_group = node_group
-    
+    node_group = create_geonode_tree(dummy_obj)
+    mat_id = 0
+    if colors is None:
+        colors = BASE_COLORS
     output_node = node_group.nodes['Group Output']
     link_stack = [output_node.inputs['Geometry']]
-        
-    execution_stack = []
-    operator_stack = []
-    operator_nargs_stack = []
-    execution_pointer_index = []
     parser_list = [expression]
     while (parser_list):
         cur_expr = parser_list.pop()
         if isinstance(cur_expr, MACRO_TYPE):
+            # TODO: Update this to allow sym functions to be used directly.
             new_expr = resolve_macros(cur_expr, device=device)
             parser_list.append(new_expr)
         elif isinstance(cur_expr, Combinator):
-            bool_node = node_group.nodes.new(type="GeometryNodeGroup")
-            bool_node.node_tree = bpy.data.node_groups[COMBINATOR_MAP[type(cur_expr)]]
-                
+            node_seq = COMBINATOR_MAP[type(cur_expr)](node_group)
+            bool_node = node_seq[0]
             # Linking:
             outer_input = link_stack.pop()
-            node_output = bool_node.outputs['Geometry']
+            node_output = bool_node.outputs['Mesh']
             node_group.links.new(node_output, outer_input)
-            n_args = len(cur_expr.args)
-            for arg in range(n_args):
-                link_stack.append(bool_node.inputs[1])
-                
+            if type(cur_expr) == Difference:
+                link_stack.append(bool_node.inputs['Mesh 2'])
+                link_stack.append(bool_node.inputs['Mesh 1'])
+            else:
+                for _ in range(len(cur_expr.args)):
+                    link_stack.append(bool_node.inputs[1])
             next_to_parse = cur_expr.args[::-1]
             parser_list.extend(next_to_parse)
         elif isinstance(cur_expr, MOD_TYPE):
             params = cur_expr.args[1]
             if isinstance(params, Symbol):
                 params = cur_expr.lookup_table[params]
-            new_transform_node = MODIFIER_MAP[type(cur_expr)](params)
+            if isinstance(params, th.Tensor):
+                params = list(params.detach().cpu().numpy())
+            node_func, param_name = MODIFIER_MAP[type(cur_expr)]
+            node_seq = node_func(node_group)
+            transform_node = node_seq[0]
+            transform_node.inputs[param_name].default_value = params
             outer_input = link_stack.pop()
-            node_output = new_transform_node.outputs['Geometry']
+            node_output = transform_node.outputs['Geometry']
             node_group.links.new(node_output, outer_input)
-            link_stack.append(new_transform_node.inputs[0])
+            link_stack.append(transform_node.inputs[0])
             next_to_parse = cur_expr.args[0]
             parser_list.append(next_to_parse)
         elif isinstance(cur_expr, PRIM_TYPE):
@@ -67,15 +68,18 @@ def expr_to_geonode_graph(expression: GLExpr, device, dummy_obj):
                 params = params[0]
                 if isinstance(params, Symbol):
                     params = cur_expr.lookup_table[params]
-            
-            primitive_node = PRIMITIVE_MAP[type(cur_expr)](params)
+            node_seq = PRIMITIVE_MAP[type(cur_expr)](node_group)
+            prim_node, material_node = node_seq
+            if create_material:
+                mat_name = f'Material_{mat_id}'
+                color = colors[mat_id % len(colors)]
+                material = create_material_tree(color, mat_name)
+                material_node.inputs['Material'].default_value = material
+                mat_id += 1
             outer_input = link_stack.pop()
-            node_output = new_transform_node.outputs['Geometry']
+            node_output = material_node.outputs['Geometry']
             node_group.links.new(node_output, outer_input)
         else:
             raise ValueError(f'Unknown expression type {type(cur_expr)}')
 
-    assert len(execution_stack) == 1
-    sdf = execution_stack[0]
-    return sdf
-
+    return node_group
