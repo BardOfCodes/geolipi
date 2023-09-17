@@ -99,7 +99,8 @@ def batch_evaluate(expr_set: List[object], sketcher):
         draw_specs = batch_limiter[ind]
         for draw_type in type_wise_draw_count.keys():
             type_wise_draw_count[draw_type] += draw_specs[draw_type]
-    all_sdfs = th.stack(all_sdfs, 0)
+    if all_sdfs:
+        all_sdfs = th.stack(all_sdfs, 0)
 
     return all_sdfs
 

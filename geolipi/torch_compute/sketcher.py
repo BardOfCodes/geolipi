@@ -47,7 +47,7 @@ class Sketcher:
         mesh_grid_inp = [range(res), ] * self.n_dims
         points = np.stack(np.meshgrid(*mesh_grid_inp, indexing="ij"), axis=-1)
         points = points.astype(np.float32)
-        points = ((points + 0.5) / res - 0.5) * 2
+        points = (points / (res-1) - 0.5) * 2
         points = th.from_numpy(points)
         points = th.reshape(points, (-1, self.n_dims)).to(self.device)
         return points

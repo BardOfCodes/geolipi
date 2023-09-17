@@ -5,6 +5,7 @@ from typing import Dict, Tuple
 import sympy
 import re
 
+
 def magic_method_decorator(cls):
     magic_methods = ['__add__', '__sub__', '__mul__',
                      '__truediv__', '__pow__']  # extend this list as needed
@@ -78,7 +79,7 @@ class GLExpr:
 
     def __repr__(self):
         return self.__str__()
-    
+
     # TODO: Implement this.
     def to(self):
         raise NotImplementedError
@@ -117,7 +118,6 @@ class GLFunction(Function):
         else:
             instance.lookup_table.update(merged_lookup_table)
         return instance
-    
 
     @staticmethod
     def _generate_symbol_name(tensor):
@@ -127,12 +127,25 @@ class GLFunction(Function):
     def _should_evalf(cls, arg):
         return -1
 
-    def __str__(self):
+    def __str__(self, tabs=0):
+        args = self.args
+        n_tabs = '\t' * tabs
+        replaced_args = [self.lookup_table.get(arg, arg) for arg in args]
+        str_args = []
+        for arg in replaced_args:
+            if isinstance(arg, (GLExpr, GLFunction)):
+                str_args.append(arg.__str__(tabs=tabs+1))
+            else:
+                str_args.append(str(arg))
+        n_tabs_1 = '\t' * (tabs + 1)
+        str_args = f",\n{n_tabs_1}" .join(str_args)
+        return f"{self.func.__name__}({str_args})"
+
+    def string_format(self):
         args = self.args
         replaced_args = [self.lookup_table.get(arg, arg) for arg in args]
         return f"{self.func.__name__}({', '.join(map(str, replaced_args))})"
-    
-    
+
     def to(self, device):
         """convert the expression to cuda or cpu"""
         resolved_args = []
@@ -147,12 +160,24 @@ class GLFunction(Function):
             elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
                 arg = sub_expr
             else:
-                raise ValueError(f"Error while converting {sub_expr} to device {device}.")
+                raise ValueError(
+                    f"Error while converting {sub_expr} to device {device}.")
             resolved_args.append(arg)
 
         new_expr = type(self)(*resolved_args)
         return new_expr
-    
+
+    def cuda(self):
+        # convert all Tensors to numpy arrays
+        device = th.device("cuda")
+        expr = self.to(device)
+        return expr
+
+    def cpu(self):
+        device = th.device("cpu")
+        expr = self.to(device)
+        return expr
+
     def numpy(self):
         # convert all Tensors to numpy arrays
         resolved_args = []
@@ -161,7 +186,7 @@ class GLFunction(Function):
                 arg = sub_expr.numpy()
             elif isinstance(sub_expr, Symbol):
                 if sub_expr in self.lookup_table.keys():
-                    arg = tuple(self.lookup_table[sub_expr].numpy())
+                    arg = tuple(self.lookup_table[sub_expr].cpu().numpy())
                 else:
                     arg = sub_expr
             elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
@@ -172,39 +197,16 @@ class GLFunction(Function):
 
         new_expr = type(self)(*resolved_args)
         return new_expr
-
-    def cuda(self):
-        # convert all Tensors to numpy arrays
-        resolved_args = []
-        for sub_expr in self.args:
-            if isinstance(sub_expr, GLFunction):
-                arg = sub_expr.cuda()
-            elif isinstance(sub_expr, Symbol):
-                if sub_expr in self.lookup_table.keys():
-                    arg = tuple(self.lookup_table[sub_expr])
-                else:
-                    arg = sub_expr
-            elif isinstance(sub_expr, (SympyInteger, SympyFloat)):
-                arg = sub_expr
-            elif isinstance(sub_expr, SympyTuple):
-                arg = th.tensor(list(sub_expr)).cuda()
-            else:
-                raise ValueError(f"Cannot convert {sub_expr} to Sympy.")
-            resolved_args.append(arg)
-
-        new_expr = type(self)(*resolved_args)
-        return new_expr
-        
 
     def sympy(self):
         # convert all Tensors to Sympy Tuples
         resolved_args = []
         for sub_expr in self.args:
             if isinstance(sub_expr, GLFunction):
-                arg = sub_expr.to_sympy()
+                arg = sub_expr.sympy()
             elif isinstance(sub_expr, Symbol):
                 if sub_expr in self.lookup_table.keys():
-                    arg = tuple(self.lookup_table[sub_expr].to("cpu").numpy().tolist())
+                    arg = tuple(self.lookup_table[sub_expr].cpu().numpy().tolist())
                 else:
                     arg = sub_expr
             elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
@@ -215,3 +217,7 @@ class GLFunction(Function):
 
         new_expr = type(self)(*resolved_args)
         return new_expr
+    
+    def __len__(self):
+        length = 1 + sum([len(arg) for arg in self.args])
+        return length

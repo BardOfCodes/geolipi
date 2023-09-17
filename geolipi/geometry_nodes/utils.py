@@ -49,6 +49,7 @@ BASE_COLORS = np.array([[0., 0., 0.06666667],
                         [0.49803922, 0.59215686, 1.],
                         [0.23529412, 0.67058824, 0.60392157],
                         [0.70980392, 0.60784314, 0.56862745]])
+BASE_COLORS = BASE_COLORS[::-1, :]
 
 
 def clean_up(avoid_keys=[]):
@@ -64,6 +65,12 @@ def clean_up(avoid_keys=[]):
     for mat in bpy.data.materials:
         if not mat.name in avoid_keys:
             bpy.data.materials.remove(mat, do_unlink=True)
+    for obj in bpy.data.meshes:
+        if not obj.name in avoid_keys:
+            bpy.data.meshes.remove(obj, do_unlink=True)
+    for obj in bpy.data.cameras:
+        if not obj.name in avoid_keys:
+            bpy.data.cameras.remove(obj, do_unlink=True)
 
 
 def init_camera():
@@ -106,17 +113,18 @@ def get_obj_min_z(obj):
     return minZ
 
 
-def set_render_settings(shadow_catcher_z=-1):
+def set_render_settings(resolution=1024, shadow_catch=False, shadow_catcher_z=-1):
     # Shadow catcher
     bpy = import_bpy()
-    bpy.ops.mesh.primitive_plane_add(
-        size=1, enter_editmode=False, align='WORLD', location=(0, 0, shadow_catcher_z), scale=(1, 1, 1))
-    plane_obj = bpy.context.active_object
-    plane_obj.name = "shadow_catcher"
-    plane_obj.scale[0] = 100
-    plane_obj.scale[1] = 100
-    plane_obj.scale[2] = 100
-    plane_obj.is_shadow_catcher = True
+    if shadow_catch:
+        bpy.ops.mesh.primitive_plane_add(
+            size=1, enter_editmode=False, align='WORLD', location=(0, 0, shadow_catcher_z), scale=(1, 1, 1))
+        plane_obj = bpy.context.active_object
+        plane_obj.name = "shadow_catcher"
+        plane_obj.scale[0] = 100
+        plane_obj.scale[1] = 100
+        plane_obj.scale[2] = 100
+        plane_obj.is_shadow_catcher = True
 
     # Render Settings
     bpy.context.scene.render.engine = 'CYCLES'
@@ -125,12 +133,12 @@ def set_render_settings(shadow_catcher_z=-1):
     bpy.context.scene.cycles.samples = 32
     bpy.context.scene.render.use_freestyle = True
     bpy.context.scene.render.line_thickness = 0.25
-    bpy.context.scene.render.resolution_x = 1024
-    bpy.context.scene.render.resolution_y = 1024
+    bpy.context.scene.render.resolution_x = resolution
+    bpy.context.scene.render.resolution_y = resolution
     freestyle_settings = bpy.context.scene.view_layers["ViewLayer"].freestyle_settings
     lineset = freestyle_settings.linesets.active
     lineset.select_silhouette = True
-    lineset.select_crease = False
+    lineset.select_crease = True
     lineset.select_border = True
     lineset.select_material_boundary = True
     lineset.select_external_contour = True

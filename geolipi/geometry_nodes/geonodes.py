@@ -8,6 +8,8 @@ from .utils import import_bpy
 
 def create_geonode_tree(dummy_obj, mod_name="CSG-GN", group_name="CSG-GN"):
     bpy = import_bpy()
+    if mod_name in dummy_obj.modifiers:
+        dummy_obj.modifiers.remove(dummy_obj.modifiers[mod_name])
     mod = dummy_obj.modifiers.new(mod_name, 'NODES')
     node_group = bpy.data.node_groups.new(group_name, 'GeometryNodeTree')
     node_group.outputs.new('NodeSocketGeometry', "Geometry")
