@@ -90,13 +90,13 @@ def init_camera():
     bpy.context.scene.camera = camera
 
 
-def init_lights():
+def init_lights(sun_energy=3.5):
     bpy = import_bpy()
     bpy.ops.object.light_add(
         type='SUN', radius=1, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
     light = bpy.data.objects['Sun']
     light.data.angle = 25/180. * math.pi
-    light.data.energy = 3.5
+    light.data.energy = sun_energy
 
     bpy.data.scenes[0].world.use_nodes = True
     bpy.data.scenes[0].world.node_tree.nodes["Background"].inputs['Color'].default_value = (
@@ -113,7 +113,8 @@ def get_obj_min_z(obj):
     return minZ
 
 
-def set_render_settings(resolution=1024, shadow_catch=False, shadow_catcher_z=-1):
+def set_render_settings(resolution=1024, shadow_catch=False, shadow_catcher_z=-1, 
+                        transparent_mode=True, line_thickness=0.25):
     # Shadow catcher
     bpy = import_bpy()
     if shadow_catch:
@@ -129,10 +130,26 @@ def set_render_settings(resolution=1024, shadow_catch=False, shadow_catcher_z=-1
     # Render Settings
     bpy.context.scene.render.engine = 'CYCLES'
     bpy.context.scene.cycles.device = 'GPU'
-    bpy.context.scene.render.film_transparent = True
-    bpy.context.scene.cycles.samples = 32
+    if transparent_mode:
+        bpy.context.scene.render.film_transparent = True
+    else:
+        bpy.context.scene.render.film_transparent = True
+        # set background color to white:
+        bpy.context.scene.use_nodes = True
+        tree = bpy.context.scene.node_tree
+        inp = tree.nodes['Render Layers']
+        composite = tree.nodes['Composite']
+        alpha_node = tree.nodes.new(type="CompositorNodeAlphaOver")
+        alpha_node.inputs[1].default_value = (16.19, 16.19, 16.19, 1)
+        # denoise_node = tree.nodes.new(type="CompositorNodeDenoise")
+        # tree.links.new(inp.outputs['Image'], denoise_node.inputs['Image'])
+        tree.links.new(inp.outputs['Image'], alpha_node.inputs[2])
+        tree.links.new(alpha_node.outputs['Image'], composite.inputs["Image"])
+        
+
+    bpy.context.scene.cycles.samples = 512# 32
     bpy.context.scene.render.use_freestyle = True
-    bpy.context.scene.render.line_thickness = 0.25
+    bpy.context.scene.render.line_thickness = line_thickness#0.25
     bpy.context.scene.render.resolution_x = resolution
     bpy.context.scene.render.resolution_y = resolution
     freestyle_settings = bpy.context.scene.view_layers["ViewLayer"].freestyle_settings
@@ -142,6 +159,7 @@ def set_render_settings(resolution=1024, shadow_catch=False, shadow_catcher_z=-1
     lineset.select_border = True
     lineset.select_material_boundary = True
     lineset.select_external_contour = True
+    lineset.select_edge_mark = True
 
 
 def render_with_rotation(xy_size, number_frames, save_loc):

@@ -45,6 +45,8 @@ def str_to_expr(expression_string_list: List[str], to_cuda=False, dtype=th.float
             cmd = Translate3D(Scale3D(PRIM_MAP[cmd_name](), scale_param),
                             translate_param)
             expr_stack.append(cmd)
+        elif cmd_name == '$':
+            continue
         else:
             raise ValueError(f'Unknown command {expression_string}')
 

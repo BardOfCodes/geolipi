@@ -20,6 +20,10 @@ class Union(Combinator):
     def eval(cls, *args):
         return None
 
+class PseudoUnion(Union):
+    @classmethod
+    def eval(cls, *args):
+        return None
 
 class Intersection(Combinator):
     @classmethod

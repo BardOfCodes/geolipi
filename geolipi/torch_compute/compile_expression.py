@@ -48,7 +48,8 @@ def compile_expr(expression: GLExpr, prim_count_dict: Dict[str, int],
     prim_params = dict()
     prim_counter = {x: 0 for x in prim_count_dict.keys()}
     for prim_type, prim_count in prim_count_dict.items():
-        prim_transforms[prim_type] = th.zeros((prim_count, 4, 4),
+        prim_transforms[prim_type] = th.zeros((prim_count, sketcher.n_dims + 1, 
+                                               sketcher.n_dims + 1),
                                               dtype=sketcher.dtype, device=sketcher.device)
         prim_inversions[prim_type] = th.zeros((prim_count),
                                               dtype=th.bool, device=sketcher.device)
