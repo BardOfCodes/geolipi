@@ -10,7 +10,7 @@ from .transforms_3d import Modifier3D, ColorTree3D
 from .primitives_2d import Primitive2D
 from .primitives_3d import Primitive3D
 
-from .combinators import Union, Intersection, Difference, Complement
+from .combinators import Union, Intersection, Difference, Complement, PseudoUnion
 from sympy import Symbol, Tuple as SympyTuple, Integer as SympyInteger
 import torch as th
 from typing import Union as type_union, Tuple
@@ -68,7 +68,7 @@ SCALE_TYPE = type_union[Scale3D, Scale2D]
 PRIM_TYPE = type_union[Primitive3D, Primitive2D]
 MACRO_TYPE = type_union[REFLECT_MACROS, SYM_MACROS, AXIAL_REFLECT_MACROS]
 COLOR_TYPE = type_union[ColorTree2D, ColorTree3D]
-COMBINATOR_TYPE = type_union[Union, Intersection, Difference, Complement]
+COMBINATOR_TYPE = type_union[Union, Intersection, Difference, Complement, PseudoUnion]
 
 
 # TODO: Fix the issue of tensor missing.

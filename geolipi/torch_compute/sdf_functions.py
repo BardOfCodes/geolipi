@@ -104,9 +104,7 @@ def sdf3d_cylinder(points, params):
 
 def sdf3d_no_param_cuboid(points, _):
     points = th.abs(points)
-    points[..., 0] -= 0.5
-    points[..., 1] -= 0.5
-    points[..., 2] -= 0.5
+    points -= 0.5
     base_sdf = th.norm(th.clip(points, min=0), dim=-1) + \
         th.clip(th.amax(points, -1), max=0)
     return base_sdf
