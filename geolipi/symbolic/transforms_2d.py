@@ -144,6 +144,19 @@ class TranslationSymmetry2D(Transform2D):
     def _signature_2(expr: expr_type, delta_x: param_type_1D, delta_y: param_type_1D, n_count: param_type_1D):
         return sig_check([(expr, expr_type), (delta_x, param_type_1D), (delta_y, param_type_1D), (n_count, param_type_1D)])
     
+class AxialTranslationSymmetry2D(TranslationSymmetry2D):
+    @classmethod
+    def eval(cls, *args, **kwargs):
+        if cls._signature_1(*args, **kwargs):
+            return None
+        else:
+            raise TypeError("Invalid arguments for the function.")
+
+    @staticmethod
+    def _signature_1(expr: expr_type, axis: sympy.Symbol, translate_delta: param_type_1D, n_count: param_type_1D):
+        return sig_check([(expr, expr_type), (axis, sympy.Symbol), (translate_delta, param_type_1D), (n_count, param_type_1D)])
+
+
 class TranslationSymmetryX2D(TranslationSymmetry2D):
     @classmethod
     def eval(cls, *args, **kwargs):
@@ -185,6 +198,19 @@ class ScaleSymmetry2D(Transform2D):
     def _signature_1(expr: expr_type, size_delta: param_type_2D, n_count: param_type_1D):
         return sig_check([(expr, expr_type), (size_delta, param_type_1D), (n_count, param_type_1D)])
         
+
+class AxialScaleSymmetry2D(ScaleSymmetry2D):
+    @classmethod
+    def eval(cls, *args, **kwargs):
+        if cls._signature_1(*args, **kwargs):
+            return None
+        else:
+            raise TypeError("Invalid arguments for the function.")
+
+    @staticmethod
+    def _signature_1(expr: expr_type, axis: sympy.Symbol, translate_delta: param_type_1D, n_count: param_type_1D):
+        return sig_check([(expr, expr_type), (axis, sympy.Symbol), (translate_delta, param_type_1D), (n_count, param_type_1D)])
+
 
 class ColorTree2D(Modifier2D):
     @classmethod
