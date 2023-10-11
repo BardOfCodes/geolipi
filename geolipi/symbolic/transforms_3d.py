@@ -177,6 +177,19 @@ class TranslationSymmetry3D(Transform3D):
         return sig_check([(expr, expr_type), (translate_delta, param_type_3D), (n_count, param_type_1D)])
     
 
+class AxialTranslationSymmetry3D(TranslationSymmetry3D):
+    @classmethod
+    def eval(cls, *args, **kwargs):
+        if cls._signature_1(*args, **kwargs):
+            return None
+        else:
+            raise TypeError("Invalid arguments for the function.")
+
+    @staticmethod
+    def _signature_1(expr: expr_type, axis: sympy.Symbol, translate_delta: param_type_1D, n_count: param_type_1D):
+        return sig_check([(expr, expr_type), (axis, sympy.Symbol), (translate_delta, param_type_1D), (n_count, param_type_1D)])
+
+
 class TranslationSymmetryX3D(TranslationSymmetry3D):
     @classmethod
     def eval(cls, *args, **kwargs):
@@ -209,6 +222,18 @@ class RotationSymmetry3D(Transform3D):
     def _signature_1(expr: expr_type, rotate_delta: param_type_3D, n_count: param_type_1D):
         return sig_check([(expr, expr_type), (rotate_delta, param_type_3D), (n_count, param_type_1D)])
         
+class AxialRotationSymmetry3D(RotationSymmetry3D):
+    @classmethod
+    def eval(cls, *args, **kwargs):
+        if cls._signature_1(*args, **kwargs):
+            return None
+        else:
+            raise TypeError("Invalid arguments for the function.")
+
+    @staticmethod
+    def _signature_1(expr: expr_type, axis: sympy.Symbol, translate_delta: param_type_1D, n_count: param_type_1D):
+        return sig_check([(expr, expr_type), (axis, sympy.Symbol), (translate_delta, param_type_1D), (n_count, param_type_1D)])
+    
 class RotationSymmetryX3D(RotationSymmetry3D):
     @classmethod
     def eval(cls, *args, **kwargs):
@@ -240,6 +265,18 @@ class ScaleSymmetry3D(Transform3D):
     def _signature_1(expr: expr_type, size_delta: param_type_3D, n_count: param_type_1D):
         return sig_check([(expr, expr_type), (size_delta, param_type_1D), (n_count, param_type_1D)])
         
+class AxialScaleSymmetry3D(ScaleSymmetry3D):
+    @classmethod
+    def eval(cls, *args, **kwargs):
+        if cls._signature_1(*args, **kwargs):
+            return None
+        else:
+            raise TypeError("Invalid arguments for the function.")
+
+    @staticmethod
+    def _signature_1(expr: expr_type, axis: sympy.Symbol, translate_delta: param_type_1D, n_count: param_type_1D):
+        return sig_check([(expr, expr_type), (axis, sympy.Symbol), (translate_delta, param_type_1D), (n_count, param_type_1D)])
+    
 
 class ColorTree3D(Modifier3D):
     @classmethod
