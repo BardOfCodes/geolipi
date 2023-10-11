@@ -295,8 +295,8 @@ def resolve_rule(graph, resolve_rule):
 
 
 def create_compiled_expr(expression, sketcher, resolve_to_dnf=False):
-    prim_count = expr_prim_count(expression)
     expression = resolve_macros(expression, device=sketcher.device)
+    prim_count = expr_prim_count(expression)
     compiled_expr = compile_expr(expression, prim_count, sketcher=sketcher, rectify_transform=True)
     expr = compiled_expr[0]
     if resolve_to_dnf:
