@@ -199,8 +199,8 @@ class TranslationSymmetryX3D(TranslationSymmetry3D):
             raise TypeError("Invalid arguments for the function.")
 
     @staticmethod
-    def _signature_1(expr: expr_type):
-        return sig_check([(expr, expr_type)])
+    def _signature_1(expr: expr_type, translate_delta: param_type_1D, n_count: param_type_1D):
+        return sig_check([(expr, expr_type), (translate_delta, param_type_1D), (n_count, param_type_1D)])
 
 
 class TranslationSymmetryY3D(TranslationSymmetryX3D):
@@ -231,8 +231,8 @@ class AxialRotationSymmetry3D(RotationSymmetry3D):
             raise TypeError("Invalid arguments for the function.")
 
     @staticmethod
-    def _signature_1(expr: expr_type, axis: sympy.Symbol, translate_delta: param_type_1D, n_count: param_type_1D):
-        return sig_check([(expr, expr_type), (axis, sympy.Symbol), (translate_delta, param_type_1D), (n_count, param_type_1D)])
+    def _signature_1(expr: expr_type, axis: sympy.Symbol, rotate_delta: param_type_1D, n_count: param_type_1D):
+        return sig_check([(expr, expr_type), (axis, sympy.Symbol), (rotate_delta, param_type_1D), (n_count, param_type_1D)])
     
 class RotationSymmetryX3D(RotationSymmetry3D):
     @classmethod
@@ -243,9 +243,8 @@ class RotationSymmetryX3D(RotationSymmetry3D):
             raise TypeError("Invalid arguments for the function.")
 
     @staticmethod
-    def _signature_1(expr: expr_type):
-        return sig_check([(expr, expr_type)])
-
+    def _signature_1(expr: expr_type, rotate_delta: param_type_1D, n_count: param_type_1D):
+        return sig_check([(expr, expr_type), (rotate_delta, param_type_1D), (n_count, param_type_1D)])
 
 class RotationSymmetryY3D(RotationSymmetryX3D):
     ...
