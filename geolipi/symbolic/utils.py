@@ -44,6 +44,8 @@ GENERAL_PARAM_SYM = type_union[RotationSymmetry2D, RotationSymmetry3D, Translati
 GENERAL_MACROS = type_union[GENERAL_REFLECT, GENERAL_PARAM_SYM]
 
 PREFIXED_AXIS_REFLECT = type_union[ReflectX2D, ReflectY2D, ReflectX3D, ReflectY3D, ReflectZ3D]
+
+
 PREFIXED_AXIS_SYM = type_union[TranslationSymmetryX2D, TranslationSymmetryY2D, TranslationSymmetryX3D, TranslationSymmetryY3D, TranslationSymmetryZ3D,
                           RotationSymmetryX3D, RotationSymmetryY3D, RotationSymmetryZ3D]
 PREFIXED_AXIS_MACROS = type_union[PREFIXED_AXIS_REFLECT, PREFIXED_AXIS_SYM]
@@ -56,6 +58,11 @@ AXIAL_PARAM_MACROS = type_union[AXIAL_REFLECT, AXIAL_PARAM_SYM]
 ALL_REFLECTS = type_union[GENERAL_REFLECT, PREFIXED_AXIS_REFLECT, AXIAL_REFLECT]
 ALL_SYMS = type_union[GENERAL_PARAM_SYM, PREFIXED_AXIS_SYM, AXIAL_PARAM_SYM]
 
+TRANSSYM_TYPE = type_union[TranslationSymmetryX2D, TranslationSymmetryY2D, TranslationSymmetryX3D, TranslationSymmetryY3D, TranslationSymmetryZ3D,
+                           AxialTranslationSymmetry2D, AxialTranslationSymmetry3D]
+ROTSYM_TYPE = type_union[RotationSymmetryX3D, RotationSymmetryY3D, RotationSymmetryZ3D, RotationSymmetry2D,
+                         AxialRotationSymmetry3D, RotationSymmetry2D]
+TRANSFORM_TYPE = type_union[TRANSLATE_TYPE, ROTATE_TYPE, SCALE_TYPE]
 
 MACRO_TYPE = type_union[GENERAL_MACROS, PREFIXED_AXIS_MACROS, AXIAL_PARAM_MACROS]
 

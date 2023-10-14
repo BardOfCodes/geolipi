@@ -231,5 +231,10 @@ class GLFunction(Function):
         return new_expr
     
     def __len__(self):
-        length = 1 + sum([len(arg) for arg in self.args])
+        length = 1
+        for arg in self.args:
+            if isinstance(arg, (GLFunction, GLExpr)):
+                length += len(arg)
+            else:
+                length += 0
         return length
