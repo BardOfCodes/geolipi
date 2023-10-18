@@ -3,8 +3,6 @@ import math
 import numpy as np
 
 # Unsafe!!!
-
-
 def blender_importer(module_name):
     if module_name not in sys.modules:
         eval(f"import {module_name}")
@@ -71,6 +69,16 @@ def clean_up(avoid_keys=[]):
     for obj in bpy.data.cameras:
         if not obj.name in avoid_keys:
             bpy.data.cameras.remove(obj, do_unlink=True)
+    if bpy.context.scene.use_nodes:
+        tree = bpy.context.scene.node_tree
+        for name, cur_node in tree.nodes.items():
+            if not name in ("Render Layers", "Composite"):
+                tree.nodes.remove(cur_node)
+        inp = tree.nodes['Render Layers']
+        composite = tree.nodes['Composite']
+        tree.links.new(inp.outputs['Image'], composite.inputs["Image"])
+        tree.links.new(inp.outputs['Alpha'], composite.inputs["Alpha"])
+        
 
 
 def init_camera():
@@ -101,10 +109,8 @@ def init_lights(sun_energy=3.5):
     bpy.data.scenes[0].world.use_nodes = True
     bpy.data.scenes[0].world.node_tree.nodes["Background"].inputs['Color'].default_value = (
         0.1, 0.1, 0.1, 1)
-
+    
 # https://blender.stackexchange.com/questions/55702/getting-global-axis-value-of-the-vertex-with-the-lowest-value
-
-
 def get_obj_min_z(obj):
     mw = obj.matrix_world      # Active object's world matrix
     glob_vertex_coordinates = [mw @ v.co for v in obj.data.vertices]  # Global
@@ -145,6 +151,9 @@ def set_render_settings(resolution=1024, shadow_catch=False, shadow_catcher_z=-1
         # tree.links.new(inp.outputs['Image'], denoise_node.inputs['Image'])
         tree.links.new(inp.outputs['Image'], alpha_node.inputs[2])
         tree.links.new(alpha_node.outputs['Image'], composite.inputs["Image"])
+        #Remove link to alpha channel
+        for link in inp.outputs['Alpha'].links:
+            tree.links.remove(link)
         
 
     bpy.context.scene.cycles.samples = 512# 32

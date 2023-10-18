@@ -6,17 +6,17 @@ import numpy as np
 from geolipi.symbolic import Combinator
 from geolipi.symbolic.utils import resolve_macros
 from geolipi.symbolic.utils import MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE
-from geolipi.symbolic.combinators import Difference, PseudoUnion
+from geolipi.symbolic.combinators import Difference, JoinUnion
 from .geonodes import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP
 from .geonodes import import_bpy, create_geonode_tree
 from .utils import BASE_COLORS
-from .materials import create_material_tree, create_simple_material_tree
+from .materials import create_material_tree, create_simple_material_tree, create_edge_material_tree, create_monotone_material
 
 # TODO: Note - its always in the rectify transform mode.
 
 def expr_to_geonode_graph(expression: GLExpr, dummy_obj, 
                           device, create_material=True,
-                          colors=None, simple_material=False):
+                          colors=None, material_type="base"):
     
     node_group = create_geonode_tree(dummy_obj)
     mat_id = 0
@@ -36,7 +36,7 @@ def expr_to_geonode_graph(expression: GLExpr, dummy_obj,
             bool_node = node_seq[0]
             # Linking:
             outer_input = link_stack.pop()
-            if type(cur_expr) == PseudoUnion:
+            if type(cur_expr) == JoinUnion:
                 node_output = bool_node.outputs['Geometry']
             else:
                 node_output = bool_node.outputs['Mesh']
@@ -44,7 +44,7 @@ def expr_to_geonode_graph(expression: GLExpr, dummy_obj,
             if type(cur_expr) == Difference:
                 link_stack.append(bool_node.inputs['Mesh 2'])
                 link_stack.append(bool_node.inputs['Mesh 1'])
-            elif type(cur_expr) == PseudoUnion:
+            elif type(cur_expr) == JoinUnion:
                 for _ in range(len(cur_expr.args)):
                     link_stack.append(bool_node.inputs[0])
             else:
@@ -77,20 +77,26 @@ def expr_to_geonode_graph(expression: GLExpr, dummy_obj,
                         params = cur_expr.lookup_table[params]
                     else:
                         params = params.name
-                    
             if params:
-                print(params)
                 node_seq = PRIMITIVE_MAP[type(cur_expr)](node_group, params)
             else:
                 node_seq = PRIMITIVE_MAP[type(cur_expr)](node_group)
             prim_node, material_node = node_seq
             if create_material:
+                # TODO: Better color management.
                 mat_name = f'Material_{mat_id}'
                 color = colors[mat_id % len(colors)]
-                if simple_material:
-                    material = create_simple_material_tree(color, mat_name)
-                else:
-                    material = create_material_tree(color, mat_name)
+                if material_type == "base":
+                    material = create_material_tree(mat_name, color)
+                elif material_type == "simple":
+                    material = create_simple_material_tree(mat_name, color)
+                elif material_type == "with_edge":
+                    material = create_edge_material_tree(mat_name, color)
+                elif material_type == "monotone":
+                    color_list = [colors[(mat_id + i * 2) % len(colors)] for i in range(3)]
+                    silhuette_color = colors[(mat_id -1) % len(colors)]
+                    material = create_monotone_material(mat_name, color, color_list, silhuette_color)
+                    
                 material_node.inputs['Material'].default_value = material
                 mat_id += 1
             outer_input = link_stack.pop()

@@ -1,5 +1,5 @@
 from .utils import import_bpy
-# ref: Derek
+# Credits: Extracted from Derek Hsu's code: https://github.com/HTDerekLiu/BlenderToolbox
 
 class colorObj(object):
 
@@ -12,8 +12,8 @@ class colorObj(object):
         self.B = B  # birghtness
         self.C = C  # contrast
 
-# For .gltf exports
-def create_simple_material_tree(color, material_name):
+# For .gltf exports in the website.
+def create_simple_material_tree(material_name, color):
     bpy = import_bpy()
     RGBA = (color[0], color[1],  color[2], 1)
     mesh_color = colorObj(RGBA, 0.5, 1.0, 1.0, 0.0, 1.0)
@@ -33,7 +33,8 @@ def create_simple_material_tree(color, material_name):
 
     return mat
 
-def create_material_tree(color, material_name):
+# For the renders in CoReF paper (ICCV 2023).
+def create_material_tree(material_name, color):
     bpy = import_bpy()
     RGBA = (color[0], color[1],  color[2], 1)
     mesh_color = colorObj(RGBA, 0.5, 1.0, 1.0, 0.0, 2.0)
@@ -58,22 +59,17 @@ def create_material_tree(color, material_name):
     mix_rgb_node.blend_type = 'MULTIPLY'
     tree.nodes["Gamma"].inputs["Gamma"].default_value = ao_strength
     tree.nodes["Ambient Occlusion"].inputs["Distance"].default_value = 10.0
-    tree.nodes["Gamma"].location.x -= 600
-
     # set color using Hue/Saturation node
     hsv_node = tree.nodes.new('ShaderNodeHueSaturation')
     hsv_node.inputs['Color'].default_value = mesh_color.RGBA
     hsv_node.inputs['Saturation'].default_value = mesh_color.S
     hsv_node.inputs['Value'].default_value = mesh_color.V
     hsv_node.inputs['Hue'].default_value = mesh_color.H
-    hsv_node.location.x -= 200
 
     # set color brightness/contrast
     bc_node = tree.nodes.new('ShaderNodeBrightContrast')
     bc_node.inputs['Bright'].default_value = mesh_color.B
     bc_node.inputs['Contrast'].default_value = mesh_color.C
-    bc_node.location.x -= 400
-
     # link all the nodes
     tree.links.new(hsv_node.outputs['Color'], bc_node.inputs['Color'])
     tree.links.new(bc_node.outputs['Color'], tree.nodes['Ambient Occlusion'].inputs['Color'])
@@ -85,7 +81,7 @@ def create_material_tree(color, material_name):
     return mat
 
 
-def create_edge_material_tree(material_name, mesh_color, edge_thickness, 
+def create_edge_material_tree(material_name, mesh_color, edge_thickness=0.001, 
                               edge_color=(0, 0, 0), 
                               ao_strength=1.0):
     rgba = (mesh_color[0], mesh_color[1],  mesh_color[2], 1)
@@ -106,9 +102,8 @@ def create_edge_material_tree(material_name, mesh_color, edge_thickness,
     mix_rgb = tree.nodes.new('ShaderNodeMixRGB')
     mix_rgb.blend_type = 'MULTIPLY'
     tree.nodes["Gamma"].inputs["Gamma"].default_value = ao_strength
-    tree.nodes["Gamma"].location.x -= 600
     tree.nodes["Ambient Occlusion"].inputs["Distance"].default_value = 10.0
-    tree.nodes["Ambient Occlusion"].inputs["Color"].default_value = mesh_color
+    tree.nodes["Ambient Occlusion"].inputs["Color"].default_value = mesh_color.RGBA
     tree.links.new(tree.nodes["Ambient Occlusion"].outputs['Color'], mix_rgb.inputs['Color1'])
     tree.links.new(tree.nodes["Ambient Occlusion"].outputs['AO'], tree.nodes['Gamma'].inputs['Color'])
     tree.links.new(tree.nodes["Gamma"].outputs['Color'], mix_rgb.inputs['Color2'])
@@ -117,8 +112,6 @@ def create_edge_material_tree(material_name, mesh_color, edge_thickness,
     tree.nodes.new(type="ShaderNodeWireframe")
     wire = tree.nodes[-1]
     wire.inputs[0].default_value = edge_thickness
-    wire.location.x -= 200
-    wire.location.y -= 200
     tree.nodes.new(type="ShaderNodeBsdfDiffuse")
     mat_wire = tree.nodes[-1]
     hsv_node = tree.nodes.new('ShaderNodeHueSaturation')
@@ -126,12 +119,10 @@ def create_edge_material_tree(material_name, mesh_color, edge_thickness,
     hsv_node.inputs['Saturation'].default_value = edge_color.S
     hsv_node.inputs['Value'].default_value = edge_color.V
     hsv_node.inputs['Hue'].default_value = edge_color.H
-    hsv_node.location.x -= 200
     # set color brightness/contrast
     bc_node = tree.nodes.new('ShaderNodeBrightContrast')
     bc_node.inputs['Bright'].default_value = edge_color.B
     bc_node.inputs['Contrast'].default_value = edge_color.C
-    bc_node.location.x -= 400
     tree.links.new(hsv_node.outputs['Color'],bc_node.inputs['Color'])
     tree.links.new(bc_node.outputs['Color'],mat_wire.inputs['Color'])
     tree.nodes.new('ShaderNodeMixShader')
@@ -143,7 +134,7 @@ def create_edge_material_tree(material_name, mesh_color, edge_thickness,
     return mat
     
 
-def create_monotone_material(material_name, mesh_color, color_list, silhouette_color, shadow_size):
+def create_monotone_material(material_name, mesh_color, color_list, silhouette_color, shadow_size=0.1):
     bpy = import_bpy()
     mat = bpy.data.materials.new(material_name)
     mat.use_nodes = True
@@ -171,7 +162,7 @@ def create_monotone_material(material_name, mesh_color, color_list, silhouette_c
     init_rgb.inputs['Color'].default_value = (.5,.5,.5,1)
     init_rgb.inputs['Hue'].default_value = 0
     init_rgb.inputs['Saturation'].default_value = 0
-    init_rgb.inputs['Value'].default_value = color_list[0].brightness
+    init_rgb.inputs['Value'].default_value = color_list[0].B
     init_diff = tree.nodes.new('ShaderNodeBsdfDiffuse')
     tree.links.new(init_rgb.outputs['Color'], init_diff.inputs['Color'])
 
@@ -186,7 +177,7 @@ def create_monotone_material(material_name, mesh_color, color_list, silhouette_c
         RGB_list[ii].inputs['Color'].default_value = (.5,.5,.5,1)
         RGB_list[ii].inputs['Hue'].default_value = 0
         RGB_list[ii].inputs['Saturation'].default_value = 0
-        RGB_list[ii].inputs['Value'].default_value = color_list[ii+1].brightness
+        RGB_list[ii].inputs['Value'].default_value = color_list[ii+1].B
         # Diffuse after RGB
         diff_list[ii] = tree.nodes.new('ShaderNodeBsdfDiffuse')
         # Color Ramp
@@ -207,86 +198,57 @@ def create_monotone_material(material_name, mesh_color, color_list, silhouette_c
         # set node location
 
     # color of the mesh
-    mainColor_HSV = tree.nodes.new('ShaderNodeHueSaturation')
-    mainColor_HSV.inputs['Color'].default_value = mesh_color.RGBA
-    mainColor_HSV.inputs['Hue'].default_value = mesh_color.H
-    mainColor_HSV.inputs['Saturation'].default_value = mesh_color.S
-    mainColor_HSV.inputs['Value'].default_value = mesh_color.V
+    main_color_HSV = tree.nodes.new('ShaderNodeHueSaturation')
+    main_color_HSV.inputs['Color'].default_value = mesh_color.RGBA
+    main_color_HSV.inputs['Hue'].default_value = mesh_color.H
+    main_color_HSV.inputs['Saturation'].default_value = mesh_color.S
+    main_color_HSV.inputs['Value'].default_value = mesh_color.V
 
     # main color BC
-    mainColor = tree.nodes.new('ShaderNodeBrightContrast')
-    mainColor.inputs['Bright'].default_value = mesh_color.B
-    mainColor.inputs['Contrast'].default_value = mesh_color.C
-    tree.links.new(mainColor_HSV.outputs['Color'], mainColor.inputs['Color'])
+    main_color = tree.nodes.new('ShaderNodeBrightContrast')
+    main_color.inputs['Bright'].default_value = mesh_color.B
+    main_color.inputs['Contrast'].default_value = mesh_color.C
+    tree.links.new(main_color_HSV.outputs['Color'], main_color.inputs['Color'])
 
     # initial and end links
-    addShader = tree.nodes.new('ShaderNodeAddShader')
+    add_shader = tree.nodes.new('ShaderNodeAddShader')
     tree.links.new(init_diff.outputs['BSDF'], mix_list[0].inputs[1])
-    tree.links.new(mix_list[-1].outputs['Shader'], addShader.inputs[0])
-    tree.links.new(mainColor.outputs['Color'], principle_node.inputs['Base Color'])
-    tree.links.new(principle_node.outputs['BSDF'], addShader.inputs[1])
+    tree.links.new(mix_list[-1].outputs['Shader'], add_shader.inputs[0])
+    tree.links.new(main_color.outputs['Color'], principle_node.inputs['Base Color'])
+    tree.links.new(principle_node.outputs['BSDF'], add_shader.inputs[1])
 
     # add silhouette 
-    mixEnd = tree.nodes.new('ShaderNodeMixShader')
-    tree.links.new(mixEnd.outputs['Shader'], tree.nodes['Material Output'].inputs['Surface'])
+    mix_end = tree.nodes.new('ShaderNodeMixShader')
+    tree.links.new(mix_end.outputs['Shader'], tree.nodes['Material Output'].inputs['Surface'])
 
-    edgeShadow_HSV = tree.nodes.new('ShaderNodeHueSaturation')
-    edgeShadow_HSV.inputs['Color'].default_value = silhouette_color.RGBA
-    edgeShadow_HSV.inputs['Hue'].default_value = silhouette_color.H
-    edgeShadow_HSV.inputs['Saturation'].default_value = silhouette_color.S
-    edgeShadow_HSV.inputs['Value'].default_value = silhouette_color.V
+    edge_shadow_HSV = tree.nodes.new('ShaderNodeHueSaturation')
+    edge_shadow_HSV.inputs['Color'].default_value = silhouette_color.RGBA
+    edge_shadow_HSV.inputs['Hue'].default_value = silhouette_color.H
+    edge_shadow_HSV.inputs['Saturation'].default_value = silhouette_color.S
+    edge_shadow_HSV.inputs['Value'].default_value = silhouette_color.V
 
-    edgeShadow = tree.nodes.new('ShaderNodeBrightContrast')
-    edgeShadow.inputs['Bright'].default_value = silhouette_color.B
-    edgeShadow.inputs['Contrast'].default_value = silhouette_color.C
+    edge_shadow = tree.nodes.new('ShaderNodeBrightContrast')
+    edge_shadow.inputs['Bright'].default_value = silhouette_color.B
+    edge_shadow.inputs['Contrast'].default_value = silhouette_color.C
     
-    tree.links.new(edgeShadow_HSV.outputs['Color'], edgeShadow.inputs['Color'])
+    tree.links.new(edge_shadow_HSV.outputs['Color'], edge_shadow.inputs['Color'])
 
-    diffEnd = tree.nodes.new('ShaderNodeBsdfDiffuse')
-    tree.links.new(edgeShadow.outputs['Color'], diffEnd.inputs['Color'])
-    tree.links.new(diffEnd.outputs['BSDF'], mixEnd.inputs[2])
+    diff_end = tree.nodes.new('ShaderNodeBsdfDiffuse')
+    tree.links.new(edge_shadow.outputs['Color'], diff_end.inputs['Color'])
+    tree.links.new(diff_end.outputs['BSDF'], mix_end.inputs[2])
 
-    fresnelEnd = tree.nodes.new('ShaderNodeFresnel')
-    RampEnd = tree.nodes.new('ShaderNodeValToRGB')
-    RampEnd.color_ramp.elements[1].position = shadow_size
-    tree.links.new(fresnelEnd.outputs[0], RampEnd.inputs['Fac'])
-    tree.links.new(RampEnd.outputs['Color'], mixEnd.inputs[0])
-    tree.links.new(addShader.outputs[0], mixEnd.inputs[1])
+    fresnel_end = tree.nodes.new('ShaderNodeFresnel')
+    ramp_end = tree.nodes.new('ShaderNodeValToRGB')
+    ramp_end.color_ramp.elements[1].position = shadow_size
+    tree.links.new(fresnel_end.outputs[0], ramp_end.inputs['Fac'])
+    tree.links.new(ramp_end.outputs['Color'], mix_end.inputs[0])
+    tree.links.new(add_shader.outputs[0], mix_end.inputs[1])
 
     # add normal to the color
-    fresnelNode = tree.nodes.new('ShaderNodeFresnel')
-    textureNode = tree.nodes.new('ShaderNodeTexCoord')
-    tree.links.new(textureNode.outputs['Normal'], fresnelNode.inputs['Normal'])
+    fresnel_node = tree.nodes.new('ShaderNodeFresnel')
+    texture_node = tree.nodes.new('ShaderNodeTexCoord')
+    tree.links.new(texture_node.outputs['Normal'], fresnel_node.inputs['Normal'])
     for ii in range(len(ramp_list)):
-        tree.links.new(fresnelNode.outputs[0], ramp_list[ii].inputs['Fac'])
+        tree.links.new(fresnel_node.outputs[0], ramp_list[ii].inputs['Fac'])
 
-    # set node location
-    for node in tree.nodes:
-        node.location.x = 0
-        node.location.y = 0
-    yLoc = 0
-    xLoc = -400
-    RampEnd.location.x = xLoc
-    RampEnd.location.y = -300
-    for node in ramp_list:
-        node.location.x = xLoc
-        node.location.y = yLoc
-        yLoc += 300
-    yLoc = 0
-    xLoc = -600
-    init_rgb.location.x = xLoc
-    init_rgb.location.y = -200
-    for node in RGB_list:
-        node.location.x = xLoc
-        node.location.y = yLoc
-        yLoc += 200
-
-    mainColor.location.x = -800
-    mainColor.location.y = 0
-    mainColor_HSV.location.x = -1000
-    mainColor_HSV.location.y = 0
-    edgeShadow.location.x = -800
-    edgeShadow.location.y = 200
-    edgeShadow_HSV.location.x = -1000
-    edgeShadow_HSV.location.y = 200
     return mat
