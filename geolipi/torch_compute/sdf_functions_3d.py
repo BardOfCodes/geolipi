@@ -1,6 +1,7 @@
 import numpy as np
 import torch as th
 from .common import EPSILON
+from .sdf_functions_2d import ndot
 
 COS_30 = np.cos(np.pi / 6)
 TAN_30 = np.tan(np.pi / 6)
@@ -320,4 +321,255 @@ def sdf3d_death_star(points, ra, rb , d):
     base_sdf = th.where(cond, term_1, term_2)
     return base_sdf
 
-# 10 functions remaining.
+def sdf3d_round_cone(points, r1, r2, h):
+    # points shape [batch, num_points, 3]
+    # r1 shape [batch, 1]
+    # r2 shape [batch, 1]
+    # h shape [batch, 1]
+    b = (r1 - r2) / h
+    a = th.sqrt(th.clamp(1.0 - b * b, min=EPSILON))
+    q = th.stack([th.norm(points[..., :2], dim=-1), points[..., 2]], dim=-1)
+    k = (q * th.stack([-b, a], dim=-1)).sum(-1)
+    cond_1 = k < 0.0
+    cond_2 = k > a * h
+    term_1 = th.norm(q, dim=-1) - r1
+    q2 = q.clone()
+    q2[..., 1] = q2[..., 1] - h
+    term_2 = th.norm(q2, dim=-1) - r2
+    term_3 = (q * th.stack([a, b], dim=-1)).sum(-1) - r1
+    base_sdf = th.where(cond_1, term_1, th.where(cond_2, term_2, term_3))
+    return base_sdf
+
+def sdf3d_arbitrary_round_cone(points, a, b, r1, r2):
+    # points shape [batch, num_points, 3]
+    # a shape [batch, 3]
+    # b shape [batch, 3]
+    # r1 shape [batch, 1]
+    # r2 shape [batch, 1]
+    a = a[..., None, :]
+    b = b[..., None, :]
+    r1 = r1[..., None, :]
+    r2 = r2[..., None, :]
+    ba = b - a
+    l2 = (ba * ba).sum(-1, keepdim=True)
+    rr = r1 - r2
+    a2 = l2 - rr * rr
+    il2 = 1.0 / (l2 + EPSILON)
+    pa = points - a
+    y = (pa * ba).sum(-1, keepdim=True)
+    z = y - l2
+    x2 = pa * l2 - ba * y
+    x2 = (x2 * x2).sum(-1, keepdim=True)
+    y2 = y * y * l2
+    z2 = z * z * l2
+    k = th.sign(rr) * rr * rr * x2
+    cond_1 = th.sign(z) * a2 * z2 > k
+    cond_2 = th.sign(y) * a2 * y2 < k
+    term_1 = th.sqrt(x2 + z2) * il2 - r2
+    term_2 = th.sqrt(x2 + y2) * il2 - r1
+    term_3 = (th.sqrt(x2 * a2 * il2) + y * rr) * il2 - r1
+    base_sdf = th.where(cond_1, term_1, th.where(cond_2, term_2, term_3))
+    return base_sdf
+
+def sdf3d_inexact_ellipsoid(points, r):
+    # points shape [batch, num_points, 3]
+    # r shape [batch, 3]
+    r = r[..., None, :]
+    k0 = th.norm(points / r, dim=-1)
+    k1 = th.norm(points / (r * r), dim=-1)
+    base_sdf = k0 * (k0 - 1.0) / k1
+    return base_sdf
+
+def sdf3d_revolvd_vesica(points, a, b, w):
+    # points shape [batch, num_points, 3]
+    # a shape [batch, 3]
+    # b shape [batch, 3]
+    # w shape [batch, 1]
+    a = a[..., None, :]
+    b = b[..., None, :]
+    w = w[..., None, :]
+    c = (a + b) * 0.5
+    l = th.norm(b - a, dim=-1, keepdim=True)
+    v = (b - a) / (l + EPSILON)
+    y = ((points - c) * v).sum(-1, keepdim=True)
+    q = th.stack([th.norm(points - c - y * v, dim=-1), th.abs(y)[..., 0]], dim=-1)
+    r = 0.5 * l
+    d = 0.5 * (r * r - w * w) / (w + EPSILON)
+    q_1 = q.clone()
+    r = r[..., 0]
+    d = d[..., 0]
+    w = w[..., 0]
+    q_1[..., 1] = q_1[..., 1] - r
+    term_1 = th.norm(q_1, dim=-1)
+    q_2 = q.clone()
+    q_2[..., 0] = q_2[..., 0] + d
+    term_2 = th.norm(q_2, dim=-1) - (d + w)
+    base_sdf = th.where(r * q[..., 0] < d * (q[..., 1] - r), term_1, term_2)
+    return base_sdf
+
+def sdf3d_rhombus(points, la, lb, h, ra):
+    # points shape [batch, num_points, 3]
+    # la shape [batch, 1]
+    # lb shape [batch, 1]
+    # h shape [batch, 1]
+    # ra shape [batch, 1]
+    p = th.abs(points)
+    b = th.stack([la, lb], dim=-1)
+    f = th.clamp(ndot(b, b-2*p[..., :2])/ ((b * b).sum(-1) + EPSILON), min=-1.0, max=1.0)
+    f_factor = th.stack([1.0 - f, 1.0 + f], dim=-1)
+    sign_term = th.sign(p[..., 0] * b[..., 1] + p[..., 1] * b[..., 0] - b[..., 0] * b[..., 1])
+    q_1 = th.norm(p[..., :2] - 0.5 * b * f_factor, dim=-1) * sign_term - ra
+    q_2 = p[..., 2] - h
+    q = th.stack([th.norm(p[..., :2] - 0.5 * b * f_factor, dim=-1) * sign_term - ra, p[..., 2] - h], dim=-1)
+    base_sdf = th.clamp(th.amax(q, dim=-1), max=0.0) + th.norm(th.clamp(q, min=0.0), dim=-1)
+    return base_sdf
+
+def sdf3d_octahedron(points, s):
+    # points shape [batch, num_points, 3]
+    # s shape [batch, 1]
+    p = th.abs(points)
+    m = p[..., 0] + p[..., 1] + p[..., 2] - s
+    m = m[..., :, None]
+    q_1 = p.clone()
+    q_2 = p.clone()[..., [1, 2, 0]]
+    q_3 = p.clone()[..., [2, 0, 1]]
+    cond_1 = 3.0 * p[..., 0:1] < m
+    cond_2 = 3.0 * p[..., 1:2] < m
+    cond_3 = 3.0 * p[..., 2:3] < m
+    q = th.where(cond_1, q_1, th.where(cond_2, q_2, q_3))
+    k = th.clamp(th.clamp(0.5 * (q[..., 2] - q[..., 1] + s), min=0.0), max=s)
+    base_sdf = th.norm(th.stack([q[..., 0], q[..., 1] - s + k, q[..., 2] - k], dim=-1), dim=-1)
+    sdf = th.where(cond_1[..., 0] | cond_2[..., 0] | cond_3[..., 0], base_sdf, m[..., 0] * COS_30)
+    return sdf
+
+def sdf3d_inexact_octahedron(points, s):
+    # points shape [batch, num_points, 3]
+    # s shape [batch, 1]
+    p = th.abs(points)
+    base_sdf = (p[..., 0] + p[..., 1] + p[..., 2] - s) * TAN_30
+    return base_sdf
+
+def sdf3d_pyramid(points, h):
+    # points shape [batch, num_points, 3]
+    # h shape [batch, 1]
+    m2 = h * h + 0.25
+    points[..., :2] = th.abs(points[..., :2])
+    cond = points[..., 1:2] > points[..., 0:1]
+    points[..., :2] = th.where(cond, points[..., [1, 0]], points[..., :2])
+    points[..., :2] = points[..., :2] - 0.5
+    points[..., 2] = points[..., 2] +  0.5
+    q = th.stack([points[..., 1], h * points[..., 2] - 0.5 * points[..., 0], h * points[..., 0] + 0.5 * points[..., 2]], dim=-1)
+    s = th.clamp(-q[..., 0], min=0.0)
+    t = th.clamp((q[..., 1] - 0.5 * points[..., 1]) / (m2 + 0.25), min=0.0, max=1.0)
+    a = m2 * (q[..., 0] + s) * (q[..., 0] + s) + q[..., 1] * q[..., 1]
+    b = m2 * (q[..., 0] + 0.5 * t) * (q[..., 0] + 0.5 * t) + (q[..., 1] - m2 * t) * (q[..., 1] - m2 * t)
+    cond = th.minimum(q[..., 1], -q[..., 0] * m2 - 0.5 * q[..., 1]) > 0.0
+    d2 = th.where(cond, 0.0, th.minimum(a, b))
+    base_sdf = th.sqrt((d2 + q[..., 2] * q[..., 2]) / m2) * th.sign(th.maximum(q[..., 2], -points[..., 2]))
+    return base_sdf
+
+def sdf3d_triangle(points, a, b, c):
+    # points shape [batch, num_points, 3]
+    # a shape [batch, 3]
+    # b shape [batch, 3]
+    # c shape [batch, 3]
+    ba = b - a
+    pa = points - a[..., None, :]
+    cb = c - b
+    pb = points - b[..., None, :]
+    ac = a - c
+    pc = points - c[..., None, :]
+    nor = th.cross(ba, ac)
+    term_1 = th.sign((th.cross(ba, nor)[..., None, :] * pa).sum(-1))
+    term_2 = th.sign((th.cross(cb, nor)[..., None, :] * pb).sum(-1))
+    term_3 = th.sign((th.cross(ac, nor)[..., None, :] * pc).sum(-1))
+    cond = term_1 + term_2 + term_3 < 2.0
+    term_1 = (ba[..., None, :] * pa).sum(-1)/((ba * ba).sum(-1, keepdim=True) + EPSILON)
+    term_2 = (cb[..., None, :] * pb).sum(-1)/((cb * cb).sum(-1, keepdim=True) + EPSILON)
+    term_3 = (ac[..., None, :] * pc).sum(-1)/((ac * ac).sum(-1, keepdim=True) + EPSILON)
+    sub_stack = th.stack([pa, pb, pc], dim=-1)
+    mult_stack = th.stack([ba, cb, ac], dim=-1)[..., None, :, :]
+    term_stack = th.stack([term_1, term_2, term_3], dim=-1)[..., None, :]
+    out = mult_stack * th.clamp(term_stack, min=0.0, max=1.0) - sub_stack
+    out = th.amin(out, dim=-1)
+    out = (out * out).sum(-1)
+    else_sdf = (nor[..., None, :] * pa).sum(-1) **2 / ((nor * nor).sum(-1, keepdim=True) + EPSILON)
+    base_sdf = th.where(cond, out, else_sdf)
+    base_sdf = th.sqrt(base_sdf)
+    return base_sdf
+
+def sdf3d_quad(points, a, b, c, d):
+    # points shape [batch, num_points, 3]
+    # a shape [batch, 3]
+    # b shape [batch, 3]
+    # c shape [batch, 3]
+    # d shape [batch, 3]
+    papbpcpd = points[..., None] - th.stack([a, b, c, d], dim=-1)[..., None, : , :]
+    pa, pb, pc, pd = th.unbind(papbpcpd, dim=-1)
+    ba = b - a
+    cb = c - b
+    dc = d - c
+    ad = a - d
+    nor = th.cross(ba, ad)
+    term_1 = th.sign((th.cross(ba, nor)[..., None, :] * pa).sum(-1))
+    term_2 = th.sign((th.cross(cb, nor)[..., None, :] * pb).sum(-1))
+    term_3 = th.sign((th.cross(dc, nor)[..., None, :] * pc).sum(-1))
+    term_4 = th.sign((th.cross(ad, nor)[..., None, :] * pd).sum(-1))
+    cond = term_1 + term_2 + term_3 + term_4 < 3.0
+    term_1 = (ba[..., None, :] * pa).sum(-1)/((ba * ba).sum(-1, keepdim=True) + EPSILON)
+    term_2 = (cb[..., None, :] * pb).sum(-1)/((cb * cb).sum(-1, keepdim=True) + EPSILON)
+    term_3 = (dc[..., None, :] * pc).sum(-1)/((dc * dc).sum(-1, keepdim=True) + EPSILON)
+    term_4 = (ad[..., None, :] * pd).sum(-1)/((ad * ad).sum(-1, keepdim=True) + EPSILON)
+    sub_stack = th.stack([pa, pb, pc, pd], dim=-1)
+    mult_stack = th.stack([ba, cb, dc, ad], dim=-1)[..., None, :, :]
+    term_stack = th.stack([term_1, term_2, term_3, term_4], dim=-1)[..., None, :]
+    out = mult_stack * th.clamp(term_stack, min=0.0, max=1.0) - sub_stack
+    out = th.amin(out, dim=-1)
+    out = (out * out).sum(-1)
+    else_sdf = (nor[..., None, :] * pa).sum(-1) **2 / ((nor * nor).sum(-1, keepdim=True) + EPSILON)
+    base_sdf = th.where(cond, out, else_sdf)
+    base_sdf = th.sqrt(base_sdf)
+    return base_sdf
+
+def sdf3d_no_param_cuboid(points,):
+    # points shape [batch, num_points, 3]
+    points = th.abs(points)
+    points -= 0.5
+    base_sdf = th.norm(th.clip(points, min=0), dim=-1) + \
+        th.clip(th.amax(points, -1), max=0)
+    return base_sdf
+
+
+def sdf3d_no_param_sphere(points,):
+    # points shape [batch, num_points, 3]
+    base_sdf = points.norm(dim=-1)
+    base_sdf = base_sdf - 0.5
+    return base_sdf
+
+
+def sdf3d_no_param_cylinder(points,):
+    # points shape [batch, num_points, 3]
+    r = 0.5
+    h = 0.5
+    xy_vec = th.norm(points[..., :2], dim=-1) - r
+    height = th.abs(points[..., 2]) - h
+    vec2 = th.stack([xy_vec, height], -1)
+    base_sdf = th.amax(vec2, -1) + th.norm(th.clip(vec2, min=0.0) + EPSILON, -1)
+    return base_sdf
+
+def sdf3d_inexact_superquadrics(points, skew_vec, epsilon_1, epsilon_2):
+    # Reference: https://arxiv.org/pdf/2303.13190.pdf
+    # points shape [batch, num_points, 3]
+    # skew_vec shape [batch, 3]
+    # epsilon_1 shape [batch, 1]
+    # epsilon_2 shape [batch, 1]
+    points = th.abs(points)
+    out_0 = (points[..., 0]/skew_vec[..., 0]) ** (2/(epsilon_2 + EPSILON))
+    out_1 = (points[..., 1]/skew_vec[..., 1]) ** (2/(epsilon_2 + EPSILON))
+    out_2 = (points[..., 2]/skew_vec[..., 2]) ** (2/(epsilon_1 + EPSILON))
+    base_sdf = 1 - ((out_0 + out_1) ** (epsilon_2/(epsilon_1 + EPSILON)) + out_2) ** (-epsilon_1/2.)
+    return base_sdf
+
+## Note: This is more of a occ function...
+def sdf3d_gaussian_kernal(points, ):
+    ...
