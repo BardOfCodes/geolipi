@@ -36,9 +36,9 @@ def sdf3d_cuboid(points, params):
     return base_sdf
 
 
-def sdf3d_sphere(points, raidus):
+def sdf3d_sphere(points, radius):
     base_sdf = points.norm(dim=-1)
-    base_sdf = base_sdf - raidus
+    base_sdf = base_sdf - radius
     return base_sdf
 
 def sdf2d_triangle(points, params):
@@ -137,6 +137,10 @@ def sdf_intersection(*args):
 
 def sdf_difference(sdf_a, sdf_b):
     sdf = th.maximum(sdf_a, -sdf_b)
+    return sdf
+
+def sdf_switched_difference(sdf_a, sdf_b):
+    sdf = th.maximum(sdf_b, -sdf_a)
     return sdf
 
 def sdf_complement(sdf_a):

@@ -37,9 +37,7 @@ class Sketcher:
         return self.homogeneous_identity.clone().detach()  # .detach()
 
     def get_color_canvas(self):
-        zeros = th.ones_like(self.coords[..., :1])
-        canvas = th.cat(
-            [zeros.clone(), zeros.clone(), zeros.clone()], dim=-1)
+        canvas = th.ones_like(self.coords[..., :1]).repeat(1, 4)
         return canvas
 
     def create_coords(self):

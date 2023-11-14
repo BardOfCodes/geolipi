@@ -20,7 +20,7 @@ def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher = None, rectif
     if rectify_transform:
         scale_stack = [sketcher.get_scale_identity()]
     parser_list = [expression]
-    color_stack = [Symbol("GRAY")]
+    color_stack = [Symbol("gray")]
     colored_canvas = sketcher.get_color_canvas()
     while (parser_list):
         cur_expr = parser_list.pop()
@@ -79,9 +79,16 @@ def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher = None, rectif
             # At this point use color code to color the primitive
             color = color_stack.pop()
             valid_color = COLOR_MAP[color.name].to(sketcher.device)
+            # For differentiable relax, this also has to be relaxed.
             occ = execution <= 0
-            
-            colored_canvas = th.where(occ.view(occ.shape[0], 1), valid_color.view(1, 3), colored_canvas)
+            # make it alpha blending: https://en.wikipedia.org/wiki/Alpha_compositing
+            alpha_a = occ[..., None] * valid_color[0, 3:4]
+            color_a = occ.view(occ.shape[0], 1) * valid_color[..., :3]
+            alpha_b = colored_canvas[..., 3:4]
+            color_b = colored_canvas[..., :3]
+            a_o = alpha_a + alpha_b * (1 - alpha_a)
+            color_o = (color_a * alpha_a + color_b * alpha_b * (1 - alpha_a)) / a_o
+            colored_canvas = th.cat([color_o, a_o], dim=-1)
         elif isinstance(cur_expr, (Intersection, Difference)):
             raise ValueError(f'Cannot use {type(cur_expr)} for coloring')
         else:

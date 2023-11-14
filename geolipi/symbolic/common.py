@@ -10,7 +10,6 @@ param_type_3D = type_union[Tuple, SympyTuple, np.ndarray, th.Tensor, Expr, GLExp
 param_type_4D = type_union[Tuple, SympyTuple, np.ndarray, th.Tensor, Expr, GLExpr]
 expr_type = type_union[Expr, GLExpr, GLFunction]
 
-color_types = (Symbol("RED"), Symbol("GREEN"), Symbol("BLUE"), Symbol("GREEN"), Symbol("GRAY"))
 axis_selector = (Symbol("AX2D"), Symbol("AY2D"), Symbol("AX3D"), Symbol("AY3D"), Symbol("AZ3D"))
 
 

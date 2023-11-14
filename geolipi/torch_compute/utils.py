@@ -5,12 +5,14 @@ from geolipi.symbolic.base_symbolic import GLExpr, GLFunction
 import inspect
 import torch as th
 import numpy as np
+import os
+import matplotlib.colors
 import rustworkx as rx
 from collections import defaultdict
 from geolipi.symbolic import Primitive3D, Primitive2D, Combinator, Modifier3D, Modifier2D
 from geolipi.symbolic.primitives_3d import Cuboid3D, Sphere3D, Cylinder3D, Cone3D, NoParamSphere3D, NoParamCylinder3D, NoParamCuboid3D
 from geolipi.symbolic.primitives_2d import Rectangle2D, Circle2D, NoParamRectangle2D, NoParamCircle2D, Triangle2D, TriangleEquilateral2D, NoParamTriangle2D
-from geolipi.symbolic.combinators import Union, Intersection, Difference, Complement
+from geolipi.symbolic.combinators import Union, Intersection, Difference, Complement, SwitchedDifference
 from geolipi.symbolic.transforms_3d import Translate3D, EulerRotate3D, Scale3D, ReflectCoords3D, ColorTree3D
 from geolipi.symbolic.transforms_2d import Translate2D, EulerRotate2D, Scale2D, ReflectCoords2D, ColorTree2D
 
@@ -20,7 +22,7 @@ from .transforms import get_affine_translate_2D, get_affine_scale_2D, get_affine
 
 from .sdf_functions import sdf3d_cuboid, sdf3d_sphere, sdf3d_cylinder, sdf3d_no_param_cuboid, sdf3d_no_param_cylinder, sdf3d_no_param_sphere
 from .sdf_functions import sdf2d_rectangle, sdf2d_circle, sdf2d_no_param_rectangle, sdf2d_no_param_circle, sdf2d_triangle, sdf2d_equilateral_triangle, sdf2d_no_param_triangle
-from .sdf_functions import sdf_union, sdf_intersection, sdf_difference, sdf_complement
+from .sdf_functions import sdf_union, sdf_intersection, sdf_difference, sdf_complement, sdf_switched_difference
 
 # TODO: Clean the usage of primitives with params.
 
@@ -36,12 +38,14 @@ MODIFIER_MAP = {
 
 }
 PRIMITIVE_MAP = {
+    # 3D
     Cuboid3D: sdf3d_cuboid,
     Sphere3D: sdf3d_sphere,
     Cylinder3D: sdf3d_cylinder,
     NoParamCuboid3D: sdf3d_no_param_cuboid,
     NoParamSphere3D: sdf3d_no_param_sphere,
     NoParamCylinder3D: sdf3d_no_param_cylinder,
+    # 2D
     Rectangle2D: sdf2d_rectangle,
     Circle2D: sdf2d_circle,
     NoParamRectangle2D: sdf2d_no_param_rectangle,
@@ -54,12 +58,12 @@ PRIMITIVE_MAP = {
 COMBINATOR_MAP = {
     Union: sdf_union,
     Intersection: sdf_intersection,
-    Difference: sdf_difference,
     Complement: sdf_complement,
+    Difference: sdf_difference,
+    SwitchedDifference: sdf_switched_difference,
 }
 
-# Fore resolution:
-
+# Used during compilation:
 INVERTED_MAP = {
     Union: Intersection,
     Intersection: Union,
@@ -70,34 +74,18 @@ NORMAL_MAP = {
     Intersection: Intersection,
     Difference: Intersection,
 }
-# ONLY_SIMPLIFY_RULES = set(["ii", "uu"])
-
 ONLY_SIMPLIFY_RULES = set([(Intersection, Intersection), (Union, Union)])
 ALL_RULES = set([(Intersection, Intersection),
                 (Union, Union), (Intersection, Union)])
-
 
 class PrimitiveSpec(GLFunction):
     @classmethod
     def eval(cls, prim_type: type, shift: int):
         return None
 
-
-COLOR_MAP = {
-    "RED": th.tensor([1.0, 0.0, 0.0]),
-    "GREEN": th.tensor([0.0, 1.0, 0.0]),
-    "BLUE": th.tensor([0.0, 0.0, 1.0]),
-    "YELLOW": th.tensor([1.0, 1.0, 0.0]),
-    "CYAN": th.tensor([0.0, 1.0, 1.0]),
-    "MAGENTA": th.tensor([1.0, 0.0, 1.0]),
-    "GRAY": th.tensor([0.5, 0.5, 0.5]),
-    "WHITE": th.tensor([1.0, 1.0, 1.0]),
-    "BLACK": th.tensor([0.0, 0.0, 0.0]),
-    "ORANGE": th.tensor([1.0, 0.5, 0.0]),
-    "PURPLE": th.tensor([0.5, 0.0, 0.5]),
-    "PINK": th.tensor([1.0, 0.0, 0.5]),
-    "BROWN": th.tensor([0.5, 0.25, 0.0]),
-    "DARK_GREEN": th.tensor([0.0, 0.5, 0.0]),
-    "DARK_BLUE": th.tensor([0.0, 0.0, 0.5]),
-    "DARK_RED": th.tensor([0.5, 0.0, 0.0]),
-}
+# use XKCD colors: https://xkcd.com/color/rgb.txt
+color_file = open(os.path.dirname(__file__) + "/xkcd_rgb.txt", "r").readlines()
+color_names = [x.strip().split("\t")[0].strip() for x in color_file[1:]]
+color_hexes = [x.strip().split("\t")[1].strip() for x in color_file[1:]]
+color_val = [th.tensor([matplotlib.colors.to_rgba(h)]) for h in color_hexes]
+COLOR_MAP = dict(zip(color_names, color_val))
