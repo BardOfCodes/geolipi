@@ -10,7 +10,6 @@ def get_affine_translate_2D(matrix, param):
     matrix[:2, 2] = -param
     return matrix
 
-
 def get_affine_scale_2D(matrix, param):
     if not isinstance(param, th.Tensor):
         param = th.tensor(param, dtype=matrix.dtype, device=matrix.device)
@@ -48,7 +47,6 @@ def get_affine_translate_3D(matrix, param):
     matrix[:3, 3] = -param
     return matrix
 
-
 def get_affine_scale_3D(matrix, param):
     if not isinstance(param, th.Tensor):
         param = th.tensor(param, dtype=matrix.dtype, device=matrix.device)
@@ -56,8 +54,6 @@ def get_affine_scale_3D(matrix, param):
     matrix[1, 1] = 1 / (EPSILON + param[1])
     matrix[2, 2] = 1 / (EPSILON + param[2])
     return matrix
-
-# Source: https://github.com/facebookresearch/pytorch3d/blob/main/pytorch3d/transforms/rotation_conversions.py#L461
 
 def get_affine_reflection_3D(matrix, param):
     if not isinstance(param, th.Tensor):
@@ -68,10 +64,39 @@ def get_affine_reflection_3D(matrix, param):
     reflection_matrix = identity - 2 * outer_product
     matrix[:3, :3] = reflection_matrix
     return matrix
-    
 
-    
+def get_affine_rotate_euler_3D(matrix, param):
+    if not isinstance(param, th.Tensor):
+        param = th.tensor(param, dtype=matrix.dtype, device=matrix.device)
+    matrices = [
+        _axis_angle_rotation_3D(c, e)
+        for c, e in zip(CONVENTION, th.unbind(param, -1))
+    ]
+    rotation_matrix = th.matmul(
+        th.matmul(matrices[0], matrices[1]), matrices[2])
 
+    matrix[:3, :3] = rotation_matrix
+    return matrix
+
+def get_affine_shear_3D(matrix, param):
+    if not isinstance(param, th.Tensor):
+        param = th.tensor(param, dtype=matrix.dtype, device=matrix.device)
+    shear_matrix = th.eye(3, dtype=matrix.dtype, device=matrix.device)
+    shear_matrix[0, 1] = param[0]
+    shear_matrix[0, 2] = param[1]
+    shear_matrix[1, 2] = param[2]
+    matrix[:3, :3] = shear_matrix
+    return matrix
+
+def get_affine_shear_2D(matrix, param):
+    if not isinstance(param, th.Tensor):
+        param = th.tensor(param, dtype=matrix.dtype, device=matrix.device)
+    shear_matrix = th.eye(2, dtype=matrix.dtype, device=matrix.device)
+    shear_matrix[0, 1] = param
+    matrix[:2, :2] = shear_matrix
+    return matrix
+
+# Source: https://github.com/facebookresearch/pytorch3d/blob/main/pytorch3d/transforms/rotation_conversions.py#L461
 def _axis_angle_rotation_3D(axis: str, angle: th.Tensor) -> th.Tensor:
 
     cos = th.cos(angle)
@@ -87,19 +112,23 @@ def _axis_angle_rotation_3D(axis: str, angle: th.Tensor) -> th.Tensor:
         R_flat = (cos, -sin, zero, sin, cos, zero, zero, zero, one)
     else:
         raise ValueError("letter must be either X, Y or Z.")
-
     return th.stack(R_flat, -1).reshape(angle.shape + (3, 3))
 
 
-def get_affine_rotate_euler_3D(matrix, param):
-    if not isinstance(param, th.Tensor):
-        param = th.tensor(param, dtype=matrix.dtype, device=matrix.device)
-    matrices = [
-        _axis_angle_rotation_3D(c, e)
-        for c, e in zip(CONVENTION, th.unbind(param, -1))
-    ]
-    rotation_matrix = th.matmul(
-        th.matmul(matrices[0], matrices[1]), matrices[2])
+def position_distort(positions, k):
+    positions = positions + th.rand_like(positions) * k
+    return positions
 
-    matrix[:3, :3] = rotation_matrix
-    return matrix
+def position_twist(positions, k):
+    c = th.cos(k*positions[..., 2])
+    s = th.sin(k*positions[..., 2])
+    rot = th.stack([c, -s, s, c], dim=-1).reshape(*c.shape, 2, 2).T
+    q = th.cat([th.bmm(positions[..., :2], rot), positions[..., 2]], dim=-1)
+    return q
+
+def position_cheap_bend(positions, k):
+    c = th.cos(k*positions[..., 0])
+    s = th.sin(k*positions[..., 0])
+    m = th.stack([c, -s, s, c], dim=-1).reshape(*c.shape, 2, 2).T
+    q = th.cat([th.bmm(positions[..., :2], m), positions[..., 2]], dim=-1)
+    return q

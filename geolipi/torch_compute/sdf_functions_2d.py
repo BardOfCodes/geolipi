@@ -39,7 +39,7 @@ def sdf2d_box(points, size):
     # points shape [batch, num_points, 2]
     # size shape [batch, 2]
     points = th.abs(points)
-    size = size[..., None, :]
+    size = size[..., None, :] / 2.0
     points = points - size
     base_sdf = th.norm(th.clip(points, min=0), dim=-1) + \
         th.clip(th.amax(points, -1), max=0)
@@ -180,7 +180,7 @@ def sdf2d_uneven_capsule(points, r1, r2, h):
     sdf = th.where(k < 0, th.norm(points, dim=-1) - r1,  sdf)
     return sdf
 
-def sdf2d_reg_pentagon(points, r):
+def sdf2d_regular_pentagon(points, r):
     # points shape [batch, num_points, 2]
     # r shape [batch, 1]
     k = th.tensor(PENT_VEC).to(points.device)
@@ -194,7 +194,7 @@ def sdf2d_reg_pentagon(points, r):
     sdf = th.norm(points, dim=-1) * th.sign(points[..., 1])
     return sdf
 
-def sdf2d_reg_hexagon(points, r):
+def sdf2d_regular_hexagon(points, r):
     # points shape [batch, num_points, 2]
     # r shape [batch, 1]
     k = th.tensor(HEX_VEC).to(points.device)
@@ -205,7 +205,7 @@ def sdf2d_reg_hexagon(points, r):
     sdf = th.norm(points, dim=-1) * th.sign(points[..., 1])
     return sdf
 
-def sdf2d_reg_octagon(points, r):
+def sdf2d_regular_octagon(points, r):
     # points shape [batch, num_points, 2]
     # r shape [batch, 1]
     k = th.tensor(OCT_VEC).to(points.device)
@@ -252,7 +252,7 @@ def sdf2d_star_5(points, r, rf):
     sdf = th.norm(points - ba * h[..., :, None], dim=-1) * th.sign(points[..., 1] * ba[..., :, 0] - points[..., 0] * ba[..., :, 1])
     return sdf
     
-def sdf2d_reg_star(points, r, n, m):
+def sdf2d_regular_star(points, r, n, m):
     # points shape [batch, num_points, 2]
     # r shape [batch, 1]
     # n shape [batch, 1]
@@ -309,7 +309,7 @@ def sdf2d_arc(points, angle, ra, rb):
                    th.abs(th.norm(points, dim=-1) - ra) - rb)
     return sdf
 
-def sdf2d_horseshoe(points, angle, r, w):
+def sdf2d_horse_shoe(points, angle, r, w):
     # points shape [batch, num_points, 2]
     # c shape [batch, 2]
     # r shape [batch, 1]
@@ -722,8 +722,7 @@ def sdf2d_hyperbola(points, k, he):
     sdf = th.where(points[..., 0] * points[..., 1] < k, d, -d)
     return sdf
 
-# circle wave
-def sdf2d_quad_bezier(points, A, B, C):
+def sdf2d_quadratic_bezier_curve(points, A, B, C):
     # points shape [batch, num_points, 2]
     # a shape [batch, 2]
     # b shape [batch, 2]

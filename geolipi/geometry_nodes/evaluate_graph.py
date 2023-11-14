@@ -4,8 +4,8 @@ from geolipi.symbolic.base_symbolic import GLExpr, GLFunction
 import torch as th
 import numpy as np
 from geolipi.symbolic import Combinator
-from geolipi.symbolic.utils import resolve_macros
-from geolipi.symbolic.utils import MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE
+from geolipi.symbolic.resolve import resolve_macros
+from geolipi.symbolic.types import MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE
 from geolipi.symbolic.combinators import Difference, JoinUnion
 from .geonodes import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP
 from .geonodes import import_bpy, create_geonode_tree

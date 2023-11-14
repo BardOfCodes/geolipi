@@ -1,34 +1,59 @@
-# Revolution of 2D
 from typing import Tuple, List
+
 from .base_symbolic import GLExpr, GLFunction
-from .common import param_type_1D, param_type_2D, param_type_3D, sig_check
 from .primitives_2d import Primitive2D
 from .primitives_3d import Primitive3D
-""" 3D Curves will be used for Curve Extrude Primitives. 2D Curves can be used for SVG creation."""
-""" Combining multiple 2D Curves into a single closed curve will be used for 3D Extrude Primitives. ExtrudeNet principle"""
 
-# Extrusion of 2D
+""" 3D Curves will be used for Curve Extrude Primitives. 
+    2D Curves can be used for SVG creation."""
 
-class Curve3D():
+
+class HigherOrderPrimitives3D(GLFunction):
+    """Functions for declaring higher order Primitives."""
+    ...
+# Extrusion of 2D: Used for GeoCode.
+
+
+class CurvePrimitive3D(HigherOrderPrimitives3D):
+    """Functions for declaring 3D curve primitives."""
     ...
 
 
-class StraightLine(Curve3D):
+class StraightExtrude3D(CurvePrimitive3D):
     ...
 
 
-class QuadraticBezier(Curve3D):
+class QuadraticBezierExtrude3D(CurvePrimitive3D):
     ...
 
 
-class CubicBezier(Curve3D):
-    ...
-
-class Curve2D(Primitive2D):
-    ...
-class GeneralizedCylinder():
+class PolyQuadBezierExtrude3D(CurvePrimitive3D):
     ...
 
 
-class RevolutedPrimitve():
+class CubicBezierExtrude3D(CurvePrimitive3D):
+    ...
+    # Ref: https://www.shadertoy.com/view/4sKyzW
+    # https://www.shadertoy.com/view/llyXDV
+
+# Used for defining the scale along curve.
+
+
+class Primitive1D(GLFunction):
+    """Functions for declaring 1D primitives."""
+    ...
+
+
+class StraightLineCurve1D(Primitive1D):
+    # y = mx + c
+    ...
+
+
+class QuadraticCurve1D(Primitive1D):
+    # y = ax2 + bx + c
+    ...
+
+
+class PolyStraightLineCurve1D(Primitive1D):
+    # set of (x, y) points smoothly connected by cubic bezier curves.
     ...

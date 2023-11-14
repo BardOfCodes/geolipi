@@ -1,116 +1,215 @@
 from typing import Tuple, List
 from .base_symbolic import GLExpr, GLFunction
 from .common import param_type_1D, param_type_2D, param_type_3D, sig_check
+from sympy import SympyTuple
 
 
 class Primitive2D(GLFunction):
-    has_sdf = True
-    has_occupancy = True
-    has_blender = True
-    true_sdf = True
+    """Functions for declaring 2D primitives."""
+    ...
+
+    def pretty_print(self, tabs=0, tab_str="\t"):
+        args = self.args
+        n_tabs = tab_str * tabs
+        replaced_args = [self.lookup_table.get(arg, arg) for arg in args]
+        str_args = []
+        for arg in replaced_args:
+            if isinstance(arg, (GLExpr, GLFunction)):
+                str_args.append(arg.pretty_print(tabs=tabs+1, tab_str=tab_str))
+            else:
+                if isinstance(arg, SympyTuple):
+                    item = [f"{x:.3f}" for x in arg]
+                    item = ', '.join(item)
+                    str_args.append(f"({item})")
+                else:
+                    str_args.append(str(arg))
+        if str_args:
+            n_tabs_1 = tab_str * (tabs + 1)
+            # str_args = [""] + str_args
+            str_args = f", ".join(str_args)
+            final = f"{self.func.__name__}({str_args})"
+        else:
+            final = f"{self.func.__name__}()"
+        return final
 
 
 class Circle2D(Primitive2D):
-    """
-    Basic 2D Circle.
-    Signature 1: Circle(radius: param_type_1D)
-    """
-    @classmethod
-    def eval(cls, *args, **kwargs):
-        if cls._signature_1(*args, **kwargs):
-            return None
-        else:
-            raise TypeError("Invalid arguments for the function.")
+    ...
 
-    @staticmethod
-    def _signature_1(radius: param_type_1D):
-        return sig_check([(radius, param_type_1D)])
+
+class RoundedBox2D(Primitive2D):
+    ...
+
+
+class Box2D(Primitive2D):
+    ...
+
+# Depreciate this.
 
 
 class Rectangle2D(Primitive2D):
-    """
-    Basic 2D Rectangle.
-    Signature 1: Rectangle(size_a: param_type_1D, size_b: param_type_1D)
-    Signature 2: Rectangle(size: param_type_2D)
-    """
-    @classmethod
-    def eval(cls, *args, **kwargs):
-        if cls._signature_1(*args, **kwargs):
-            return None
-        elif cls._signature_2(*args, **kwargs):
-            return None
-        else:
-            raise TypeError("Invalid arguments for the function.")
+    ...
 
-    @staticmethod
-    def _signature_1(size_x: param_type_1D, size_y: param_type_1D):
-        return sig_check([(size_x, param_type_1D), (size_y, param_type_1D)])
 
-    @staticmethod
-    def _signature_2(size: param_type_2D):
-        return sig_check([(size, param_type_2D)])
+class OrientedBox2D(Primitive2D):
+    ...
+
+
+class Rhombus2D(Primitive2D):
+    ...
+
+
+class Trapezoid2D(Primitive2D):
+    ...
+
+
+class Parallelogram2D(Primitive2D):
+    ...
+
+
+class EquilateralTriangle2D(Primitive2D):
+    ...
+
+
+class IsoscelesTriangle2D(Primitive2D):
+    ...
 
 
 class Triangle2D(Primitive2D):
-    @classmethod
-    def eval(cls, *args, **kwargs):
-        if cls._signature_1(*args, **kwargs):
-            return None
-        elif cls._signature_2(*args, **kwargs):
-            return None
-        else:
-            raise TypeError("Invalid arguments for the function.")
-
-    @staticmethod
-    def _signature_1(point_a: param_type_2D = None, point_b: param_type_2D = None, point_c: param_type_2D = None):
-        return sig_check([(point_a, param_type_2D), (point_b, param_type_2D), (point_c, param_type_2D)])
-    @staticmethod
-    def _signature_2(params: param_type_3D = None):
-        return True
+    ...
 
 
-
-class TriangleIsosceles2D(Primitive2D):
-    @classmethod
-    def eval(cls, *args, **kwargs):
-        if cls._signature_1(*args, **kwargs):
-            return None
-        else:
-            raise TypeError("Invalid arguments for the function.")
-    # shorthand to make a equilateral triangle
-
-    @staticmethod
-    def _signature_1(size_x: param_type_1D, size_y: param_type_1D):
-        return sig_check([(size_x, param_type_1D), (size_y, param_type_1D)])
+class UnevenCapsule2D(Primitive2D):
+    ...
 
 
-class TriangleEquilateral2D(Primitive2D):
-    @classmethod
-    def eval(cls, *args, **kwargs):
-        if cls._signature_1(*args, **kwargs):
-            return None
-        else:
-            raise TypeError("Invalid arguments for the function.")
-    # shorthand to make a equilateral triangle
-
-    @staticmethod
-    def _signature_1(size: param_type_1D):
-        return sig_check([(size, param_type_1D)])
+class RegularPentagon2D(Primitive2D):
+    ...
 
 
-class NoParamCircle2D(Circle2D):
-    @classmethod
-    def eval(cls,):
-        return None
+class RegularHexagon2D(Primitive2D):
+    ...
 
 
-class NoParamRectangle2D(Rectangle2D):
-    @classmethod
-    def eval(cls,):
-        return None
+class Hexagram2D(Primitive2D):
+    ...
 
 
-class NoParamTriangle2D(Rectangle2D):
-    @classmethod
-    def eval(cls,):
-        return None
+class Star2D(Primitive2D):
+    ...
+
+
+class RegularStar2D(Primitive2D):
+    ...
+
+
+class Pie2D(Primitive2D):
+    ...
+
+
+class CutDisk2D(Primitive2D):
+    ...
+
+
+class Arc2D(Primitive2D):
+    ...
+
+
+class HorseShoe2D(Primitive2D):
+    ...
+
+
+class Vesica2D(Primitive2D):
+    ...
+
+
+class OrientedVesica2D(Primitive2D):
+    ...
+
+
+class Moon2D(Primitive2D):
+    ...
+
+
+class RoundedCross2D(Primitive2D):
+    ...
+
+
+class Egg2D(Primitive2D):
+    ...
+
+
+class Heart2D(Primitive2D):
+    ...
+
+
+class Cross2D(Primitive2D):
+    ...
+
+
+class RoundedX2D(Primitive2D):
+    ...
+
+
+class Polygon2D(Primitive2D):
+    ...
+
+
+class Ellipse2D(Primitive2D):
+    ...
+
+
+class Parabola2D(Primitive2D):
+    ...
+
+
+class ParabolaSegment2D(Primitive2D):
+    ...
+
+
+class BlobbyCross2D(Primitive2D):
+    ...
+
+
+class Tunnel2D(Primitive2D):
+    ...
+
+
+class Stairs2D(Primitive2D):
+    ...
+
+
+class QuadraticCircle2D(Primitive2D):
+    ...
+
+
+class CoolS2D(Primitive2D):
+    ...
+
+
+class CircleWave2D(Primitive2D):
+    ...
+
+
+class Hyperbola2D(Primitive2D):
+    ...
+
+
+class QuadraticBezierCurve2D(Primitive2D):
+    ...
+
+
+class Segment2D(Primitive2D):
+    ...
+
+
+class NoParamRectangle2D(Primitive2D):
+    ...
+
+
+class NoParamCircle2D(Primitive2D):
+    ...
+
+
+class NoParamTriangle2D(Primitive2D):
+    ...

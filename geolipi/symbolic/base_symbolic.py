@@ -1,9 +1,12 @@
+
+import re
+import sympy
+import inspect
 import numpy as np
 import torch as th
-from sympy import Function, Expr, Symbol, Tuple as SympyTuple, Integer as SympyInteger, Float as SympyFloat
 from typing import Dict, Tuple
-import sympy
-import re
+
+from sympy import Function, Expr, Symbol, Tuple as SympyTuple, Integer as SympyInteger, Float as SympyFloat
 
 
 def magic_method_decorator(cls):
@@ -127,7 +130,6 @@ class GLFunction(Function):
     def _should_evalf(cls, arg):
         return -1
 
-    
     def pretty_print(self, tabs=0, tab_str="\t"):
         args = self.args
         n_tabs = tab_str * tabs
@@ -229,7 +231,19 @@ class GLFunction(Function):
 
         new_expr = type(self)(*resolved_args)
         return new_expr
-    
+
+    @classmethod
+    def eval(cls, *args, **kwargs):
+        if cls._signature_1(*args, **kwargs):
+            return None
+        else:
+            class_sig = inspect.signature(cls._signature_1)
+            error_message = f"Invalid arguments for the function. Here is the function signature: {str(class_sig)}"
+            raise TypeError(error_message)
+
+    def _signature_1(self, *args, **kwargs):
+        return True
+
     def __len__(self):
         length = 1
         for arg in self.args:
@@ -238,3 +252,9 @@ class GLFunction(Function):
             else:
                 length += 0
         return length
+
+
+class PrimitiveSpec(GLFunction):
+    @classmethod
+    def eval(cls, prim_type: type, shift: int):
+        return None

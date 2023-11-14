@@ -124,7 +124,6 @@ def sdf3d_infinite_cone(points, angle):
     base_sdf = d * th.where((q[..., 0] * c[..., 1] - q[..., 1] * c[..., 0]) < 0.0, -1, 1)
     return base_sdf
 
-# -------------------------------------------------------------------
 def sdf3d_plane(points, n, h):
     # points shape [batch, num_points, 3]
     # n shape [batch, 3]
@@ -380,7 +379,7 @@ def sdf3d_inexact_ellipsoid(points, r):
     base_sdf = k0 * (k0 - 1.0) / k1
     return base_sdf
 
-def sdf3d_revolvd_vesica(points, a, b, w):
+def sdf3d_revolved_vesica(points, a, b, w):
     # points shape [batch, num_points, 3]
     # a shape [batch, 3]
     # b shape [batch, 3]
@@ -498,7 +497,7 @@ def sdf3d_triangle(points, a, b, c):
     base_sdf = th.sqrt(base_sdf)
     return base_sdf
 
-def sdf3d_quad(points, a, b, c, d):
+def sdf3d_quadrilateral(points, a, b, c, d):
     # points shape [batch, num_points, 3]
     # a shape [batch, 3]
     # b shape [batch, 3]
@@ -531,7 +530,7 @@ def sdf3d_quad(points, a, b, c, d):
     base_sdf = th.sqrt(base_sdf)
     return base_sdf
 
-def sdf3d_no_param_cuboid(points,):
+def sdf3d_no_param_cuboid(points):
     # points shape [batch, num_points, 3]
     points = th.abs(points)
     points -= 0.5
@@ -540,14 +539,14 @@ def sdf3d_no_param_cuboid(points,):
     return base_sdf
 
 
-def sdf3d_no_param_sphere(points,):
+def sdf3d_no_param_sphere(points):
     # points shape [batch, num_points, 3]
     base_sdf = points.norm(dim=-1)
     base_sdf = base_sdf - 0.5
     return base_sdf
 
 
-def sdf3d_no_param_cylinder(points,):
+def sdf3d_no_param_cylinder(points):
     # points shape [batch, num_points, 3]
     r = 0.5
     h = 0.5
@@ -557,7 +556,7 @@ def sdf3d_no_param_cylinder(points,):
     base_sdf = th.amax(vec2, -1) + th.norm(th.clip(vec2, min=0.0) + EPSILON, -1)
     return base_sdf
 
-def sdf3d_inexact_superquadrics(points, skew_vec, epsilon_1, epsilon_2):
+def sdf3d_inexact_super_quadrics(points, skew_vec, epsilon_1, epsilon_2):
     # Reference: https://arxiv.org/pdf/2303.13190.pdf
     # points shape [batch, num_points, 3]
     # skew_vec shape [batch, 3]
@@ -569,7 +568,3 @@ def sdf3d_inexact_superquadrics(points, skew_vec, epsilon_1, epsilon_2):
     out_2 = (points[..., 2]/skew_vec[..., 2]) ** (2/(epsilon_1 + EPSILON))
     base_sdf = 1 - ((out_0 + out_1) ** (epsilon_2/(epsilon_1 + EPSILON)) + out_2) ** (-epsilon_1/2.)
     return base_sdf
-
-## Note: This is more of a occ function...
-def sdf3d_gaussian_kernal(points, ):
-    ...

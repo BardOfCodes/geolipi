@@ -3,12 +3,11 @@ import torch as th
 import torch as th
 import numpy as np
 from .utils import perpendicular_vector
+from .common import EPSILON
 
 # The return of a curve distance should be:
 # 1) The parameter t on the curve (0, 1) which corresponds to the closest point
 # 3) The projection of the point into the plane with normal plane_normal
-
-EPSILON = th.from_numpy(np.array([1e-5])).float().cuda()
 
 def linear_curve_sdf(points, start_point, end_point, line_plane_normal=None):
 
@@ -150,7 +149,7 @@ def quadratic_curve_sdf(points, start_point, end_point, control_point, plane_nor
 
 
 
-def sdf2d_reveolution(points, sdf2d_func, o):
+def sdf2d_revolution(points, sdf2d_func, o):
     q = th.stack([th.norm(points[..., :2], dim=-1) - o, points[..., 2]], dim=-1)
     return sdf2d_func(q)
 

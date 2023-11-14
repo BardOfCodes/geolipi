@@ -4,15 +4,16 @@ from geolipi.symbolic.base_symbolic import GLExpr, GLFunction
 import torch as th
 import numpy as np
 from geolipi.symbolic import Union, Intersection, Difference
-from geolipi.symbolic.utils import resolve_macros
+from geolipi.symbolic.resolve import resolve_macros
 from .sketcher import Sketcher
-from geolipi.symbolic.utils import MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE, COLOR_TYPE
+from geolipi.symbolic.resolve import MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE, COLOR_TYPE
 from .utils import MODIFIER_MAP, PRIMITIVE_MAP
 from .utils import COLOR_MAP
 
 # TODO: A recursiver version
 
-def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher = None, rectify_transform=False):
+def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher = None, 
+                           rectify_transform=False, relaxed_occupancy=False, temperature=0.0):
     
     transforms_stack = [sketcher.get_affine_identity()]
     execution_stack = []
@@ -29,11 +30,15 @@ def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher = None, rectif
             parser_list.append(new_expr)
         elif isinstance(cur_expr, Union):
             n_args = len(cur_expr.args)
+            # chain extensions
             transform = transforms_stack.pop()
             transform_chain = [transform.clone() for x in range(n_args)]
             transforms_stack.extend(transform_chain)
             color = color_stack.pop()
-            color_chain = [Symbol(color.name) for x in range(n_args)]
+            if isinstance(color, th.Tensor):
+                color_chain = [color.clone() for x in range(n_args)]
+            else:
+                color_chain = [color for x in range(n_args)]
             color_stack.extend(color_chain)
             if rectify_transform:
                 scale = scale_stack.pop()
@@ -71,17 +76,21 @@ def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher = None, rectif
                 _ = scale_stack.pop()
             coords = sketcher.get_coords(transform)
             params = cur_expr.args
-            if params:
-                params = params[0]
-                if isinstance(params, Symbol):
-                    params = cur_expr.lookup_table[params]
-            execution = PRIMITIVE_MAP[type(cur_expr)](coords, params)
+            if params in cur_expr.lookup_table:
+                params = cur_expr.lookup_table[params]
+            execution = PRIMITIVE_MAP[type(cur_expr)](coords, *params)
             # At this point use color code to color the primitive
             color = color_stack.pop()
             valid_color = COLOR_MAP[color.name].to(sketcher.device)
             # For differentiable relax, this also has to be relaxed.
-            occ = execution <= 0
+            
+            if relaxed_occupancy:
+                # from the sdf execution compute occupancy
+                occ = relax_sdf(execution, temperature=temperature)
+            else:
+                occ = execution <= 0
             # make it alpha blending: https://en.wikipedia.org/wiki/Alpha_compositing
+            # Amazing source: https://ciechanow.ski/alpha-compositing/
             alpha_a = occ[..., None] * valid_color[0, 3:4]
             color_a = occ.view(occ.shape[0], 1) * valid_color[..., :3]
             alpha_b = colored_canvas[..., 3:4]
@@ -90,9 +99,16 @@ def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher = None, rectif
             color_o = (color_a * alpha_a + color_b * alpha_b * (1 - alpha_a)) / a_o
             colored_canvas = th.cat([color_o, a_o], dim=-1)
         elif isinstance(cur_expr, (Intersection, Difference)):
+            # Technicall you can - as long as you define the operators properly.
+
             raise ValueError(f'Cannot use {type(cur_expr)} for coloring')
         else:
             raise ValueError(f'Unknown expression type {type(cur_expr)}')
 
     return colored_canvas
 
+
+def relax_sdf(execution, temperature):
+    output_tanh = th.tanh(execution * temperature)
+    output_shape = th.nn.functional.sigmoid(-output_tanh * temperature)
+    return output_shape

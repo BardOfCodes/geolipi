@@ -9,10 +9,12 @@ from sympy import Symbol
 import rustworkx as rx
 from geolipi.symbolic import Combinator, Difference, Intersection, Union
 from geolipi.symbolic.base_symbolic import GLExpr
-from geolipi.symbolic.utils import MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE, resolve_macros
+from geolipi.symbolic.types import MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE, TRANSSYM_TYPE
+from geolipi.symbolic.base_symbolic import PrimitiveSpec
+from geolipi.symbolic.resolve import resolve_macros
 from .sketcher import Sketcher
 from .utils import MODIFIER_MAP
-from .utils import INVERTED_MAP, NORMAL_MAP, PrimitiveSpec, ONLY_SIMPLIFY_RULES, ALL_RULES 
+from .utils import INVERTED_MAP, NORMAL_MAP, ONLY_SIMPLIFY_RULES, ALL_RULES 
 
 def expr_prim_count(expression: GLExpr):
     """Get the number of primitives of each kind in the expression."""
@@ -53,10 +55,11 @@ def compile_expr(expression: GLExpr, prim_count_dict: Dict[str, int],
                                               dtype=sketcher.dtype, device=sketcher.device)
         prim_inversions[prim_type] = th.zeros((prim_count),
                                               dtype=th.bool, device=sketcher.device)
-        n_params = len(inspect.signature(prim_type).parameters)
+        n_params = len(inspect.signature(prim_type).parameters) # but each might not be singleton.
         if n_params > 0:
             prim_params[prim_type] = th.zeros((prim_count, n_params),
                                               dtype=sketcher.dtype, device=sketcher.device)
+            
 
     execution_stack = []
     execution_pointer_index = []
@@ -100,20 +103,21 @@ def compile_expr(expression: GLExpr, prim_count_dict: Dict[str, int],
             parser_list.extend(next_to_parse)
             execution_pointer_index.append(len(execution_stack))
         elif isinstance(cur_expr, MOD_TYPE):
-            params = cur_expr.args
+            params = cur_expr.args[1:]
             if params:
-                params = cur_expr.args[1]
-            if isinstance(params, Symbol):
-                if params in cur_expr.lookup_table.keys():
-                    params = cur_expr.lookup_table[params]
-                else:
-                    params = params
+                for ind, param in enumerate(params):
+                    if param in cur_expr.lookup_table:
+                        params[ind] = cur_expr.lookup_table[param]
+            # This is a hack unclear how to deal with other types)
             if rectify_transform:
                 if isinstance(cur_expr, TRANSLATE_TYPE):
                     scale = scale_stack[-1]
-                    params = params / scale
+                    params[0] = params[0] / scale
                 elif isinstance(cur_expr, SCALE_TYPE):
-                    scale_stack[-1] *= params
+                    scale_stack[-1] *= params[0]
+                elif isinstance(cur_expr, TRANSSYM_TYPE):
+                    scale = scale_stack[-1]
+                    params[0] = params[0] / scale
             transform = transforms_stack.pop()
             identity_mat = sketcher.get_affine_identity()
             new_transform = MODIFIER_MAP[type(cur_expr)](identity_mat, params)
