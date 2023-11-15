@@ -60,3 +60,10 @@ class Sketcher:
 
     def get_base_coords(self):
         return self.coords.clone().detach()
+    
+    def get_homogenous_coords(self):
+        coords = self.coords.clone().detach()
+        pad = th.ones_like(coords[:, :1])
+        points_homog = th.cat([coords, pad], dim=1)
+        return points_homog
+        

@@ -1,4 +1,4 @@
-from typing import Tuple, List, Union
+from typing import Tuple, List
 from .base_symbolic import GLExpr, GLFunction
 from inspect import signature
 from .common import param_type_1D, param_type_2D, param_type_3D, sig_check
@@ -40,9 +40,6 @@ class Sphere3D(Primitive3D):
 
 class Box3D(Primitive3D):
     ...
-
-# Depreciate this.
-
 
 class Cuboid3D(Box3D):
     ...

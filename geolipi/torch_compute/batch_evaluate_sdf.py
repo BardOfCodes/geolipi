@@ -2,7 +2,9 @@ from collections import defaultdict
 from typing import List
 import torch as th
 import numpy as np
-from .utils import PRIMITIVE_MAP, PrimitiveSpec, COMBINATOR_MAP, Combinator
+from geolipi.symbolic.base_symbolic import PrimitiveSpec
+from geolipi.symbolic.types import COMBINATOR_TYPE
+from .utils import PRIMITIVE_MAP, COMBINATOR_MAP
 
 def create_evaluation_batches(compiled_expr_list: List[object], convert_to_cuda=True):
     batch_limiter = []
@@ -114,7 +116,7 @@ def execute_compiled_expression(expression, type_wise_primitives, type_wise_draw
     parser_list = [expression]
     while (parser_list):
         cur_expr = parser_list.pop()
-        if isinstance(cur_expr, Combinator):
+        if isinstance(cur_expr, COMBINATOR_TYPE):
             operator_stack.append(type(cur_expr))
             n_args = len(cur_expr.args)
             operator_nargs_stack.append(n_args)

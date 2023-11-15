@@ -13,20 +13,23 @@ class HigherOrderPrimitives3D(GLFunction):
     ...
 # Extrusion of 2D: Used for GeoCode.
 
+class Revolution3D(HigherOrderPrimitives3D):
+    ...
 
 class CurvePrimitive3D(HigherOrderPrimitives3D):
     """Functions for declaring 3D curve primitives."""
     ...
 
-
-class StraightExtrude3D(CurvePrimitive3D):
+class SimpleExtrusion3D(CurvePrimitive3D):
     ...
-
+class LinearExtrude3D(CurvePrimitive3D):
+    ...
 
 class QuadraticBezierExtrude3D(CurvePrimitive3D):
     ...
 
 
+# TODO: the following functions.
 class PolyQuadBezierExtrude3D(CurvePrimitive3D):
     ...
 
@@ -44,7 +47,7 @@ class Primitive1D(GLFunction):
     ...
 
 
-class StraightLineCurve1D(Primitive1D):
+class LinearCurve1D(Primitive1D):
     # y = mx + c
     ...
 

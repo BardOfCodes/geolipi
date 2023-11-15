@@ -2,46 +2,54 @@
 import torch as th
 import torch as th
 import numpy as np
-from .utils import perpendicular_vector
 from .common import EPSILON
 
 # The return of a curve distance should be:
 # 1) The parameter t on the curve (0, 1) which corresponds to the closest point
 # 3) The projection of the point into the plane with normal plane_normal
 
-def linear_curve_sdf(points, start_point, end_point, line_plane_normal=None):
-
-    line_vec = (end_point - start_point)
+def sdf3d_linear_extrude(points, start_point, end_point, theta, line_plane_normal=None):
+    # points shape [batch, num_points, 3]
+    # start_point shape [batch, 3]
+    # end_point shape [batch, 3]
+    # theta shape [batch, 1]
+    prune_batch_dim = False
+    if len(points.shape) == 2:
+        prune_batch_dim = True
+        points = points.unsqueeze(0)
+        
+    line_vec = end_point - start_point
     if line_plane_normal is None:
-        line_plane_normal = perpendicular_vector(line_vec)
-    line_vec_scale = th.norm(line_vec)
+        line_plane_normal = perpendicular_vectors(line_vec)
+    line_vec_scale = th.norm(line_vec, dim=-1, keepdim=True)
     line_vec_normalized = line_vec/(line_vec_scale + EPSILON)
 
-    point_vec = points - start_point
-    projection = th.sum(point_vec * line_vec_normalized, dim=-1)
-    line_param = projection/(line_vec_scale + EPSILON)
+    point_vec = points - start_point[..., None, :]
+    projection = (point_vec * line_vec_normalized[..., None, :]).sum(dim=-1)
+    line_param = projection/(line_vec_scale[...,  :] + EPSILON)
 
-    closest_point = start_point + \
-        projection.unsqueeze(1) * line_vec_normalized.unsqueeze(0)
+    closest_point = start_point[..., None, :] + projection[..., None] * line_vec_normalized[..., None, :]
     disp_from_line = points - closest_point
-    along_plane_component = th.sum(disp_from_line * line_plane_normal, dim=-1)
-    off_plane_comonent = th.norm(
-        disp_from_line - along_plane_component.unsqueeze(1) * line_plane_normal.unsqueeze(0), dim=-1)
+    along_plane_component = th.sum(disp_from_line * line_plane_normal[..., None, :], dim=-1)
+    off_plane_comonent = th.norm(disp_from_line - along_plane_component[..., None] * line_plane_normal[..., None, :], dim=-1)
     # pretend the third component is the height of a cylinder.
-    parameterized_points = th.stack(
-        [along_plane_component, off_plane_comonent, line_param], dim=-1)
+    distance_field_2d = th.stack([along_plane_component, off_plane_comonent], dim=-1)
+    # Now rotate by theta:
+    c = th.cos(theta)
+    s = th.sin(theta)
+    rotation_matrix = th.stack([c, -s, s, c], dim=-1).view(-1, 2, 2)
+    if rotation_matrix.shape[0] == 1:
+        rotation_matrix = rotation_matrix.squeeze(0)
+        distance_field_2d = th.matmul(distance_field_2d, rotation_matrix)
+    else:
+        distance_field_2d = th.bmm(distance_field_2d, rotation_matrix)
+    
+    parameterized_points = th.cat([distance_field_2d, line_param[..., None]], dim=-1)
     return parameterized_points, line_vec_scale
 
-
-def dot2(tensor):
-    return th.sum(tensor * tensor, dim=-1)
-
-
-def cro(a, b):
-    return a[..., 0] * b[..., 1] - a[..., 1] * b[..., 0]
-
 # based on: https://www.shadertoy.com/view/MlKcDD
-def quadratic_curve_sdf(points, start_point, end_point, control_point, plane_normal=None):
+# TODO: Make it batched.
+def sdf3d_quadratic_bezier_extrude(points, start_point, control_point, end_point, theta, plane_normal=None):
 
     # first project to plane:
     if plane_normal is None:
@@ -139,23 +147,65 @@ def quadratic_curve_sdf(points, start_point, end_point, control_point, plane_nor
     solution = th.abs(solution)
     solution = th.sqrt(solution + EPSILON) * th.sign(sign)
 
-    parameterized_distance = th.stack(
-        [solution, rotated_points[..., 2], t], -1)
 
+    distance_field_2d = th.stack([solution, rotated_points[..., 2]], dim=-1)
+    # Now rotate by theta:
+    c = th.cos(theta)
+    s = th.sin(theta)
+    rotation_matrix = th.stack([c, -s, s, c], dim=-1).view(-1, 2, 2)
+    if rotation_matrix.shape[0] == 1:
+        rotation_matrix = rotation_matrix.squeeze(0)
+        distance_field_2d = th.matmul(distance_field_2d, rotation_matrix)
+    else:
+        distance_field_2d = th.bmm(distance_field_2d, rotation_matrix)
+    
+    parameterized_points = th.cat([distance_field_2d, t[..., None]], dim=-1)
+    
     # approximate scale as length of quad curve is expensive to compute
     scale_factor = th.norm(end_point - control_point) + \
         th.norm(control_point - start_point)
-    return parameterized_distance, scale_factor
+    return parameterized_points, scale_factor
+
+def perpendicular_vectors(vec, normalize=True):
+    if th.all(vec == 0):
+        raise ValueError("The input vector should not be the zero vector.")
+    
+    new_vec = th.zeros_like(vec)
+    alternate_vec = th.zeros_like(vec)
+    new_vec[..., 2] = 1
+    #  remove projection of new_vec onto vec from new_vec
+    perp_vec = new_vec - (new_vec * vec).sum(-1, keepdim=True) * vec
+    
+    cond = th.norm(perp_vec, dim=-1, keepdim=True) < EPSILON
+    alternate_vec[..., 1] = 1
+    perp_vec = th.where(cond, alternate_vec, perp_vec)
+    if normalize:
+        perp_vec = perp_vec/(th.norm(perp_vec, dim=-1, keepdim=True) + EPSILON)
+
+    return perp_vec
 
 
+def dot2(tensor):
+    return th.sum(tensor * tensor, dim=-1)
 
-def sdf2d_revolution(points, sdf2d_func, o):
+
+def cro(a, b):
+    return a[..., 0] * b[..., 1] - a[..., 1] * b[..., 0]
+
+
+def sdf3d_revolution(points, sdf2d_func, o):
     q = th.stack([th.norm(points[..., :2], dim=-1) - o, points[..., 2]], dim=-1)
     return sdf2d_func(q)
 
-def sdf2d_extrusion(points, sdf2d_func, h):
+def sdf3d_simple_extrusion(points, sdf2d_func, h):
     d = sdf2d_func(points[..., :2])
     w = th.stack([d, th.abs(points[..., 2]) - h], dim=-1)
     w_2 = th.clamp(th.amin(w, dim=-1), max=0)
     base_sdf = w_2 + th.norm(th.clamp(w, min=0.0))
     return base_sdf
+
+def sdf1d_linear_curve():
+    ...
+
+def sdf1d_quadratic_curve():
+    ...

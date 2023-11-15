@@ -12,7 +12,7 @@ class Transform2D(Modifier2D):
     ...
 
 
-class PositionalTransform2D(Transform2D):
+class PositionalTransform2D(Modifier2D):
     ...
 
 

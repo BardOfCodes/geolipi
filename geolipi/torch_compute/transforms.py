@@ -122,13 +122,13 @@ def position_distort(positions, k):
 def position_twist(positions, k):
     c = th.cos(k*positions[..., 2])
     s = th.sin(k*positions[..., 2])
-    rot = th.stack([c, -s, s, c], dim=-1).reshape(*c.shape, 2, 2).T
-    q = th.cat([th.bmm(positions[..., :2], rot), positions[..., 2]], dim=-1)
+    rot = th.stack([c, -s, s, c], dim=-1).reshape(*c.shape, 2, 2)
+    q = th.cat([th.bmm(rot, positions[..., :2, None])[..., 0], positions[..., 2:]], dim=-1)
     return q
 
 def position_cheap_bend(positions, k):
     c = th.cos(k*positions[..., 0])
     s = th.sin(k*positions[..., 0])
-    m = th.stack([c, -s, s, c], dim=-1).reshape(*c.shape, 2, 2).T
-    q = th.cat([th.bmm(positions[..., :2], m), positions[..., 2]], dim=-1)
+    m = th.stack([c, -s, s, c], dim=-1).reshape(*c.shape, 2, 2)
+    q = th.cat([th.bmm(m, positions[..., :2, None])[..., 0], positions[..., 2:]], dim=-1)
     return q

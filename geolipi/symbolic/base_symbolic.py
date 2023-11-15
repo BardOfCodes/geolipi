@@ -234,7 +234,7 @@ class GLFunction(Function):
 
     @classmethod
     def eval(cls, *args, **kwargs):
-        if cls._signature_1(*args, **kwargs):
+        if cls._signature_1(cls, *args, **kwargs):
             return None
         else:
             class_sig = inspect.signature(cls._signature_1)

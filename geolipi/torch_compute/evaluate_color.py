@@ -6,7 +6,7 @@ import numpy as np
 from geolipi.symbolic import Union, Intersection, Difference
 from geolipi.symbolic.resolve import resolve_macros
 from .sketcher import Sketcher
-from geolipi.symbolic.resolve import MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE, COLOR_TYPE
+from geolipi.symbolic.types import MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE, COLOR_TYPE
 from .utils import MODIFIER_MAP, PRIMITIVE_MAP
 from .utils import COLOR_MAP
 

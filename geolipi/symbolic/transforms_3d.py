@@ -13,7 +13,7 @@ class Transform3D(Modifier3D):
     ...
 
 
-class PositionalTransform3D(Transform3D):
+class PositionalTransform3D(Modifier3D):
     ...
 
 

@@ -1,7 +1,7 @@
 from typing import Tuple, List
 from .base_symbolic import GLExpr, GLFunction
 from .common import param_type_1D, param_type_2D, param_type_3D, sig_check
-from sympy import SympyTuple
+from sympy import Tuple as SympyTuple
 
 
 class Primitive2D(GLFunction):

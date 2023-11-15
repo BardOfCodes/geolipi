@@ -14,12 +14,13 @@ import geolipi.symbolic.primitives_3d as sym_prim3d
 import geolipi.symbolic.primitives_2d as sym_prim2d
 import geolipi.symbolic.transforms_3d as sym_t3d
 import geolipi.symbolic.transforms_2d as sym_t2d 
+import geolipi.symbolic.primitives_higher as sym_higher
 
-
-import sdf_operators as sdf_op_bank
-import sdf_functions_2d as sdf2d_bank
-import sdf_functions_3d as sdf3d_bank
-import transforms as transform_bank
+import geolipi.torch_compute.sdf_operators as sdf_op_bank
+import geolipi.torch_compute.sdf_functions_2d as sdf2d_bank
+import geolipi.torch_compute.sdf_functions_3d as sdf3d_bank
+import geolipi.torch_compute.transforms as transform_bank
+import geolipi.torch_compute.sdf_functions_higher as higher_sdf_bank
 
 COMBINATOR_MAP = {
     sym_comb.Union: sdf_op_bank.sdf_union,
@@ -119,6 +120,13 @@ PRIMITIVE_MAP = {
     sym_prim3d.NoParamSphere3D: sdf3d_bank.sdf3d_no_param_sphere,
     sym_prim3d.NoParamCylinder3D: sdf3d_bank.sdf3d_no_param_cylinder,
     sym_prim3d.InexactSuperQuadrics3D: sdf3d_bank.sdf3d_inexact_super_quadrics,
+    # Higher Order
+    sym_higher.LinearExtrude3D: higher_sdf_bank.sdf3d_linear_extrude,
+    sym_higher.QuadraticBezierExtrude3D: higher_sdf_bank.sdf3d_quadratic_bezier_extrude,
+    sym_higher.Revolution3D: higher_sdf_bank.sdf3d_revolution,
+    sym_higher.SimpleExtrusion3D: higher_sdf_bank.sdf3d_simple_extrusion,
+    sym_higher.LinearCurve1D: higher_sdf_bank.sdf1d_linear_curve,
+    sym_higher.QuadraticCurve1D: higher_sdf_bank.sdf1d_quadratic_curve,
 }
 
 MODIFIER_MAP = {

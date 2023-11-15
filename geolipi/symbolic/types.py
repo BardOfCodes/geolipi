@@ -10,7 +10,7 @@ from sympy import Symbol, Tuple as SympyTuple, Integer as SympyInteger
 
 from .base_symbolic import GLExpr, GLFunction
 from .combinators import *
-from .curves import *
+from .primitives_higher import *
 from .primitives_2d import *
 from .primitives_3d import *
 from .transforms_2d import *
@@ -61,5 +61,5 @@ ROTSYM_TYPE = type_union[RotationSymmetryX3D, RotationSymmetryY3D, RotationSymme
                          AxialRotationSymmetry3D, RotationSymmetry2D]
 
 COLOR_TYPE = type_union[ColorTree2D, ColorTree3D]
-PRIM_TYPE = type_union[Primitive2D, Primitive3D]
+PRIM_TYPE = type_union[Primitive2D, Primitive3D, HigherOrderPrimitives3D]
 HIGERPRIM_TYPE = HigherOrderPrimitives3D
