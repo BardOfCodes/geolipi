@@ -166,19 +166,21 @@ def expr_to_sdf(expression: GLExpr, sketcher: Sketcher = None, rectify_transform
         elif isinstance(cur_expr, MOD_TYPE):
             params = cur_expr.args[1:]
             if params:
+                param_list = []
                 for ind, param in enumerate(params):
                     if param in cur_expr.lookup_table:
-                        params[ind] = cur_expr.lookup_table[param]
+                        cur_param = cur_expr.lookup_table[param]
+                        param_list.append(cur_param)
+                    else:
+                        param_list.append(param)
+                params = param_list
             # This is a hack unclear how to deal with other types)
             if rectify_transform:
-                if isinstance(cur_expr, TRANSLATE_TYPE):
+                if isinstance(cur_expr, (TRANSLATE_TYPE, TRANSSYM_TYPE)):
                     scale = scale_stack[-1]
                     params[0] = params[0] / scale
                 elif isinstance(cur_expr, SCALE_TYPE):
                     scale_stack[-1] *= params[0]
-                elif isinstance(cur_expr, TRANSSYM_TYPE):
-                    scale = scale_stack[-1]
-                    params[0] = params[0] / scale
 
             transform = transforms_stack.pop()
             identity_mat = sketcher.get_affine_identity()
@@ -194,9 +196,14 @@ def expr_to_sdf(expression: GLExpr, sketcher: Sketcher = None, rectify_transform
             coords = sketcher.get_coords(transform)
             params = cur_expr.args
             if params:
+                param_list = []
                 for ind, param in enumerate(params):
                     if param in cur_expr.lookup_table:
-                        params[ind] = cur_expr.lookup_table[param]
+                        cur_param = cur_expr.lookup_table[param]
+                        param_list.append(cur_param)
+                    else:
+                        param_list.append(param)
+                params = param_list
             execution = PRIMITIVE_MAP[type(cur_expr)](coords, *params)
             execution_stack.append(execution)
         else:

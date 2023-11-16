@@ -2,7 +2,6 @@ from typing import Tuple, List
 
 import sympy
 from .base_symbolic import GLExpr, GLFunction
-from .common import expr_type, param_type_1D, param_type_2D, param_type_3D, param_type_4D, sig_check
 
 
 class Modifier3D(GLFunction):

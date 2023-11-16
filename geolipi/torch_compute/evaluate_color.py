@@ -81,7 +81,10 @@ def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher = None,
             execution = PRIMITIVE_MAP[type(cur_expr)](coords, *params)
             # At this point use color code to color the primitive
             color = color_stack.pop()
-            valid_color = COLOR_MAP[color.name].to(sketcher.device)
+            if isinstance(color, Symbol):
+                valid_color = COLOR_MAP[color.name].to(sketcher.device)
+            else:
+                valid_color = color
             # For differentiable relax, this also has to be relaxed.
             
             if relaxed_occupancy:

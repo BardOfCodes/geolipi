@@ -67,3 +67,7 @@ class Sketcher:
         points_homog = th.cat([coords, pad], dim=1)
         return points_homog
         
+    def empty_sdf(self):
+        coords = self.get_base_coords()
+        sdf = th.norm(coords, dim=-1)
+        return sdf

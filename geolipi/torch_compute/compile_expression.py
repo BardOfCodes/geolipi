@@ -35,10 +35,10 @@ def expr_prim_count(expression: GLExpr):
     return prim_count_dict
 
 
-def compile_expr(expression: GLExpr, prim_count_dict: Dict[str, int],
-                 sketcher: Sketcher = None, rectify_transform=False):
+def compile_expr(expression: GLExpr, sketcher: Sketcher = None, rectify_transform=True):
     """Gather & Compute the transforms, Gather the primitive_params, Remove Difference, and Resolve Complement,"""
 
+    prim_count_dict = expr_prim_count(expression)
     # trasforms
     transforms_stack = [sketcher.get_affine_identity()]
     # inversions
@@ -55,7 +55,9 @@ def compile_expr(expression: GLExpr, prim_count_dict: Dict[str, int],
                                               dtype=sketcher.dtype, device=sketcher.device)
         prim_inversions[prim_type] = th.zeros((prim_count),
                                               dtype=th.bool, device=sketcher.device)
-        n_params = len(inspect.signature(prim_type).parameters) # but each might not be singleton.
+        # Todo: Handle parameterized Primitives
+        # Add type annotation to functions.
+        n_params = 0# len(inspect.signature(prim_type).parameters) # but each might not be singleton.
         if n_params > 0:
             prim_params[prim_type] = th.zeros((prim_count, n_params),
                                               dtype=sketcher.dtype, device=sketcher.device)
@@ -65,6 +67,7 @@ def compile_expr(expression: GLExpr, prim_count_dict: Dict[str, int],
     execution_pointer_index = []
     operator_stack = []
     operator_nargs_stack = []
+    operator_params_stack = []
     if rectify_transform:
         scale_stack = [sketcher.get_scale_identity()]
 
@@ -76,7 +79,13 @@ def compile_expr(expression: GLExpr, prim_count_dict: Dict[str, int],
             raise ValueError('Direct use of Macros not supported in compile_expr. \
                 Resolve with resolve_macros first')
         elif isinstance(cur_expr, Combinator):
-            n_args = len(cur_expr.args)
+            tree_branches, param_list = [], []
+            for arg in cur_expr.args:
+                if arg in cur_expr.lookup_table:
+                    param_list.append(cur_expr.lookup_table[arg])
+                else:
+                    tree_branches.append(arg)
+            n_args = len(tree_branches)
             transform = transforms_stack.pop()
             transform_chain = [transform.clone() for x in range(n_args)]
             transforms_stack.extend(transform_chain)
@@ -98,52 +107,55 @@ def compile_expr(expression: GLExpr, prim_count_dict: Dict[str, int],
                 current_symbol = NORMAL_MAP[type(cur_expr)]
             operator_stack.append(current_symbol)
             operator_nargs_stack.append(n_args)
-
-            next_to_parse = cur_expr.args[::-1]
+            operator_params_stack.append(param_list)
+            next_to_parse = tree_branches[::-1]
             parser_list.extend(next_to_parse)
             execution_pointer_index.append(len(execution_stack))
         elif isinstance(cur_expr, MOD_TYPE):
             params = cur_expr.args[1:]
+            next_to_parse = cur_expr.args[0]
             if params:
+                param_list = []
                 for ind, param in enumerate(params):
-                    if param in cur_expr.lookup_table:
-                        params[ind] = cur_expr.lookup_table[param]
+                    if param in expression.lookup_table:
+                        cur_param = expression.lookup_table[param]
+                        param_list.append(cur_param)
+                    else:
+                        param_list.append(param)
+                params = param_list
             # This is a hack unclear how to deal with other types)
             if rectify_transform:
-                if isinstance(cur_expr, TRANSLATE_TYPE):
+                if isinstance(cur_expr, (TRANSLATE_TYPE, TRANSSYM_TYPE)):
                     scale = scale_stack[-1]
                     params[0] = params[0] / scale
                 elif isinstance(cur_expr, SCALE_TYPE):
                     scale_stack[-1] *= params[0]
-                elif isinstance(cur_expr, TRANSSYM_TYPE):
-                    scale = scale_stack[-1]
-                    params[0] = params[0] / scale
             transform = transforms_stack.pop()
             identity_mat = sketcher.get_affine_identity()
-            new_transform = MODIFIER_MAP[type(cur_expr)](identity_mat, params)
+            new_transform = MODIFIER_MAP[type(cur_expr)](identity_mat, *params)
             transform = th.matmul(new_transform, transform)
             transforms_stack.append(transform)
             inversion_stack.append(inversion_mode)
-            next_to_parse = cur_expr.args[0]
             parser_list.append(next_to_parse)
         elif isinstance(cur_expr, PRIM_TYPE):
             transform = transforms_stack.pop()
-            _ = scale_stack.pop()
+            if rectify_transform:
+                _ = scale_stack.pop()
             prim_type = type(cur_expr)
             prim_id = prim_counter[prim_type]
             prim_transforms[prim_type][prim_id] = transform
             if inversion_mode:
                 prim_inversions[prim_type][prim_id] = True
-            params = cur_expr.args
-            if params:
-                if isinstance(params, Symbol):
-                    params = cur_expr.lookup_table[params]
-                prim_params[prim_type][prim_id] = params
+            params = []
+            # params = cur_expr.args
+            # if params:
+            #     if isinstance(params, Symbol):
+            #         params = cur_expr.lookup_table[params]
+            #     prim_params[prim_type][prim_id] = params
 
             prim_spec = PrimitiveSpec(prim_type, prim_id)
             execution_stack.append(prim_spec)
             prim_counter[prim_type] += 1
-
         else:
             raise ValueError(f'Unknown expression type {type(cur_expr)}')
 
@@ -151,8 +163,9 @@ def compile_expr(expression: GLExpr, prim_count_dict: Dict[str, int],
             n_args = operator_nargs_stack.pop()
             operator = operator_stack.pop()
             _ = execution_pointer_index.pop()
+            params = operator_params_stack.pop()
             args = execution_stack[-n_args:]
-            new_canvas = operator(*args)
+            new_canvas = operator(*args, *params)
             execution_stack = execution_stack[:-n_args] + [new_canvas]
 
     expression = execution_stack[0]
@@ -300,13 +313,12 @@ def resolve_rule(graph, resolve_rule):
 
 def create_compiled_expr(expression, sketcher, resolve_to_dnf=False):
     expression = resolve_macros(expression, device=sketcher.device)
-    prim_count = expr_prim_count(expression)
-    compiled_expr = compile_expr(expression, prim_count, sketcher=sketcher, rectify_transform=True)
+    compiled_expr = compile_expr(expression, sketcher=sketcher, rectify_transform=True)
     expr = compiled_expr[0]
     if resolve_to_dnf:
         expr = expr_to_dnf(expr)
-    transforms = {x:y.detach().cpu() for x, y in compiled_expr[1].items()}
-    inversions = {x:y.detach().cpu() for x, y in compiled_expr[2].items()}
-    params = {x:y.detach().cpu() for x, y in compiled_expr[3].items()}
+    transforms = {x:y.cpu() for x, y in compiled_expr[1].items()}
+    inversions = {x:y.cpu() for x, y in compiled_expr[2].items()}
+    params = {x:y.cpu() for x, y in compiled_expr[3].items()}
     
     return expr, transforms, inversions, params

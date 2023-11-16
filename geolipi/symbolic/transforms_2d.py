@@ -1,8 +1,6 @@
 from typing import Tuple, List
 from .base_symbolic import GLExpr, GLFunction
 import sympy
-from .common import expr_type, param_type_1D, param_type_2D, param_type_3D, sig_check
-
 
 class Modifier2D(GLFunction):
     ...

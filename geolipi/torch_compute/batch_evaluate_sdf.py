@@ -80,9 +80,9 @@ def batch_evaluate(expr_set: List[object], sketcher):
         draw_func = PRIMITIVE_MAP[draw_type]
         if draw_type in prim_params.keys():
             params = prim_params[draw_type]
-            primitives = draw_func(rotated_points, params)
+            primitives = draw_func(rotated_points, *params)
         else:
-            primitives = draw_func(rotated_points, None)
+            primitives = draw_func(rotated_points)
             # For some primitives make this a expansion of fixed size.
         # inversion = th.stack(collapsed_inversions[draw_type], 0).unsqueeze(1)
         inversion = prim_inversions[draw_type].unsqueeze(1)
@@ -95,12 +95,16 @@ def batch_evaluate(expr_set: List[object], sketcher):
     type_wise_draw_count = defaultdict(int)
     all_sdfs = []
     for ind, expression in enumerate(expressions):
-        sdf = execute_compiled_expression(
-            expression, type_wise_primitives, type_wise_draw_count)
+        if expression is None:
+            sdf = sketcher.empty_sdf()
+        else:
+            sdf = execute_compiled_expression(
+                expression, type_wise_primitives, type_wise_draw_count)
         all_sdfs.append(sdf)
         draw_specs = batch_limiter[ind]
         for draw_type in type_wise_draw_count.keys():
             type_wise_draw_count[draw_type] += draw_specs[draw_type]
+        
     if all_sdfs:
         all_sdfs = th.stack(all_sdfs, 0)
 
