@@ -13,22 +13,25 @@ from .utils import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP, COLOR_FUNCTIONS
 from .common import EPSILON
 from .utils import COLOR_MAP
 from geolipi.symbolic import Union, Intersection, Difference
-from .color_functions import source_over
+from .color_functions import source_over_seq
 
 
 def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize=True, 
                           rectify_transform=True, coords=None, tracked_scale=None,
-                          color_mode=True, relaxed_occupancy=True, 
-                          destination_canvas=None, relax_temperature=0.0):
+                          color_mode=True,
+                          relaxed_occupancy=False, relax_temperature=0.0):
     if initialize:
         coords = sketcher.get_homogenous_coords()
-        if rectify_transform:
-            if tracked_scale is None:
-                tracked_scale = sketcher.get_scale_identity()
-        if color_mode:
-            destination_canvas = sketcher.get_color_canvas()
+        tracked_scale = sketcher.get_scale_identity()
 
-    if isinstance(expression, MOD_TYPE):
+    if isinstance(expression, MACRO_TYPE):
+        resolved_expr = resolve_macros(expression, device=sketcher.device)
+        return recursive_evaluate(resolved_expr, sketcher, secondary_sketcher=secondary_sketcher,
+                                     initialize=False, rectify_transform=rectify_transform,
+                                     coords=coords, tracked_scale=tracked_scale,
+                                        relaxed_occupancy=relaxed_occupancy,
+                                         relax_temperature=relax_temperature)
+    elif isinstance(expression, MOD_TYPE):
         sub_expr = expression.args[0]
         params = expression.args[1:]
         params = parse_tensor_from_expr(expression, params)
@@ -118,24 +121,30 @@ def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize
                                             relaxed_occupancy=relaxed_occupancy,
                                          relax_temperature=relax_temperature)
             sdf_list.append(cur_sdf)
-        new_sdf = COMBINATOR_MAP[type(expression)](*sdf_list, *param_list)
+        channel_count = sdf_list[0].shape[-1]
+        if channel_count == 4:
+            new_sdf = source_over_seq(sdf_list)
+        else:
+            new_sdf = COMBINATOR_MAP[type(expression)](*sdf_list, *param_list)
         return new_sdf
 
     elif isinstance(expression, SVG_COMBINATORS):
         source_expr = expression.args[0]
-        source_canvas = recursive_evaluate(source_expr, sketcher, secondary_sketcher=secondary_sketcher,
+        source_canvas = recursive_evaluate(source_expr, sketcher, 
+                                           secondary_sketcher=secondary_sketcher,
                                         initialize=False,
                                         rectify_transform=rectify_transform,
-                                        coords=coords,
-                                        tracked_scale=tracked_scale,
+                                        coords=coords.clone(),
+                                        tracked_scale=tracked_scale.clone(),
                                         relaxed_occupancy=relaxed_occupancy,
                                          relax_temperature=relax_temperature)
         destination_expr = expression.args[1]
-        destination_canvas = recursive_evaluate(destination_expr, sketcher, secondary_sketcher=secondary_sketcher,
+        destination_canvas = recursive_evaluate(destination_expr, sketcher, 
+                                                secondary_sketcher=secondary_sketcher,
                                         initialize=False,
                                         rectify_transform=rectify_transform,
-                                        coords=coords,
-                                        tracked_scale=tracked_scale,
+                                        coords=coords.clone(),
+                                        tracked_scale=tracked_scale.clone(),
                                         relaxed_occupancy=relaxed_occupancy,
                                          relax_temperature=relax_temperature)
         output_canvas = COLOR_FUNCTIONS[type(expression)](source_canvas, destination_canvas)
@@ -182,13 +191,6 @@ def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize
         colored_canvas = COLOR_FUNCTIONS[type(expression)](colored_canvas, color)
         return colored_canvas
     
-    elif isinstance(expression, MACRO_TYPE):
-        resolved_expr = resolve_macros(expression, device=sketcher.device)
-        return recursive_evaluate(resolved_expr, sketcher, secondary_sketcher=secondary_sketcher,
-                                     initialize=False, rectify_transform=rectify_transform,
-                                     coords=coords, tracked_scale=tracked_scale,
-                                        relaxed_occupancy=relaxed_occupancy,
-                                         relax_temperature=relax_temperature)
 
 def parse_tensor_from_expr(expression, params):
     if params:
@@ -303,10 +305,6 @@ def expr_to_sdf(expression: GLExpr, sketcher: Sketcher = None, rectify_transform
     sdf = execution_stack[0]
     return sdf
 
-
-
-
-# TODO: A recursiver version
 def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher = None, 
                            rectify_transform=False, relaxed_occupancy=False, temperature=0.0):
     
@@ -387,7 +385,6 @@ def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher = None,
                 occ = relaxed_occupancy(execution, temperature=temperature)
             else:
                 occ = execution <= 0
-            # make it alpha blending: https://en.wikipedia.org/wiki/Alpha_compositing
             # Amazing source: https://ciechanow.ski/alpha-compositing/
             alpha_a = occ[..., None] * valid_color[0, 3:4]
             color_a = occ.view(occ.shape[0], 1) * valid_color[..., :3]

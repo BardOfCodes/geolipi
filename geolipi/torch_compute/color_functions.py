@@ -1,5 +1,6 @@
 import torch as th
 # Color fetch
+from .common import EPSILON
 
 # Use premultiplied? -> optimizing alpha seperately from color.
 
@@ -44,7 +45,9 @@ def svg_xor(source, destination):
     
 def get_unmultiplied_form(result):
     alpha_r = result[..., 3:4]
-    color_r = result[..., :3] / alpha_r
+    alpha_r = th.clamp(alpha_r, EPSILON, 1)
+    color_r = result[..., :3] / (alpha_r + EPSILON)
+    color_r = th.clamp(color_r, 0, 1)
     output = th.cat([color_r, alpha_r], dim=-1)
     return output
 
@@ -59,6 +62,11 @@ def get_premultiplied_form(source, destination):
     premult_d = th.cat([premult_d, alpha_d], dim=-1)
     return premult_s, premult_d
 
+def source_over_seq(sequence):
+    result = sequence[0]
+    for i in range(1, len(sequence)):
+        result = source_over(sequence[i], result)
+    return result
 
 def source_in(source, destination):
     return destination_in(destination, source)
