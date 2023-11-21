@@ -93,10 +93,6 @@ class AxialScaleSymmetry2D(ScaleSymmetry2D):
     ...
 
 
-class ColorTree2D(SDFModifier2D):
-    ...
-
-
 class Dilate2D(SDFModifier2D):
     ...
 

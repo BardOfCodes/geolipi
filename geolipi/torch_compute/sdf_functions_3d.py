@@ -68,7 +68,7 @@ def sdf3d_capped_torus(points, angle, ra, rb):
     term_2 = th.norm(points[..., :2], dim=-1)
     k = th.where(sc[..., 1] * points[..., 0] > sc[..., 0] * points[..., 1], term_1, term_2)
     term = (points * points).sum(-1) + ra ** 2 - 2 * ra * k
-    base_sdf = th.sqrt(term + EPSILON) - rb
+    base_sdf = th.sqrt(th.clamp(term , min=EPSILON)) - rb
     return base_sdf
 
 def sdf3d_link(points, le, r1, r2):
@@ -95,14 +95,16 @@ def sdf3d_cone(points, angle, h):
     # angle shape [batch, 1]
     # h shape [batch, 1]
     c = th.stack([th.cos(angle), th.sin(angle)], dim=-1)
+    c = th.where(c == 0, EPSILON, c)
     q = h[..., None, :] * th.stack([c[..., 0] / c[..., 1], -th.ones_like(c[..., 0])], dim=-1)
     w = th.stack([th.norm(points[..., :2], dim=-1), points[..., 2]], dim=-1)
+    q = th.where(q==0, EPSILON, q)
     a = w - q * th.clamp((w * q).sum(-1, keepdim=True) / (q * q).sum(-1, keepdim=True), min=0.0, max=1.0)
     b = w - q * th.stack([th.clamp(w[..., 0] / q[..., 0], min=0.0, max=1.0), th.ones_like(w[..., 0])], dim=-1)
     k = th.sign(q[..., 1])
     d = th.minimum((a * a).sum(-1), (b * b).sum(-1))
     s = th.maximum(k * (w[..., 0] * q[..., 1] - w[..., 1] * q[..., 0]), k * (w[..., 1] - q[..., 1]))
-    base_sdf = th.sqrt(d) * th.sign(s)
+    base_sdf = th.sqrt(d + EPSILON) * th.sign(s)
     return base_sdf
 
 def sdf3d_inexact_cone(points, angle, h):
@@ -128,7 +130,7 @@ def sdf3d_plane(points, n, h):
     # points shape [batch, num_points, 3]
     # n shape [batch, 3]
     # h shape [batch, 1]
-    n = n / th.norm(n + EPSILON, dim=-1, keepdim=True)
+    n = n / (th.norm(n, dim=-1, keepdim=True) + EPSILON)
     base_sdf = (points * n).sum(-1) + h
     return base_sdf
 
@@ -167,7 +169,7 @@ def sdf3d_capsule(points,  a, b, r):
     # r shape [batch, 1]
     pa = points - a[..., None, :]
     ba = b[..., None, :] - a[..., None, :]
-    h = th.clamp((pa * ba).sum(-1, keepdim=True) / (ba * ba).sum(-1, keepdim=True), min=0.0, max=1.0)
+    h = th.clamp((pa * ba).sum(-1, keepdim=True) / ((ba * ba).sum(-1, keepdim=True), EPSILON), min=0.0, max=1.0)
     sdf = th.norm(pa - ba * h, dim=-1) - r
     return sdf
 
@@ -213,7 +215,7 @@ def sdf3d_arbitrary_capped_cylinder(points, a, b, r):
     term_1 = -th.minimum(x2, y2)
     term_2 = th.where(x > 0.0, x2, 0.0) + th.where(y > 0.0, y2, 0.0)
     d = th.where(cond, term_1, term_2)
-    base_sdf = th.sign(d) * th.sqrt(th.abs(d)) / baba
+    base_sdf = th.sign(d) * th.sqrt(th.abs(d) + EPSILON) / (baba + EPSILON)
     return base_sdf
 
 def sdf3d_rounded_cylinder(points, ra, rb, h):
@@ -236,9 +238,9 @@ def sdf3d_capped_cone(points, r1, r2, h):
     k1 = th.stack([r2, h], dim=-1)
     k2 = th.stack([r2 - r1, 2 * h], dim=-1)
     ca = th.stack([q[..., 0] - th.clamp(q[..., 0], min=th.where(q[..., 1] < 0.0, r1, r2)), th.abs(q[..., 1]) - h], dim=-1)
-    cb = q - k1 + k2 * th.clamp(((k1 - q) * k2).sum(-1, keepdim=True) / (k2 * k2).sum(-1, keepdim=True), min=0.0, max=1.0)
+    cb = q - k1 + k2 * th.clamp(((k1 - q) * k2).sum(-1, keepdim=True) / ((k2 * k2).sum(-1, keepdim=True) + EPSILON), min=0.0, max=1.0)
     s = th.where((cb[..., 0] < 0.0) & (ca[..., 1] < 0.0), -1.0, 1.0)
-    base_sdf = s * th.sqrt(th.minimum((ca * ca).sum(-1), (cb * cb).sum(-1)))
+    base_sdf = s * th.sqrt(th.minimum((ca * ca).sum(-1), (cb * cb).sum(-1)) + EPSILON)
     return base_sdf
 
 def sdf3d_arbitrary_capped_cone(points, a, b, ra, rb):
@@ -254,16 +256,16 @@ def sdf3d_arbitrary_capped_cone(points, a, b, ra, rb):
     baba = (ba*ba).sum(-1, keepdim=True)[..., None, :]
     pa = points - a[..., None, :]
     papa = ((pa * pa)).sum(-1, keepdim=True)
-    paba = (pa * ba[..., None, :]).sum(-1, keepdim=True) / baba
-    x = th.sqrt(papa - paba * paba * baba)
+    paba = (pa * ba[..., None, :]).sum(-1, keepdim=True) / (baba + EPSILON)
+    x = th.sqrt(th.clamp(papa - paba * paba * baba, min=EPSILON))
     cax = th.clamp(x - th.where(paba < 0.5, ra, rb), min=0.0)
     cay = th.abs(paba - 0.5) - 0.5
     k = rba * rba + baba
-    f = th.clamp((rba * (x - ra) + paba * baba) / k, min=0.0, max=1.0)
+    f = th.clamp((rba * (x - ra) + paba * baba) / (k + EPSILON), min=0.0, max=1.0)
     cbx = x - ra - f * rba
     cby = paba - f
     s = th.where((cbx < 0.0) & (cay < 0.0), -1.0, 1.0)
-    base_sdf = s * th.sqrt(th.minimum(cax * cax + cay * cay * baba, cbx * cbx + cby * cby * baba))
+    base_sdf = s * th.sqrt(th.minimum(cax * cax + cay * cay * baba, cbx * cbx + cby * cby * baba) + EPSILON)
     return base_sdf
 
 def sdf3d_solid_angle(points, angle, ra):
@@ -281,7 +283,7 @@ def sdf3d_cut_sphere(points, r, h):
     # points shape [batch, num_points, 3]
     # r shape [batch, 1]
     # h shape [batch, 1]
-    w = th.sqrt(r * r - h * h)
+    w = th.sqrt(th.clamp(r * r - h * h, min=EPSILON))
     q = th.stack([th.norm(points[..., :2], dim=-1), points[..., 2]], dim=-1)
     term_1 = (h - r) * q[..., 0] * q[..., 0] + w * w * (h + r - 2.0 * q[..., 1])
     term_2 = h * q[..., 0] - w * q[..., 1]
@@ -297,7 +299,7 @@ def sdf3d_cut_hollow_sphere(points, r, h, t):
     # r shape [batch, 1]
     # h shape [batch, 1]
     # t shape [batch, 1]
-    w = th.sqrt(r * r - h * h)
+    w = th.sqrt(th.clamp(r * r - h * h, min=EPSILON))
     q = th.stack([th.norm(points[..., :2], dim=-1), points[..., 2]], dim=-1)
     term_1 = th.norm(q - th.stack([w, h], dim=-1), dim=-1)
     term_2 = th.abs(th.norm(q, dim=-1) - r)
@@ -309,8 +311,9 @@ def sdf3d_death_star(points, ra, rb , d):
     # ra shape [batch, 1]
     # rb shape [batch, 1]
     # d shape [batch, 1]
+    d = th.where(d==0, EPSILON, d)
     a = (ra * ra - rb * rb + d * d) / (2.0 * d)
-    b = th.sqrt(th.clamp(ra * ra - a * a, min=0.0))
+    b = th.sqrt(th.clamp(ra * ra - a * a, min=EPSILON))
     p = th.stack([points[..., 0], th.norm(points[..., 1:], dim=-1)], dim=-1)
     cond = p[..., 0] * b - p[..., 1] * a > d * th.clamp(b - p[..., 1], min=0.0)
     term_1 = th.norm(p - th.stack([a, b], dim=-1), dim=-1)
@@ -325,6 +328,7 @@ def sdf3d_round_cone(points, r1, r2, h):
     # r1 shape [batch, 1]
     # r2 shape [batch, 1]
     # h shape [batch, 1]
+    h = th.where(h==0, EPSILON, h)
     b = (r1 - r2) / h
     a = th.sqrt(th.clamp(1.0 - b * b, min=EPSILON))
     q = th.stack([th.norm(points[..., :2], dim=-1), points[..., 2]], dim=-1)
@@ -364,15 +368,17 @@ def sdf3d_arbitrary_round_cone(points, a, b, r1, r2):
     k = th.sign(rr) * rr * rr * x2
     cond_1 = th.sign(z) * a2 * z2 > k
     cond_2 = th.sign(y) * a2 * y2 < k
-    term_1 = th.sqrt(x2 + z2) * il2 - r2
-    term_2 = th.sqrt(x2 + y2) * il2 - r1
-    term_3 = (th.sqrt(x2 * a2 * il2) + y * rr) * il2 - r1
+    term_1 = th.sqrt(th.clamp(x2 + z2, min=EPSILON)) * il2 - r2
+    term_2 = th.sqrt(th.clamp(x2 + y2, min=EPSILON)) * il2 - r1
+    term_3 = (th.sqrt(th.clamp(x2 * a2 * il2, min=EPSILON)) + y * rr) * il2 - r1
     base_sdf = th.where(cond_1, term_1, th.where(cond_2, term_2, term_3))
     return base_sdf
 
 def sdf3d_inexact_ellipsoid(points, r):
     # points shape [batch, num_points, 3]
     # r shape [batch, 3]
+    
+    r = th.where(r==0, EPSILON, r)
     r = r[..., None, :]
     k0 = th.norm(points / r, dim=-1)
     k1 = th.norm(points / (r * r), dim=-1)
@@ -464,7 +470,7 @@ def sdf3d_pyramid(points, h):
     b = m2 * (q[..., 0] + 0.5 * t) * (q[..., 0] + 0.5 * t) + (q[..., 1] - m2 * t) * (q[..., 1] - m2 * t)
     cond = th.minimum(q[..., 1], -q[..., 0] * m2 - 0.5 * q[..., 1]) > 0.0
     d2 = th.where(cond, 0.0, th.minimum(a, b))
-    base_sdf = th.sqrt((d2 + q[..., 2] * q[..., 2]) / m2) * th.sign(th.maximum(q[..., 2], -points[..., 2]))
+    base_sdf = th.sqrt(th.clamp((d2 + q[..., 2] * q[..., 2]) / m2, min=EPSILON)) * th.sign(th.maximum(q[..., 2], -points[..., 2]))
     return base_sdf
 
 def sdf3d_triangle(points, a, b, c):
@@ -494,7 +500,7 @@ def sdf3d_triangle(points, a, b, c):
     out = (out * out).sum(-1)
     else_sdf = (nor[..., None, :] * pa).sum(-1) **2 / ((nor * nor).sum(-1, keepdim=True) + EPSILON)
     base_sdf = th.where(cond, out, else_sdf)
-    base_sdf = th.sqrt(base_sdf)
+    base_sdf = th.sqrt(th.clamp(base_sdf, min=EPSILON))
     return base_sdf
 
 def sdf3d_quadrilateral(points, a, b, c, d):
@@ -527,7 +533,7 @@ def sdf3d_quadrilateral(points, a, b, c, d):
     out = (out * out).sum(-1)
     else_sdf = (nor[..., None, :] * pa).sum(-1) **2 / ((nor * nor).sum(-1, keepdim=True) + EPSILON)
     base_sdf = th.where(cond, out, else_sdf)
-    base_sdf = th.sqrt(base_sdf)
+    base_sdf = th.sqrt(th.clamp(base_sdf, min=EPSILON))
     return base_sdf
 
 def sdf3d_no_param_cuboid(points):

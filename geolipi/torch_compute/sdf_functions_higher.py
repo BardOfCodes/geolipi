@@ -1,9 +1,8 @@
 
 import torch as th
-import torch as th
 import numpy as np
 from .common import EPSILON
-
+from .sdf_functions_2d import SQRT_3
 # The return of a curve distance should be:
 # 1) The parameter t on the curve (0, 1) which corresponds to the closest point
 # 3) The projection of the point into the plane with normal plane_normal
@@ -13,9 +12,7 @@ def sdf3d_linear_extrude(points, start_point, end_point, theta, line_plane_norma
     # start_point shape [batch, 3]
     # end_point shape [batch, 3]
     # theta shape [batch, 1]
-    prune_batch_dim = False
     if len(points.shape) == 2:
-        prune_batch_dim = True
         points = points.unsqueeze(0)
         
     line_vec = end_point - start_point
@@ -48,27 +45,40 @@ def sdf3d_linear_extrude(points, start_point, end_point, theta, line_plane_norma
     return parameterized_points, line_vec_scale
 
 # based on: https://www.shadertoy.com/view/MlKcDD
-# TODO: Make it batched.
+# TODO: Still buggy.
 def sdf3d_quadratic_bezier_extrude(points, start_point, control_point, end_point, theta, plane_normal=None):
 
+    # stack into a batch
+    # points = th.stack([points, points], dim=0)
+    # start_point = th.stack([start_point, start_point], dim=0)
+    # control_point = th.stack([control_point, control_point], dim=0)
+    # end_point = th.stack([end_point, end_point], dim=0)
+    # theta = th.stack([theta, theta], dim=0)
+    # if len(points.shape) == 2:
+    #     points = points.unsqueeze(0)
     # first project to plane:
     if plane_normal is None:
         # find normal with the three points:
         vec1 = control_point - start_point
         vec2 = end_point - control_point
-        plane_normal = th.cross(vec1, vec2)
+        plane_normal = th.cross(vec1, vec2, dim=-1)
+        plane_norms = th.norm(plane_normal, dim=-1, keepdim=True)
+        z_axis_original = th.zeros_like(plane_normal)
+        z_axis_original[..., 2] = 1.0
+        plane_normal = th.where(plane_norms < EPSILON, z_axis_original, plane_normal)
+        
 
-    z_axis = plane_normal/(th.norm(plane_normal) + EPSILON)
+    z_axis = plane_normal/(th.norm(plane_normal, dim=-1, keepdim=True) + EPSILON)
     x_axis = end_point - start_point
-    x_axis = x_axis/(th.norm(x_axis) + EPSILON)
-    y_axis = th.cross(z_axis, x_axis)
-    y_axis = y_axis/(th.norm(y_axis) + EPSILON)
+    x_axis = x_axis/(th.norm(x_axis, dim=-1, keepdim=True) + EPSILON)
+    y_axis = th.cross(z_axis, x_axis, dim=-1)
+    y_axis = y_axis/(th.norm(y_axis, dim=-1, keepdim=True) + EPSILON)
     rotation_matrix = th.stack([y_axis, x_axis, z_axis], dim=-1)
 
     rotated_points = th.matmul(points, rotation_matrix)
-    quad_points = th.stack([start_point, control_point, end_point], dim=0)
+    quad_points = th.stack([start_point, control_point, end_point], dim=-1).swapaxes(-2, -1)
 
-    shift = th.dot(control_point, z_axis)
+    shift = (control_point * z_axis).sum(-1, keepdim=True)
     rotated_quad_points = th.matmul(quad_points, rotation_matrix)
     rotated_points[..., 2] -= shift
 
@@ -76,9 +86,9 @@ def sdf3d_quadratic_bezier_extrude(points, start_point, control_point, end_point
     quad_proj = rotated_quad_points[..., :2]
 
     # Solve with cordano's method for nearest points:
-    A = quad_proj[0:1]
-    B = quad_proj[1:2]
-    C = quad_proj[2:3]
+    A = quad_proj[..., 0:1, :]
+    B = quad_proj[..., 1:2, :]
+    C = quad_proj[..., 2:3, :]
     pos = xy_points
     a = B - A
     b = A - 2.0 * B + C
@@ -93,7 +103,9 @@ def sdf3d_quadratic_bezier_extrude(points, start_point, control_point, end_point
     kz = kk * th.sum(d * a, dim=-1)
 
     p = ky - kx * kx
+    p = th.where(th.abs(p) < EPSILON, EPSILON * th.sign(p), p)
     q = kx * (2.0 * kx * kx - 3.0 * ky) + kz
+    q = th.where(th.abs(q) < EPSILON, EPSILON * th.sign(q), q)
     p3 = p * p * p
     q2 = q * q
     original_h = q2 + 4.0 * p3
@@ -103,29 +115,28 @@ def sdf3d_quadratic_bezier_extrude(points, start_point, control_point, end_point
     h = original_h.clone()
     h = th.abs(h)
     h = th.sqrt(h + EPSILON)
-    x_1 = (th.stack([h, -h], -1) - q.unsqueeze(1))/2
+    x_1 = (th.stack([h, -h], -1) - q.unsqueeze(-1))/2
 
-    k = (1 - p3/(q2 + EPSILON)) * p3/(q + EPSILON)
+    k = (1 - p3/q2) * p3/q
     x_2 = th.stack([k, -k-q], -1)
-    p_stacked = p.unsqueeze(1).expand(-1, 2)
-    x = th.where(th.abs(p_stacked) < 0.001, x_2, x_1)
+    x = th.where(p[..., :, None] < 0.001, x_2, x_1)
 
     uv = th.sign(x) * th.pow(th.abs(x)+EPSILON, 1.0/3.0)
     t_1 = uv[..., 0] + uv[..., 1] - kx
-    usable_t = t_1.unsqueeze(1)
+    usable_t = t_1.unsqueeze(-1)
     q_diff = d + (c + b * usable_t) * usable_t
     solution_1 = dot2(q_diff)
     sign_1 = cro(c + 2 * b * usable_t, q_diff)
 
     # Multiple roots:
     z = th.sqrt(th.abs(p) + EPSILON)
-    temp = q / (p * z * 2.0 + EPSILON)
+    temp = q / (p * z * 2.0)
     temp = th.clamp(temp, -1 + EPSILON, 1 - EPSILON)
     v = th.acos(temp) / 3.0
     m = th.cos(v)
-    n = th.sin(v) * 1.732050808
-    new_vec = th.stack([m + m, -n - m], dim=1)
-    t_2 = new_vec * z.unsqueeze(1) - kx.unsqueeze(0)
+    n = th.sin(v) * SQRT_3
+    new_vec = th.stack([m + m, -n - m], dim=-1)
+    t_2 = new_vec * z.unsqueeze(-1) - kx.unsqueeze(1)
     usable_t = t_2  # th.clamp(t_2, 0.0, 1.0)
 
     sol_1_t = usable_t[..., 0:1]
@@ -147,24 +158,23 @@ def sdf3d_quadratic_bezier_extrude(points, start_point, control_point, end_point
     solution = th.abs(solution)
     solution = th.sqrt(solution + EPSILON) * th.sign(sign)
 
-
     distance_field_2d = th.stack([solution, rotated_points[..., 2]], dim=-1)
     # Now rotate by theta:
     c = th.cos(theta)
     s = th.sin(theta)
-    rotation_matrix = th.stack([c, -s, s, c], dim=-1).view(-1, 2, 2)
-    if rotation_matrix.shape[0] == 1:
-        rotation_matrix = rotation_matrix.squeeze(0)
-        distance_field_2d = th.matmul(distance_field_2d, rotation_matrix)
+    if len(points.shape) == 2:
+        rotation_matrix = th.stack([c, -s, s, c], dim=-1).view(2, 2)
     else:
-        distance_field_2d = th.bmm(distance_field_2d, rotation_matrix)
+        rotation_matrix = th.stack([c, -s, s, c], dim=-1).view(-1, 2, 2)
+    distance_field_2d = th.matmul(distance_field_2d, rotation_matrix)
     
     parameterized_points = th.cat([distance_field_2d, t[..., None]], dim=-1)
     
     # approximate scale as length of quad curve is expensive to compute
-    scale_factor = th.norm(end_point - control_point) + \
-        th.norm(control_point - start_point)
+    scale_factor = th.norm(end_point - control_point, dim=-1) + \
+        th.norm(control_point - start_point, dim=-1)
     return parameterized_points, scale_factor
+
 
 def perpendicular_vectors(vec, normalize=True):
     if th.all(vec == 0):
@@ -204,8 +214,24 @@ def sdf3d_simple_extrusion(points, sdf2d_func, h):
     base_sdf = w_2 + th.norm(th.clamp(w, min=0.0))
     return base_sdf
 
-def sdf1d_linear_curve():
-    ...
 
-def sdf1d_quadratic_curve():
-    ...
+def linear_curve_1d(points, point1, point2):
+    # points shape [batch, num_points, 1]
+    # point1 shape [batch, 2]
+    # point2 shape [batch, 2]
+    demon = point2[..., 0] - point1[..., 0]
+    demon = th.where(demon==0, EPSILON, demon)
+    m = (point2[..., 1] - point1[..., 1])/demon
+    c = point1[..., 1] - m * point1[..., 0]
+    output = points[..., 0] * m + c
+    return output
+
+def quadratic_curve_1d(points, param_a, param_b, param_c):
+    # points shape [batch, num_points, 1]
+    # param_a shape [batch, 1]
+    # param_b shape [batch, 1]
+    # param_c shape [batch, 1]
+    output = param_a * points[..., 0] * points[..., 0] + param_b * points[..., 0] + param_c
+    return output
+
+

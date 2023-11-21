@@ -1,4 +1,4 @@
-from .evaluate_sdf import expr_to_sdf
+from .evaluate_expression import expr_to_sdf
 from .compile_expression import create_compiled_expr
 from .sketcher import Sketcher
 

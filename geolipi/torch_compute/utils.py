@@ -15,13 +15,14 @@ import geolipi.symbolic.primitives_2d as sym_prim2d
 import geolipi.symbolic.transforms_3d as sym_t3d
 import geolipi.symbolic.transforms_2d as sym_t2d 
 import geolipi.symbolic.primitives_higher as sym_higher
+import geolipi.symbolic.color as sym_color
 
 import geolipi.torch_compute.sdf_operators as sdf_op_bank
 import geolipi.torch_compute.sdf_functions_2d as sdf2d_bank
 import geolipi.torch_compute.sdf_functions_3d as sdf3d_bank
 import geolipi.torch_compute.transforms as transform_bank
 import geolipi.torch_compute.sdf_functions_higher as higher_sdf_bank
-
+import geolipi.torch_compute.color_functions as color_func_bank
 COMBINATOR_MAP = {
     sym_comb.Union: sdf_op_bank.sdf_union,
     sym_comb.Intersection: sdf_op_bank.sdf_intersection,
@@ -125,8 +126,8 @@ PRIMITIVE_MAP = {
     sym_higher.QuadraticBezierExtrude3D: higher_sdf_bank.sdf3d_quadratic_bezier_extrude,
     sym_higher.Revolution3D: higher_sdf_bank.sdf3d_revolution,
     sym_higher.SimpleExtrusion3D: higher_sdf_bank.sdf3d_simple_extrusion,
-    sym_higher.LinearCurve1D: higher_sdf_bank.sdf1d_linear_curve,
-    sym_higher.QuadraticCurve1D: higher_sdf_bank.sdf1d_quadratic_curve,
+    sym_higher.LinearCurve1D: higher_sdf_bank.linear_curve_1d,
+    sym_higher.QuadraticCurve1D: higher_sdf_bank.quadratic_curve_1d,
 }
 
 MODIFIER_MAP = {
@@ -178,3 +179,18 @@ color_names = [x.strip().split("\t")[0].strip() for x in color_file[1:]]
 color_hexes = [x.strip().split("\t")[1].strip() for x in color_file[1:]]
 color_val = [th.tensor([matplotlib.colors.to_rgba(h)]) for h in color_hexes]
 COLOR_MAP = dict(zip(color_names, color_val))
+
+COLOR_FUNCTIONS = {
+    sym_color.DestinationAtop: color_func_bank.destination_atop,
+    sym_color.DestinationIn: color_func_bank.destination_in,
+    sym_color.DestinationOut: color_func_bank.destination_out,
+    sym_color.DestinationOver: color_func_bank.destination_over,
+    sym_color.SourceIn: color_func_bank.source_in,
+    sym_color.SourceOut: color_func_bank.source_out,
+    sym_color.SourceOver: color_func_bank.source_over,
+    sym_color.SourceAtop: color_func_bank.source_atop,
+    sym_color.SVGXOR : color_func_bank.svg_xor,
+    sym_color.ApplyColor2D: color_func_bank.apply_color,
+    sym_color.ModifyOpacity2D: color_func_bank.modify_opacity,
+    sym_color.ModifyColor2D: color_func_bank.modify_color,
+}

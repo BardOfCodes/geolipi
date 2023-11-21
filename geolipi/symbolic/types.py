@@ -15,6 +15,7 @@ from .primitives_2d import *
 from .primitives_3d import *
 from .transforms_2d import *
 from .transforms_3d import *
+from .color import *
 
 
 PARAM_TYPE = type_union[np.ndarray, th.Tensor]
@@ -60,6 +61,10 @@ TRANSSYM_TYPE = type_union[TranslationSymmetryX2D, TranslationSymmetryY2D, Trans
 ROTSYM_TYPE = type_union[RotationSymmetryX3D, RotationSymmetryY3D, RotationSymmetryZ3D, RotationSymmetry2D,
                          AxialRotationSymmetry3D, RotationSymmetry2D]
 
-COLOR_TYPE = type_union[ColorTree2D, ColorTree3D]
 PRIM_TYPE = type_union[Primitive2D, Primitive3D, HigherOrderPrimitives3D]
 HIGERPRIM_TYPE = HigherOrderPrimitives3D
+
+# COLOR_TYPE = type_union[ColorModifier2D, ColorModifier3D]
+COLOR_MOD = type_union[ModifyColor2D, ModifyOpacity2D]
+APPLY_COLOR_TYPE = ApplyColor2D
+SVG_COMBINATORS = SVGCombinator

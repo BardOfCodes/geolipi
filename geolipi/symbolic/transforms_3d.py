@@ -7,7 +7,6 @@ from .base_symbolic import GLExpr, GLFunction
 class Modifier3D(GLFunction):
     ...
 
-
 class Transform3D(Modifier3D):
     ...
 
@@ -146,10 +145,6 @@ class ScaleSymmetry3D(Macro3D):
 
 
 class AxialScaleSymmetry3D(ScaleSymmetry3D):
-    ...
-
-
-class ColorTree3D(SDFModifier3D):
     ...
 
 

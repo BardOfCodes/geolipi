@@ -5,7 +5,7 @@ import inspect
 import numpy as np
 import torch as th
 from typing import Dict, Tuple
-
+from sympy.core.basic import Basic
 from sympy import Function, Expr, Symbol, Tuple as SympyTuple, Integer as SympyInteger, Float as SympyFloat
 
 
@@ -122,6 +122,23 @@ class GLFunction(Function):
             instance.lookup_table.update(merged_lookup_table)
         return instance
 
+    def doit(self, **hints):
+        if hints.get('deep', True):
+            # only "doit if not in symbolic form"
+            terms = []
+            for cur_term in self.args:
+                if cur_term in self.lookup_table:
+                    terms.append(self.lookup_table[cur_term])
+                else:
+                    if isinstance(cur_term, Basic):
+                        terms.append(cur_term.doit(**hints))
+                    else:
+                        terms.append(cur_term)
+                        
+            return self.func(*terms)
+        else:
+            return self
+        
     @staticmethod
     def _generate_symbol_name(tensor):
         return f"tensor_{id(tensor)}"
@@ -160,6 +177,22 @@ class GLFunction(Function):
         replaced_args = [self.lookup_table.get(arg, arg) for arg in args]
         return f"{self.func.__name__}({', '.join(map(str, replaced_args))})"
 
+    @property
+    def device(self):
+        """return the device of the first tensor in the expression"""
+        for arg in self.args:
+            if isinstance(arg, (GLFunction, GLExpr)):
+                return arg.device
+            elif isinstance(arg, Symbol):
+                if arg in self.lookup_table.keys():
+                    return self.lookup_table[arg].device
+                else:
+                    return None
+            elif isinstance(arg, (SympyTuple, SympyInteger, SympyFloat)):
+                return None
+            else:
+                raise ValueError(f"Cannot get device of {arg}.")
+            
     def to(self, device):
         """convert the expression to cuda or cpu"""
         resolved_args = []
