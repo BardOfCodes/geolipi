@@ -45,3 +45,7 @@ class ModifyOpacity2D(ColorModifier2D):
 
 class ModifyColor2D(ColorModifier2D):
     ...
+
+
+class SourceOverSequence(SVGCombinator):
+    ...

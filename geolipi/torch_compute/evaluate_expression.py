@@ -123,31 +123,24 @@ def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize
             sdf_list.append(cur_sdf)
         channel_count = sdf_list[0].shape[-1]
         if channel_count == 4:
-            new_sdf = source_over_seq(sdf_list)
+            new_sdf = source_over_seq(*sdf_list)
         else:
             new_sdf = COMBINATOR_MAP[type(expression)](*sdf_list, *param_list)
         return new_sdf
 
     elif isinstance(expression, SVG_COMBINATORS):
-        source_expr = expression.args[0]
-        source_canvas = recursive_evaluate(source_expr, sketcher, 
-                                           secondary_sketcher=secondary_sketcher,
-                                        initialize=False,
-                                        rectify_transform=rectify_transform,
-                                        coords=coords.clone(),
-                                        tracked_scale=tracked_scale.clone(),
-                                        relaxed_occupancy=relaxed_occupancy,
-                                         relax_temperature=relax_temperature)
-        destination_expr = expression.args[1]
-        destination_canvas = recursive_evaluate(destination_expr, sketcher, 
-                                                secondary_sketcher=secondary_sketcher,
-                                        initialize=False,
-                                        rectify_transform=rectify_transform,
-                                        coords=coords.clone(),
-                                        tracked_scale=tracked_scale.clone(),
-                                        relaxed_occupancy=relaxed_occupancy,
-                                         relax_temperature=relax_temperature)
-        output_canvas = COLOR_FUNCTIONS[type(expression)](source_canvas, destination_canvas)
+        output_seq = []
+        for expr in expression.args:
+            canvas = recursive_evaluate(expr, sketcher, 
+                                            secondary_sketcher=secondary_sketcher,
+                                            initialize=False,
+                                            rectify_transform=rectify_transform,
+                                            coords=coords.clone(),
+                                            tracked_scale=tracked_scale.clone(),
+                                            relaxed_occupancy=relaxed_occupancy,
+                                            relax_temperature=relax_temperature)
+            output_seq.append(canvas)
+        output_canvas = COLOR_FUNCTIONS[type(expression)](*output_seq)
         return output_canvas
         
     elif isinstance(expression, APPLY_COLOR_TYPE):

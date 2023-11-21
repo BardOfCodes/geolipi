@@ -62,10 +62,10 @@ def get_premultiplied_form(source, destination):
     premult_d = th.cat([premult_d, alpha_d], dim=-1)
     return premult_s, premult_d
 
-def source_over_seq(sequence):
-    result = sequence[0]
-    for i in range(1, len(sequence)):
-        result = source_over(sequence[i], result)
+def source_over_seq(*args):
+    result = args[0]
+    for i in range(1, len(args)):
+        result = source_over(args[i], result)
     return result
 
 def source_in(source, destination):
@@ -82,7 +82,7 @@ def source_atop(source, destination):
 
 def apply_color(occupancy, color):
     occ_expand = occupancy[..., None].float()
-    alpha_a = occ_expand * color[0, 3:4]
+    alpha_a = occ_expand * color[..., 3:4]
     color_a = occ_expand * color[..., :3]
     # color_b = (1 - occ_expand) * 1.0
     # color_a = color_a + color_b

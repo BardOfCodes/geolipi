@@ -264,7 +264,8 @@ def sdf2d_regular_star(points, r, n, m):
     bn = th.remainder(th.atan2(points[..., 0], points[..., 1]), (2 * an)) - an
     p = th.norm(points[..., :], dim=-1, keepdim=True) * th.stack([th.cos(bn), th.abs(th.sin(bn))], -1)
     p = p - (r * acs)[..., None, :]
-    p = p + th.clamp(th.clamp( -(p * ecs).sum(-1), min=0), max=r[..., 0:1] * acs[..., 1:2] / (ecs[..., 0, 1:2])[..., None] * ecs[..., :] + EPSILON)
+    max_val = r[..., 0] * acs[..., 1] / ecs[..., 0, 1]
+    p = p + ecs * th.clamp(th.clamp(-(p * ecs).sum(-1, keepdim=True), min=0), max=max_val[..., None, None])
     sdf = th.norm(p, dim=-1) * th.sign(p[..., 0])
     return sdf
 

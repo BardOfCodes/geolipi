@@ -193,4 +193,5 @@ COLOR_FUNCTIONS = {
     sym_color.ApplyColor2D: color_func_bank.apply_color,
     sym_color.ModifyOpacity2D: color_func_bank.modify_opacity,
     sym_color.ModifyColor2D: color_func_bank.modify_color,
+    sym_color.SourceOverSequence: color_func_bank.source_over_seq
 }
