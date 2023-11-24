@@ -14,6 +14,7 @@ from geolipi.symbolic.base_symbolic import PrimitiveSpec
 from geolipi.symbolic.resolve import resolve_macros
 from .sketcher import Sketcher
 from .utils import MODIFIER_MAP
+from .common import RECTIFY_TRANSFORM
 from .utils import INVERTED_MAP, NORMAL_MAP, ONLY_SIMPLIFY_RULES, ALL_RULES 
 
 def expr_prim_count(expression: GLExpr):
@@ -35,7 +36,8 @@ def expr_prim_count(expression: GLExpr):
     return prim_count_dict
 
 
-def compile_expr(expression: GLExpr, sketcher: Sketcher = None, rectify_transform=True):
+def compile_expr(expression: GLExpr, sketcher: Sketcher = None,
+                 rectify_transform=RECTIFY_TRANSFORM):
     """Gather & Compute the transforms, Gather the primitive_params, Remove Difference, and Resolve Complement,"""
 
     prim_count_dict = expr_prim_count(expression)
@@ -311,9 +313,10 @@ def resolve_rule(graph, resolve_rule):
     return graph
 
 
-def create_compiled_expr(expression, sketcher, resolve_to_dnf=False):
+def create_compiled_expr(expression, sketcher, resolve_to_dnf=False, 
+                         rectify_transform=RECTIFY_TRANSFORM):
     expression = resolve_macros(expression, device=sketcher.device)
-    compiled_expr = compile_expr(expression, sketcher=sketcher, rectify_transform=True)
+    compiled_expr = compile_expr(expression, sketcher=sketcher, rectify_transform=rectify_transform)
     expr = compiled_expr[0]
     if resolve_to_dnf:
         expr = expr_to_dnf(expr)

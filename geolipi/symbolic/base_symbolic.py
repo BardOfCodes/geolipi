@@ -195,24 +195,32 @@ class GLFunction(Function):
             
     def to(self, device):
         """convert the expression to cuda or cpu"""
-        resolved_args = []
-        for sub_expr in self.args:
-            if isinstance(sub_expr, GLFunction):
-                arg = sub_expr.to(device)
-            elif isinstance(sub_expr, Symbol):
-                if sub_expr in self.lookup_table.keys():
-                    arg = self.lookup_table[sub_expr].to(device)
-                else:
-                    arg = sub_expr
-            elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
-                arg = sub_expr
-            else:
-                raise ValueError(
-                    f"Error while converting {sub_expr} to device {device}.")
-            resolved_args.append(arg)
+        # TODO: Is it okay to just update the values? 
+        # TODO: Or should you return a new expr?
+        for key, value in self.lookup_table.items():
+            self.lookup_table[key] = value.to(device)
+        for arg in self.args:
+            if isinstance(arg, GLFunction):
+                arg.to(device)
+        return self
+        # resolved_args = []
+        # for sub_expr in self.args:
+        #     if isinstance(sub_expr, GLFunction):
+        #         arg = sub_expr.to(device)
+        #     elif isinstance(sub_expr, Symbol):
+        #         if sub_expr in self.lookup_table.keys():
+        #             arg = self.lookup_table[sub_expr].to(device)
+        #         else:
+        #             arg = sub_expr
+        #     elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
+        #         arg = sub_expr
+        #     else:
+        #         raise ValueError(
+        #             f"Error while converting {sub_expr} to device {device}.")
+        #     resolved_args.append(arg)
 
-        new_expr = type(self)(*resolved_args)
-        return new_expr
+        # new_expr = type(self)(*resolved_args)
+        # return new_expr
 
     def cuda(self):
         # convert all Tensors to numpy arrays

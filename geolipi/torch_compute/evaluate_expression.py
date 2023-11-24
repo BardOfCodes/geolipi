@@ -10,15 +10,14 @@ from geolipi.symbolic.types import (MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_
                                     COLOR_MOD, APPLY_COLOR_TYPE, SVG_COMBINATORS)
 from .sketcher import Sketcher
 from .utils import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP, COLOR_FUNCTIONS
-from .common import EPSILON
+from .common import EPSILON, RECTIFY_TRANSFORM
 from .utils import COLOR_MAP
 from geolipi.symbolic import Union, Intersection, Difference
 from .color_functions import source_over_seq
 
 
 def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize=True, 
-                          rectify_transform=True, coords=None, tracked_scale=None,
-                          color_mode=True,
+                          rectify_transform=RECTIFY_TRANSFORM, coords=None, tracked_scale=None,
                           relaxed_occupancy=False, relax_temperature=0.0):
     if initialize:
         coords = sketcher.get_homogenous_coords()
@@ -202,7 +201,8 @@ def create_relaxed_occupancy(execution, temperature):
     output_shape = th.nn.functional.sigmoid(-output_tanh * temperature)
     return output_shape
 
-def expr_to_sdf(expression: GLExpr, sketcher: Sketcher = None, rectify_transform=True):
+def expr_to_sdf(expression: GLExpr, sketcher: Sketcher,
+                rectify_transform=RECTIFY_TRANSFORM):
     transforms_stack = [sketcher.get_affine_identity()]
     execution_stack = []
     operator_stack = []
@@ -298,8 +298,9 @@ def expr_to_sdf(expression: GLExpr, sketcher: Sketcher = None, rectify_transform
     sdf = execution_stack[0]
     return sdf
 
-def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher = None, 
-                           rectify_transform=False, relaxed_occupancy=False, temperature=0.0):
+def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher, 
+                           rectify_transform=RECTIFY_TRANSFORM, 
+                           relaxed_occupancy=False, temperature=0.0):
     
     transforms_stack = [sketcher.get_affine_identity()]
     execution_stack = []
