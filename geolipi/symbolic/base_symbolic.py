@@ -7,7 +7,9 @@ import torch as th
 from typing import Dict, Tuple
 from sympy.core.basic import Basic
 from sympy import Function, Expr, Symbol, Tuple as SympyTuple, Integer as SympyInteger, Float as SympyFloat
-
+from sympy.logic.boolalg import Boolean as SympyBoolean
+from sympy import FunctionClass as SympyFC
+SYMPY_TYPES = (SympyTuple, SympyInteger, SympyFloat, SympyBoolean, SympyFC)
 
 def magic_method_decorator(cls):
     magic_methods = ['__add__', '__sub__', '__mul__',
@@ -101,11 +103,9 @@ class GLFunction(Function):
     def __new__(cls, *args, **kwargs):
         new_args = []
         merged_lookup_table = {}
+        GL_TYPES = (GLFunction, GLExpr)
         for arg in args:
-            if isinstance(arg, GLExpr):
-                merged_lookup_table.update(arg.lookup_table)
-                new_args.append(arg)
-            elif isinstance(arg, GLFunction):
+            if isinstance(arg, GL_TYPES):
                 merged_lookup_table.update(arg.lookup_table)
                 new_args.append(arg)
             elif isinstance(arg, th.Tensor):
@@ -116,10 +116,12 @@ class GLFunction(Function):
                 new_args.append(arg)
 
         instance = super(GLFunction, cls).__new__(cls, *new_args, **kwargs)
-        if not hasattr(instance, "lookup_table"):
-            instance.lookup_table = merged_lookup_table
-        else:
-            instance.lookup_table.update(merged_lookup_table)
+        instance.lookup_table = merged_lookup_table
+        # if not hasattr(instance, "lookup_table"):
+        #     instance.lookup_table = merged_lookup_table
+        # else:
+        #     instance.lookup_table.update(merged_lookup_table)
+            
         return instance
 
     def doit(self, **hints):
@@ -164,7 +166,6 @@ class GLFunction(Function):
                     str_args.append(str(arg))
         if str_args:
             n_tabs_1 = tab_str * (tabs + 1)
-            # str_args = [""] + str_args
             str_args = f",\n{n_tabs_1}" .join(str_args)
             str_args = f"\n{n_tabs_1}" + str_args
             final = f"{self.func.__name__}({str_args})"
@@ -197,30 +198,31 @@ class GLFunction(Function):
         """convert the expression to cuda or cpu"""
         # TODO: Is it okay to just update the values? 
         # TODO: Or should you return a new expr?
-        for key, value in self.lookup_table.items():
-            self.lookup_table[key] = value.to(device)
-        for arg in self.args:
-            if isinstance(arg, GLFunction):
-                arg.to(device)
-        return self
-        # resolved_args = []
-        # for sub_expr in self.args:
-        #     if isinstance(sub_expr, GLFunction):
-        #         arg = sub_expr.to(device)
-        #     elif isinstance(sub_expr, Symbol):
-        #         if sub_expr in self.lookup_table.keys():
-        #             arg = self.lookup_table[sub_expr].to(device)
-        #         else:
-        #             arg = sub_expr
-        #     elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
-        #         arg = sub_expr
-        #     else:
-        #         raise ValueError(
-        #             f"Error while converting {sub_expr} to device {device}.")
-        #     resolved_args.append(arg)
+        # for key, value in self.lookup_table.items():
+        #     self.lookup_table[key] = value.to(device)
+        # for arg in self.args:
+        #     if isinstance(arg, GLFunction):
+        #         arg.to(device)
+        # return self
+        resolved_args = []
+        for sub_expr in self.args:
+            if isinstance(sub_expr, GLFunction):
+                arg = sub_expr.to(device)
+            elif isinstance(sub_expr, Symbol):
+                if sub_expr in self.lookup_table.keys():
+                    arg = self.lookup_table[sub_expr].to(device)
+                else:
+                    arg = sub_expr
+            elif isinstance(sub_expr, SYMPY_TYPES):
+                arg = sub_expr
+            else:
+                raise ValueError(
+                    f"Error while converting {sub_expr} to device {device}.")
+            resolved_args.append(arg)
 
-        # new_expr = type(self)(*resolved_args)
-        # return new_expr
+        new_expr = type(self)(*resolved_args)
+        return new_expr
+    
 
     def cuda(self):
         # convert all Tensors to numpy arrays

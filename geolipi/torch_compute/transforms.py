@@ -50,9 +50,11 @@ def get_affine_translate_3D(matrix, param):
 def get_affine_scale_3D(matrix, param):
     if not isinstance(param, th.Tensor):
         param = th.tensor(param, dtype=matrix.dtype, device=matrix.device)
-    matrix[0, 0] = 1 / (EPSILON + param[0])
-    matrix[1, 1] = 1 / (EPSILON + param[1])
-    matrix[2, 2] = 1 / (EPSILON + param[2])
+    scale_var = 1 / (param + EPSILON)
+    
+    matrix[0, 0] = scale_var[0]
+    matrix[1, 1] = scale_var[1]
+    matrix[2, 2] = scale_var[2]
     return matrix
 
 def get_affine_reflection_3D(matrix, param):
