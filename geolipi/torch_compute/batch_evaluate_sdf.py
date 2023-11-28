@@ -12,6 +12,7 @@ def create_evaluation_batches(compiled_expr_list: List[object], convert_to_cuda=
     all_prim_transforms = defaultdict(list)
     all_prim_inversion = defaultdict(list)
     all_prim_param = defaultdict(list)
+
     for compiled_expr in compiled_expr_list:
         expression = compiled_expr[0]
         prim_transform = compiled_expr[1]
@@ -26,18 +27,25 @@ def create_evaluation_batches(compiled_expr_list: List[object], convert_to_cuda=
             batch_count[prim_type] = transforms.shape[0]
         all_expressions.append(expression)
         batch_limiter.append(batch_count)
-    # concatenate
-    if convert_to_cuda:
-        device = "cuda"
-    else:
-        device = "cpu"
         
     for prim_type in all_prim_transforms.keys():
         if all_prim_transforms[prim_type]:
-            all_prim_transforms[prim_type] =  th.cat(all_prim_transforms[prim_type], 0).to(device)
-            all_prim_inversion[prim_type] = th.cat(all_prim_inversion[prim_type], 0).to(device)
+            all_prim_transforms[prim_type] =  th.cat(all_prim_transforms[prim_type], 0)
+            all_prim_inversion[prim_type] = th.cat(all_prim_inversion[prim_type], 0)
             if prim_type in all_prim_param.keys():
-                all_prim_param[prim_type] = th.cat(all_prim_param[prim_type], 0).to(device)
+                params = all_prim_param[prim_type]
+                n_params = len(params[0])
+                final_params = []
+                for ind in range(n_params):
+                    final_params.append(th.cat([x[ind] for x in params], 0))
+                all_prim_param[prim_type] = final_params
+    if convert_to_cuda:
+        all_prim_transforms = {x:y.cuda() for x, y in all_prim_transforms.items()}
+        all_prim_inversion = {x:y.cuda() for x, y in all_prim_inversion.items()}
+
+        for prim_type, prim_param_list in all_prim_param.items():
+            all_prim_param[prim_type] = [x.cuda() for x in prim_param_list]
+        # all_prim_param = {x:y.cuda() for x, y in all_prim_param.items()}
 
     return all_expressions, all_prim_transforms, all_prim_inversion, all_prim_param, batch_limiter
 
@@ -78,12 +86,9 @@ def batch_evaluate(expr_set: List[object], sketcher):
         rotated_points = transformed_points_hom[:, :, :sketcher.n_dims]
 
         draw_func = PRIMITIVE_MAP[draw_type]
-        if draw_type in prim_params.keys():
-            params = prim_params[draw_type]
-            primitives = draw_func(rotated_points, *params)
-        else:
-            primitives = draw_func(rotated_points)
-            # For some primitives make this a expansion of fixed size.
+        params = prim_params[draw_type]
+        primitives = draw_func(rotated_points, *params)
+        # For some primitives make this a expansion of fixed size.
         # inversion = th.stack(collapsed_inversions[draw_type], 0).unsqueeze(1)
         inversion = prim_inversions[draw_type].unsqueeze(1)
         sign_matrix = inversion * -2 + 1

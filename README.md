@@ -1,115 +1,64 @@
-# GeoLipi
+# GeoLIPI
 
-Language for modelling 3D shapes. This is to be treated as a meta-language, from which certain specific 3D Visual programming languages can be derived. Targets:
+[banner]()
 
-1) 3D CSG Variants
-2) ShapeAssembly
-3) GeoCode
+Language for modelling 3D shapes. This is to be treated as a meta-language, from which visual programming languages can be derived. Some of the languages/visual programs that can be executed in this framework are:
 
-## Priority TODO
+1) CSG 3D Variants ()
+2) GeoCode
+3) SVG 2D
 
-1) Fill in some SDF functions.
-   1) SuperQuad / CSGStump / Curves
-2) Get all csg languages in.
-   1) primalCSG
-   2) LeafAffineCSG
-   3) HierarchicalCSG
-   4) MacroCSG
-   5) GeoCode / SA ? 
+and many more. Check out `languages.md` for more details.
 
-3) Converters:
-   1) Blender Graph. 
-   2) OpenSCAD
-   3) Mesh.
+## Main usecase
 
-## Lower priority TODO
+Mainly, GeoLIPI attempts to embed a generic visual language in python, making it easier to use and extend for research. Additionally, it provides the following benefits:
 
-1) Move away from SYMPY to AST.
-## Execute into
+1) Fast Batched Execution of programs - useful for training neural networks on large batches of program executions.
+2) Single "symbolic" object, multiple execution strategies. This helps with "executing" the program in different platforms/systems (such as blender for rendering, and pytorch for optimization).
+3) Parameter Optimization of arbitrary visual programs (All operations are created to allow differentiable optimization of its parameters).
+4) [TBD] Help with searching programs for a desired execution (refer to our recent [paper]()).
+5) Batched PyTorch execution code for all the shader toy 2D and 3D primitives described by Inigo Quilez.
 
-1) SDF Function
-2) Blender Graph
-3) openSCAD program / FREECAD program
-4) Mesh / SDF grid / Point cloud / Occupancy grid
-5) GLSL code generator?
-## Next steps
+## Installation
 
-1) Get P-CSG and M-CSG working.
-2) Get Batch executors integrated.
-3) Create data-loader examples.
-
-## Goal
-
-Language or python -> Symbol soup -> compiled form  -> SDF eval, or blender graph.
-
-1) Fast Batched execution with baking.
-2) Blender graph creation + visualization
-3) Expression to Mesh, PC, Occupancy Grid, SDF Grid.
-
-### Primitives
-
-1) Basic: Cuboid, Ellipse, Cylinder, Cone,
-2) Infinite: HalfSpace, Inf. Cy/cone
-3) Superquadrics
-4) Gaussian Occupancy: SIF and spaghetti
-5) More complicated primitives: torus, link, hex prism, triangle prism, capsule, pyramid, octahedron
-6) sphere-triangles - Sphere + box triangle.
-7) meta-balls - rounded output (in sdf land)
-8) 2D/3D extrude with:
-   1) Straight line (start and end points)
-   2) 2D Curve Quad and cubic line (Iq's solution)
-   3) 2D closed loop beizier (extrudeNet)
-9) 3D Surfaces -> IQ's triangle and quad,
-   1) ParseNet's diff nurbs
-   2) Iq's Triangle and quads (is it volumetric?)
-10) Neural Primitives
-11) Colored primitives? (density and color) [Suitable for lego]
-
-## Combinators
-
-1) fusion: Union Only
-2) Base CSG: Union, Intersection, Difference
-3) Base +: Translate, Reflect, rotational sym
-4) Base +: smooth union, intersection, difference
-5) Infinite translate -> Mod
-6) CADDY: map and fold operations -> out of scope. Szalinski
-7) Attachment - combinators
-8) Sub-programs - Shape Assembly
-
-## Example
-
-```python
-from geolipi.primitives import *
-from geolipi.combinators import *
-from geolipi.functions import *
-
-@geolipi
-def shape_expr():
-    x_translate = (5, 0, 0)
-    cube_1 = Cuboid(1, 2, 3)
-    cube_2 = Cuboid(2, 0.4, 1)
-    shape = Union(cube_1, Translate(cube_2, x_translate))
-    return shape
-
-sdf = geolipi.sdf_executor.execute(shape_expr)
-bpy_graph = geolipi.bpy_graph_generator.generate(shape_expr)
-expr_string = geolipi.string_parser.generate_string(shape_expr)
-
-
-@geolipi
-def shape_expr():
-    shape = Union(Cuboid(0.1, 0.2, 0.3), 
-                  Translate(Cuboid(0.4, 0.6, 0.2), 
-                            (0.3, 0.5, 0)
-                  )
-    )
-
-    return shape
+```bash
 ```
 
+## Examples
 
-# Other works:
+Check out the python notebooks in `examples/` for more details.
 
-1) Geometry script
-2) openPySCAD
-3) sdf-torch
+## High level issues
+
+1) Execution time. Something like a BVH is a must for really complex programs.
+
+2) Initializing time - Sympy Functions are not the simplest to initialize. Furthermore, the lookup_table for tensors is not the most efficient.
+
+3) What to do about numerical precision? Also SDFs are almost often not exact (after boolean operations or scaling etc.)
+
+4) Aliasing.
+
+5) Which symbols should have 2D/3D explicit and which ones not? The code can be made more uniform in general.
+
+
+## Other related works
+
+Many other awesome libraries exist which help with pythonic 3D modelling. I have taken inspiration from many of them. Some of them are:
+
+1) [Geometry script](https://github.com/carson-katri/geometry-script).
+
+2) [openPySCAD](https://github.com/taxpon/openpyscad).
+
+3) [sdf-torch](https://github.com/unixpickle/sdf-torch).
+
+## Acknowledgements
+
+1) A big shoutout to Inigo Quilez for his awesome [work](https://www.iquilezles.org/www/index.htm) on SDFs and shader toy.
+2) Thanks to Carson Katri for his [geometry script](https://github.com/carson-katri/geometry-script) work which helped with the blender side of things.
+3) [Derek](https://www.dgp.toronto.edu/~hsuehtil/)'s Blender toolbox ([link](https://github.com/HTDerekLiu/BlenderToolbox)) was quite helpful for materials.
+4) Patrick-Kidger's [sympytorch](https://github.com/patrick-kidger/sympytorch) helped thinking about how to integrate sympy here.
+5) Thanks to [Tim Nelson](https://cs.brown.edu/~tbn/)'s Logic for Systems course made the DNF/CNF stuff much easier to understand.
+6) Thanks to my PhD Advisor [Daniel Ritchie](https://dritchie.github.io/) for his support and guidance. 
+7) Thanks to my lab mates [Arman Maesumi](https://armanmaesumi.github.io/) and [R. Kenny Jones](https://rkjones4.github.io/) for their feedback and support.
+

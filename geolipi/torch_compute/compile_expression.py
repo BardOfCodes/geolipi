@@ -17,6 +17,9 @@ from .utils import MODIFIER_MAP
 from .common import RECTIFY_TRANSFORM
 from .utils import INVERTED_MAP, NORMAL_MAP, ONLY_SIMPLIFY_RULES, ALL_RULES 
 
+# Don't resolve when expression is crazy big.
+MAX_EXPR_SIZE = 500
+
 def expr_prim_count(expression: GLExpr):
     """Get the number of primitives of each kind in the expression."""
     prim_count_dict = defaultdict(int)
@@ -49,7 +52,7 @@ def compile_expr(expression: GLExpr, sketcher: Sketcher = None,
 
     prim_transforms = dict()
     prim_inversions = dict()
-    prim_params = dict()
+    prim_params = defaultdict(list)
     prim_counter = {x: 0 for x in prim_count_dict.keys()}
     for prim_type, prim_count in prim_count_dict.items():
         prim_transforms[prim_type] = th.zeros((prim_count, sketcher.n_dims + 1, 
@@ -148,12 +151,17 @@ def compile_expr(expression: GLExpr, sketcher: Sketcher = None,
             prim_transforms[prim_type][prim_id] = transform
             if inversion_mode:
                 prim_inversions[prim_type][prim_id] = True
-            params = []
-            # params = cur_expr.args
-            # if params:
-            #     if isinstance(params, Symbol):
-            #         params = cur_expr.lookup_table[params]
-            #     prim_params[prim_type][prim_id] = params
+            param_list = []
+            params = cur_expr.args
+            if params:
+                for ind, param in enumerate(params):
+                    if param in expression.lookup_table:
+                        cur_param = expression.lookup_table[param]
+                        param_list.append(cur_param)
+                    else:
+                        param_list.append(param)
+                params = param_list
+            prim_params[prim_type].append(params)
 
             prim_spec = PrimitiveSpec(prim_type, prim_id)
             execution_stack.append(prim_spec)
@@ -169,6 +177,14 @@ def compile_expr(expression: GLExpr, sketcher: Sketcher = None,
             args = execution_stack[-n_args:]
             new_canvas = operator(*args, *params)
             execution_stack = execution_stack[:-n_args] + [new_canvas]
+
+    for prim_type, prim_param_list in prim_params.items():
+        n_params = len(prim_param_list[0])
+        final_list = []
+        for cur_id in range(n_params):
+            cur_param_list = [x[cur_id] for x in prim_param_list]
+            final_list.append(th.stack(cur_param_list, 0))
+        prim_params[prim_type] = final_list
 
     expression = execution_stack[0]
     return expression, prim_transforms, prim_inversions, prim_params
@@ -231,7 +247,7 @@ def graph_to_expr(graph):
     return expression
 
 
-def expr_to_dnf(expression):
+def expr_to_dnf(expression, max_expr_size=MAX_EXPR_SIZE):
     # convert to tree for easy usage:
     graph = expr_to_graph(expression)
     # RULES:
@@ -250,6 +266,8 @@ def expr_to_dnf(expression):
                 graph = resolve_rule(graph, rule_match)
         else:
             graph = resolve_rule(graph, rule_match)
+        if graph.num_nodes() > max_expr_size:
+            return expression
     expression = graph_to_expr(graph)
     return expression
 
@@ -313,15 +331,21 @@ def resolve_rule(graph, resolve_rule):
     return graph
 
 
-def create_compiled_expr(expression, sketcher, resolve_to_dnf=False, 
+def create_compiled_expr(expression, sketcher, resolve_to_dnf=False,
+                         convert_to_cpu=True,
                          rectify_transform=RECTIFY_TRANSFORM):
     expression = resolve_macros(expression, device=sketcher.device)
     compiled_expr = compile_expr(expression, sketcher=sketcher, rectify_transform=rectify_transform)
-    expr = compiled_expr[0]
+    expr, transforms, inversions, params = compiled_expr
+
     if resolve_to_dnf:
         expr = expr_to_dnf(expr)
-    transforms = {x:y.cpu() for x, y in compiled_expr[1].items()}
-    inversions = {x:y.cpu() for x, y in compiled_expr[2].items()}
-    params = {x:y.cpu() for x, y in compiled_expr[3].items()}
+
+    if convert_to_cpu:
+        transforms = {x: y.cpu() for x, y in transforms.items()}
+        inversions = {x: y.cpu() for x, y in inversions.items()}
+        for prim_type, prim_param_list in params.items():
+            params[prim_type] = [x.cpu() for x in prim_param_list]
+        # params = {x: y.cpu() for x, y in params.items()}
     
     return expr, transforms, inversions, params

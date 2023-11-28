@@ -4,11 +4,11 @@ from .common import EPSILON
 
 
 def sdf_union(*args):
-    sdf = th.min(th.stack(args, dim=-1), dim=-1)[0]
+    sdf = th.amin(th.stack(args, dim=-1), dim=-1)
     return sdf
 
 def sdf_intersection(*args):
-    sdf = th.max(th.stack(args, dim=-1), dim=-1)[0]
+    sdf = th.amax(th.stack(args, dim=-1), dim=-1)
     return sdf
 
 def sdf_difference(sdf_a, sdf_b):

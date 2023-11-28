@@ -187,12 +187,6 @@ class GLFunction(Function):
             elif isinstance(arg, Symbol):
                 if arg in self.lookup_table.keys():
                     return self.lookup_table[arg].device
-                else:
-                    return None
-            elif isinstance(arg, (SympyTuple, SympyInteger, SympyFloat)):
-                return None
-            else:
-                raise ValueError(f"Cannot get device of {arg}.")
             
     def to(self, device):
         """convert the expression to cuda or cpu"""
@@ -274,6 +268,28 @@ class GLFunction(Function):
 
         new_expr = type(self)(*resolved_args)
         return new_expr
+    
+    def to_tensor(self, dtype=th.float32, device="cuda"):
+        resolved_args = []
+        for sub_expr in self.args:
+            if isinstance(sub_expr, GLFunction):
+                arg = sub_expr.to_tensor()
+            elif isinstance(sub_expr, Symbol):
+                    if sub_expr in self.lookup_table.keys():
+                        arg = self.lookup_table[sub_expr].to(dtype=dtype, device=device)
+                    else:
+                        arg = sub_expr
+            elif isinstance(sub_expr, (SympyTuple, SympyFloat)):
+                arg = th.tensor(sub_expr, dtype=dtype, device=device)
+            elif isinstance(sub_expr, SympyInteger):
+                arg = th.tensor(sub_expr, dtype=th.int64, device=device)
+            else:
+                raise ValueError(f"Cannot convert {sub_expr} to Sympy.")
+            resolved_args.append(arg)
+
+        new_expr = type(self)(*resolved_args)
+        return new_expr
+    
 
     @classmethod
     def eval(cls, *args, **kwargs):
