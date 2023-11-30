@@ -72,6 +72,7 @@ def sdf3d_capped_torus(points, angle, ra, rb):
     return base_sdf
 
 def sdf3d_link(points, le, r1, r2):
+    # TODO: Backprop fix
     # points shape [batch, num_points, 3]
     # le shape [batch, 1]
     # r1 shape [batch, 1]
@@ -457,6 +458,7 @@ def sdf3d_inexact_octahedron(points, s):
 def sdf3d_pyramid(points, h):
     # points shape [batch, num_points, 3]
     # h shape [batch, 1]
+    # TODO: Backprop fix
     m2 = h * h + 0.25
     points[..., :2] = th.abs(points[..., :2])
     cond = points[..., 1:2] > points[..., 0:1]

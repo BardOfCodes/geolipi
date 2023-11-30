@@ -20,7 +20,10 @@ def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize
                           rectify_transform=RECTIFY_TRANSFORM, coords=None, tracked_scale=None,
                           relaxed_occupancy=False, relax_temperature=0.0):
     if initialize:
-        coords = sketcher.get_homogenous_coords()
+        if coords is None:
+            coords = sketcher.get_homogenous_coords()
+        else:
+            coords = sketcher.make_homogenous_coords(coords)
         tracked_scale = sketcher.get_scale_identity()
 
     if isinstance(expression, MACRO_TYPE):
@@ -202,7 +205,9 @@ def create_relaxed_occupancy(execution, temperature):
     return output_shape
 
 def expr_to_sdf(expression: GLExpr, sketcher: Sketcher,
-                rectify_transform=RECTIFY_TRANSFORM):
+                rectify_transform=RECTIFY_TRANSFORM,
+                secondary_sketcher=None,
+                coords=None):
     transforms_stack = [sketcher.get_affine_identity()]
     execution_stack = []
     operator_stack = []
@@ -269,7 +274,7 @@ def expr_to_sdf(expression: GLExpr, sketcher: Sketcher,
             transform = transforms_stack.pop()
             if rectify_transform:
                 _ = scale_stack.pop()
-            coords = sketcher.get_coords(transform)
+            cur_coords = sketcher.get_coords(transform, points=coords)
             params = cur_expr.args
             if params:
                 param_list = []
@@ -280,7 +285,7 @@ def expr_to_sdf(expression: GLExpr, sketcher: Sketcher,
                     else:
                         param_list.append(param)
                 params = param_list
-            execution = PRIMITIVE_MAP[type(cur_expr)](coords, *params)
+            execution = PRIMITIVE_MAP[type(cur_expr)](cur_coords, *params)
             execution_stack.append(execution)
         else:
             raise ValueError(f'Unknown expression type {type(cur_expr)}')
@@ -300,7 +305,8 @@ def expr_to_sdf(expression: GLExpr, sketcher: Sketcher,
 
 def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher, 
                            rectify_transform=RECTIFY_TRANSFORM, 
-                           relaxed_occupancy=False, temperature=0.0):
+                           relaxed_occupancy=False, temperature=0.0,
+                           coords=None):
     
     transforms_stack = [sketcher.get_affine_identity()]
     execution_stack = []
@@ -361,11 +367,11 @@ def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher,
             transform = transforms_stack.pop()
             if rectify_transform:
                 _ = scale_stack.pop()
-            coords = sketcher.get_coords(transform)
+            cur_coords = sketcher.get_coords(transform, points=coords)
             params = cur_expr.args
             if params in cur_expr.lookup_table:
                 params = cur_expr.lookup_table[params]
-            execution = PRIMITIVE_MAP[type(cur_expr)](coords, *params)
+            execution = PRIMITIVE_MAP[type(cur_expr)](cur_coords, *params)
             # At this point use color code to color the primitive
             color = color_stack.pop()
             if isinstance(color, Symbol):

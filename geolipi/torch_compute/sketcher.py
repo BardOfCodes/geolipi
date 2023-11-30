@@ -50,8 +50,11 @@ class Sketcher:
         points = th.reshape(points, (-1, self.n_dims)).to(self.device)
         return points
 
-    def get_coords(self, transform):
-        coords = self.coords.clone().detach()
+    def get_coords(self, transform, points):
+        if points is None:
+            coords = self.coords.clone().detach()
+        else: 
+            coords = points
         pad = th.ones_like(coords[:, :1])
         points_hom = th.cat([coords, pad], dim=1)
         rotated_points_hom = th.einsum('ij,mj->mi', transform, points_hom)
@@ -63,6 +66,10 @@ class Sketcher:
     
     def get_homogenous_coords(self):
         coords = self.coords.clone().detach()
+        coords = self.make_homogenous_coords(coords)
+        return coords
+    
+    def make_homogenous_coords(self, coords):
         pad = th.ones_like(coords[:, :1])
         points_homog = th.cat([coords, pad], dim=1)
         return points_homog

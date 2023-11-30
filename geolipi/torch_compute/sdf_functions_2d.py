@@ -222,6 +222,7 @@ def sdf2d_regular_octagon(points, r):
 def sdf2d_hexagram(points, r):
     # points shape [batch, num_points, 2]
     # r shape [batch, 1]
+    # TODO: correct for Diff Opt
     k = th.tensor(HEXAGRAM_VEC).to(points.device)
     points = th.abs(points)
     k2 = k.flip(0)
@@ -236,6 +237,7 @@ def sdf2d_star_5(points, r, rf):
     # points shape [batch, num_points, 2]
     # r shape [batch, 1]
     # rf shape [batch, 1]
+    # TODO: Fix for singular eval
     k = th.tensor(STAR_VEC).to(points.device)
     k2 = k.clone()
     k2[0] = k2[0] * -1

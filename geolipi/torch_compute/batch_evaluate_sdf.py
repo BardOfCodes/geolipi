@@ -50,7 +50,7 @@ def create_evaluation_batches(compiled_expr_list: List[object], convert_to_cuda=
     return all_expressions, all_prim_transforms, all_prim_inversion, all_prim_param, batch_limiter
 
 
-def batch_evaluate(expr_set: List[object], sketcher):
+def batch_evaluate(expr_set: List[object], sketcher, coords=None):
     """Batch evaluate a set of expressions.
 
     Args:
@@ -67,7 +67,10 @@ def batch_evaluate(expr_set: List[object], sketcher):
     prim_params = expr_set[3]
     batch_limiter = expr_set[4]
 
-    points = sketcher.get_base_coords()
+    if coords is None:
+        points = sketcher.get_base_coords()
+    else:
+        points = coords
 
     M = points.shape[0]
     # Add a fourth column of ones to the point cloud to make it homogeneous

@@ -87,6 +87,7 @@ PRIMITIVE_MAP = {
     sym_prim3d.Cuboid3D: sdf3d_bank.sdf3d_box,
     sym_prim3d.RoundedBox3D: sdf3d_bank.sdf3d_rounded_box,
     sym_prim3d.BoxFrame3D: sdf3d_bank.sdf3d_box_frame,
+    sym_prim3d.Torus3D: sdf3d_bank.sdf3d_torus,
     sym_prim3d.CappedTorus3D: sdf3d_bank.sdf3d_capped_torus,
     sym_prim3d.Link3D: sdf3d_bank.sdf3d_link,
     sym_prim3d.InfiniteCylinder3D: sdf3d_bank.sdf3d_infinite_cylinder,
