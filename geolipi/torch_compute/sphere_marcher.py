@@ -114,8 +114,13 @@ class Renderer:
         return ray_positions, ray_directions
     
     def render(self, sdf_expression, ground_expression=None, 
-               material_setting=None, finite_difference_epsilon=None):
+               material_setting=None, finite_difference_epsilon=None,
+               convergence_threshold=None, num_iterations=None):
 
+        if convergence_threshold is None:
+            convergence_threshold = self.convergence_threshold
+        if num_iterations is None:
+            num_iterations = self.num_iterations
         camera_position = self.get_camera_position(**self.camera_params)
         ray_positions, ray_directions = self.get_rays(camera_position)
         if material_setting is None:

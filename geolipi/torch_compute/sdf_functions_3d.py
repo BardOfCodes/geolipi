@@ -7,10 +7,19 @@ COS_30 = np.cos(np.pi / 6)
 TAN_30 = np.tan(np.pi / 6)
 
 def sdf3d_sphere(points, radius):
-    # points shape [batch, num_points, 3]
-    # radius shape [batch, 1]
-    base_sdf = th.norm(points, dim=-1)
-    base_sdf = base_sdf - radius
+    """
+    Calculates the signed distance from 3D points to the surface of a sphere.
+
+    Parameters:
+    points (torch.Tensor): A tensor of shape [batch, num_points, 3] representing 3D points.
+    radius (torch.Tensor): A tensor of shape [batch, 1] representing the radii of spheres.
+
+    Returns:
+    torch.Tensor: A tensor containing the signed distances of each point to the sphere surface.
+    """
+
+    # Calculate the Euclidean norm of each point and subtract the radius for signed distance
+    base_sdf = th.norm(points, dim=-1) - radius
     return base_sdf
 
 def sdf3d_box(points, size):
@@ -170,7 +179,7 @@ def sdf3d_capsule(points,  a, b, r):
     # r shape [batch, 1]
     pa = points - a[..., None, :]
     ba = b[..., None, :] - a[..., None, :]
-    h = th.clamp((pa * ba).sum(-1, keepdim=True) / ((ba * ba).sum(-1, keepdim=True), EPSILON), min=0.0, max=1.0)
+    h = th.clamp((pa * ba).sum(-1, keepdim=True) / ((ba * ba).sum(-1, keepdim=True) + EPSILON), min=0.0, max=1.0)
     sdf = th.norm(pa - ba * h, dim=-1) - r
     return sdf
 
@@ -460,11 +469,12 @@ def sdf3d_pyramid(points, h):
     # h shape [batch, 1]
     # TODO: Backprop fix
     m2 = h * h + 0.25
-    points[..., :2] = th.abs(points[..., :2])
-    cond = points[..., 1:2] > points[..., 0:1]
-    points[..., :2] = th.where(cond, points[..., [1, 0]], points[..., :2])
-    points[..., :2] = points[..., :2] - 0.5
-    points[..., 2] = points[..., 2] +  0.5
+    abs_points = th.abs(points[..., :2])
+    cond = abs_points[..., 1:2] > abs_points[..., 0:1]
+    swapped_points = th.where(cond, abs_points[..., [1, 0]], abs_points[..., :2])
+    mod_points = swapped_points - 0.5
+    z_coord = points[..., 2:3] + 0.5
+    points = th.cat([mod_points, z_coord], dim=-1)
     q = th.stack([points[..., 1], h * points[..., 2] - 0.5 * points[..., 0], h * points[..., 0] + 0.5 * points[..., 2]], dim=-1)
     s = th.clamp(-q[..., 0], min=0.0)
     t = th.clamp((q[..., 1] - 0.5 * points[..., 1]) / (m2 + 0.25), min=0.0, max=1.0)
@@ -576,3 +586,17 @@ def sdf3d_inexact_super_quadrics(points, skew_vec, epsilon_1, epsilon_2):
     out_2 = (points[..., 2]/skew_vec[..., 2]) ** (2/(epsilon_1 + EPSILON))
     base_sdf = 1 - ((out_0 + out_1) ** (epsilon_2/(epsilon_1 + EPSILON)) + out_2) ** (-epsilon_1/2.)
     return base_sdf
+
+def sdf3d_inexact_anisotropic_gaussian(points, center, axial_radii, scale_constant):
+    # Reference: https://arxiv.org/pdf/1904.06447.pdf
+    # points shape [batch, num_points, 3]
+    # center shape [batch, 3]
+    # axial_radii shape [batch, 3]
+    # scale_constant shape [batch, 1]
+    points = -(points - center[..., None, :]) ** 2 / (2 * axial_radii[..., None, :] ** 2)
+    base_sdf = scale_constant[..., :] * th.exp(points.sum(-1))
+    return base_sdf
+
+               
+
+    

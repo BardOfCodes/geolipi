@@ -197,6 +197,8 @@ class NoParamCylinder3D(Primitive3D):
 class InexactSuperQuadrics3D(Primitive3D):
     ...
 
-
+class InexactAnisotropicGaussian3D(Primitive3D):
+    ...
 class PreBakedPrimitive3D(Primitive3D):
     ...
+

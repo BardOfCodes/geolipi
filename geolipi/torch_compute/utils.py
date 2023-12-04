@@ -122,6 +122,7 @@ PRIMITIVE_MAP = {
     sym_prim3d.NoParamSphere3D: sdf3d_bank.sdf3d_no_param_sphere,
     sym_prim3d.NoParamCylinder3D: sdf3d_bank.sdf3d_no_param_cylinder,
     sym_prim3d.InexactSuperQuadrics3D: sdf3d_bank.sdf3d_inexact_super_quadrics,
+    sym_prim3d.InexactAnisotropicGaussian3D: sdf3d_bank.sdf3d_inexact_anisotropic_gaussian,
     # Higher Order
     sym_higher.LinearExtrude3D: higher_sdf_bank.sdf3d_linear_extrude,
     sym_higher.QuadraticBezierExtrude3D: higher_sdf_bank.sdf3d_quadratic_bezier_extrude,

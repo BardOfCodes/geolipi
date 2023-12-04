@@ -203,16 +203,21 @@ def cro(a, b):
     return a[..., 0] * b[..., 1] - a[..., 1] * b[..., 0]
 
 
-def sdf3d_revolution(points, sdf2d_func, o):
-    q = th.stack([th.norm(points[..., :2], dim=-1) - o, points[..., 2]], dim=-1)
-    return sdf2d_func(q)
+def sdf3d_revolution(points, o):
+    param_x = th.norm(points[..., :2], dim=-1) - o
+    param_y = points[..., 2]
+    param_z = th.ones_like(param_x)
+    scale_factor = 0
+    parameterized_points = th.stack([param_x, param_y, param_z], dim=-1)
+    return parameterized_points, scale_factor
 
-def sdf3d_simple_extrusion(points, sdf2d_func, h):
-    d = sdf2d_func(points[..., :2])
-    w = th.stack([d, th.abs(points[..., 2]) - h], dim=-1)
-    w_2 = th.clamp(th.amin(w, dim=-1), max=0)
-    base_sdf = w_2 + th.norm(th.clamp(w, min=0.0))
-    return base_sdf
+def sdf3d_simple_extrusion(points, h):
+    # points shape [batch, num_points, 3]
+    # h shape [batch, 1]
+    parameterized_points = points[..., :2]
+    to_scale = (points[..., 2:3] + h/2) / (h + EPSILON)
+    parameterized_points = th.cat([parameterized_points, to_scale], dim=-1)
+    return parameterized_points, h
 
 
 def linear_curve_1d(points, point1, point2):

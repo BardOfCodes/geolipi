@@ -12,7 +12,7 @@ from .sketcher import Sketcher
 from .utils import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP, COLOR_FUNCTIONS
 from .common import EPSILON, RECTIFY_TRANSFORM
 from .utils import COLOR_MAP
-from geolipi.symbolic import Union, Intersection, Difference
+from geolipi.symbolic import Union, Intersection, Difference, Revolution3D
 from .color_functions import source_over_seq
 
 
@@ -81,7 +81,7 @@ def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize
         params = parse_tensor_from_expr(expression, params)
         n_dims = sketcher.n_dims
         coords = coords[..., :n_dims]/(coords[..., n_dims:n_dims+1] + EPSILON)
-            
+        
         if isinstance(expression, HIGERPRIM_TYPE):
             param_points, scale_factor = PRIMITIVE_MAP[type(expression)](coords, *params)
             
@@ -96,11 +96,14 @@ def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize
                                                       rectify_transform=rectify_transform,
                                                       coords=homo_dist_field_2d, tracked_scale=None)
             in_plane_distance = in_plane_distance / scale_t
-            
-            height = (param_points[..., 2].clone() - 0.5) * scale_factor
-            height = th.abs(height) - (0.5 * scale_factor)
-            vec2 = th.stack([in_plane_distance, height], dim=-1)
-            sdf = th.amax(vec2, -1) + th.norm(th.clip(vec2, min=0.0), -1)
+            # TODO: Very Unclean.
+            if isinstance(expression, Revolution3D):
+                sdf = in_plane_distance
+            else:
+                height = (param_points[..., 2].clone() - 0.5) * scale_factor
+                height = th.abs(height) - (0.5 * scale_factor)
+                vec2 = th.stack([in_plane_distance, height], dim=-1)
+                sdf = th.amax(vec2, -1) + th.norm(th.clip(vec2, min=0.0), -1)
             return sdf
         else:
             sdf = PRIMITIVE_MAP[type(expression)](coords, *params)

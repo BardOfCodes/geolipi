@@ -56,3 +56,4 @@ def get_figure(sdf, input_type="SDF", res=128, point_count=2500, r=1):
         )
     )
     return fig
+
