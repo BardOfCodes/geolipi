@@ -1,6 +1,6 @@
 import numpy as np
 import torch as th
-from .common import EPSILON
+from .common import EPSILON, ACOS_EPSILON
 from .sdf_functions_2d import ndot
 
 COS_30 = np.cos(np.pi / 6)
@@ -81,7 +81,6 @@ def sdf3d_capped_torus(points, angle, ra, rb):
     return base_sdf
 
 def sdf3d_link(points, le, r1, r2):
-    # TODO: Backprop fix
     # points shape [batch, num_points, 3]
     # le shape [batch, 1]
     # r1 shape [batch, 1]
@@ -141,7 +140,7 @@ def sdf3d_plane(points, n, h):
     # n shape [batch, 3]
     # h shape [batch, 1]
     n = n / (th.norm(n, dim=-1, keepdim=True) + EPSILON)
-    base_sdf = (points * n).sum(-1) + h
+    base_sdf = (points * n[..., None, :]).sum(-1) + h
     return base_sdf
 
 def sdf3d_hex_prism(points, h):
@@ -467,7 +466,6 @@ def sdf3d_inexact_octahedron(points, s):
 def sdf3d_pyramid(points, h):
     # points shape [batch, num_points, 3]
     # h shape [batch, 1]
-    # TODO: Backprop fix
     m2 = h * h + 0.25
     abs_points = th.abs(points[..., :2])
     cond = abs_points[..., 1:2] > abs_points[..., 0:1]
@@ -581,10 +579,11 @@ def sdf3d_inexact_super_quadrics(points, skew_vec, epsilon_1, epsilon_2):
     # epsilon_1 shape [batch, 1]
     # epsilon_2 shape [batch, 1]
     points = th.abs(points)
-    out_0 = (points[..., 0]/skew_vec[..., 0]) ** (2/(epsilon_2 + EPSILON))
-    out_1 = (points[..., 1]/skew_vec[..., 1]) ** (2/(epsilon_2 + EPSILON))
-    out_2 = (points[..., 2]/skew_vec[..., 2]) ** (2/(epsilon_1 + EPSILON))
-    base_sdf = 1 - ((out_0 + out_1) ** (epsilon_2/(epsilon_1 + EPSILON)) + out_2) ** (-epsilon_1/2.)
+    out_0 = (points[..., 0]/skew_vec[..., 0:1]) ** (2/(epsilon_2 + EPSILON))
+    out_1 = (points[..., 1]/skew_vec[..., 1:2]) ** (2/(epsilon_2 + EPSILON))
+    out_2 = (points[..., 2]/skew_vec[..., 2:3]) ** (2/(epsilon_1 + EPSILON))
+    inside_term = (th.abs(out_0 + out_1) + EPSILON) ** (epsilon_2/(epsilon_1 + EPSILON))
+    base_sdf = 1 - (th.abs(inside_term + out_2) + EPSILON) ** (-epsilon_1/2.)
     return base_sdf
 
 def sdf3d_inexact_anisotropic_gaussian(points, center, axial_radii, scale_constant):

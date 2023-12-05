@@ -132,6 +132,10 @@ PRIMITIVE_MAP = {
     sym_higher.QuadraticCurve1D: higher_sdf_bank.quadratic_curve_1d,
 }
 
+# Try compile
+# PRIMITIVE_MAP = {x: th.compile(y) for x, y in PRIMITIVE_MAP.items()}
+
+
 MODIFIER_MAP = {
     # 2D
     sym_t2d.Translate2D: transform_bank.get_affine_translate_2D,

@@ -164,7 +164,7 @@ def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize
                                         relaxed_occupancy=relaxed_occupancy,
                                          relax_temperature=relax_temperature)
         if relaxed_occupancy:
-            cur_occ = create_relaxed_occupancy(cur_sdf, relax_temperature)
+            cur_occ = smoothen_sdf(cur_sdf, relax_temperature)
         else:
             cur_occ = cur_sdf <= 0
         colored_canvas = COLOR_FUNCTIONS[type(expression)](cur_occ, color)
@@ -202,7 +202,7 @@ def parse_tensor_from_expr(expression, params):
         params = param_list
     return params
 
-def create_relaxed_occupancy(execution, temperature):
+def smoothen_sdf(execution, temperature):
     output_tanh = th.tanh(execution * temperature)
     output_shape = th.nn.functional.sigmoid(-output_tanh * temperature)
     return output_shape

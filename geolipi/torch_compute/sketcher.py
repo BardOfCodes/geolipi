@@ -5,7 +5,8 @@ import numpy as np
 class Sketcher:
 
     def __init__(self, device="cuda", dtype=th.float32,
-                 resolution=64, mode="direct", n_dims=3):
+                 resolution=64, mode="direct", n_dims=3,
+                 coord_scale=1.0):
         if dtype == "float32":
             dtype = th.float32
         self.device = th.device(device)
@@ -13,6 +14,7 @@ class Sketcher:
         self.resolution = resolution
         self.mode = mode
         self.n_dims = n_dims
+        self.coord_scale = coord_scale
         self.homogeneous_identity = th.eye(n_dims + 1, device=self.device)
         self.zero_mat = th.zeros(n_dims, n_dims, device=self.device)
         self.coords = self.create_coords()
@@ -46,13 +48,14 @@ class Sketcher:
         points = np.stack(np.meshgrid(*mesh_grid_inp, indexing="ij"), axis=-1)
         points = points.astype(np.float32)
         points = (points / (res-1) - 0.5) * 2
+        points = points * self.coord_scale
         points = th.from_numpy(points)
         points = th.reshape(points, (-1, self.n_dims)).to(self.device)
         return points
 
     def get_coords(self, transform, points):
         if points is None:
-            coords = self.coords.clone().detach()
+            coords = self.get_base_coords()
         else: 
             coords = points
         pad = th.ones_like(coords[:, :1])
@@ -65,7 +68,7 @@ class Sketcher:
         return self.coords.clone().detach()
     
     def get_homogenous_coords(self):
-        coords = self.coords.clone().detach()
+        coords = self.get_base_coords()
         coords = self.make_homogenous_coords(coords)
         return coords
     

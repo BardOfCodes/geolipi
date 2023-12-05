@@ -1,6 +1,6 @@
 import numpy as np
 import torch as th
-from .common import EPSILON
+from .common import EPSILON, ACOS_EPSILON
 
 SQRT_3 = np.sqrt(3, dtype=np.float32)
 SQRT_2 = np.sqrt(2, dtype=np.float32)
@@ -28,8 +28,8 @@ def sdf2d_rounded_box(points, bounds, radius):
     # Select appropriate radii based on the sign of p
     radius = radius[..., None, :]
     bounds = bounds[..., None, :]
-    radius_xy = th.where(points[..., 0:1] > 0, radius[..., 0:1], radius[..., 2:3])
-    radius_x = th.where(points[..., 1:2] > 0, radius_xy, radius[..., 1:2])
+    radius_xy = th.where(points[..., 0:1] > 0, radius[..., 0:2], radius[..., 2:4])
+    radius_x = th.where(points[..., 1:2] > 0, radius_xy[..., 0:1], radius_xy[..., 1:2])
     q = th.abs(points) - bounds + radius_x
     length_q = th.norm(th.clamp(q, min=0.0), dim=-1)
     sd = th.clamp(th.max(q[..., 0], q[..., 1]), max=0.0) + length_q - radius_x[..., 0]
@@ -99,7 +99,7 @@ def sdf2d_parallelogram(points, width, height, skew):
     e = th.stack([skew, height], -1)
     p = th.where(points[..., 1:2] < 0, -points, points)
     w = p - e
-    w[..., 0] = w[..., 0] - th.clamp(w[..., 0], -width, width)
+    w[..., 0] = w[..., 0] - th.clamp(w[..., 0].clone(), -width, width)
     d = th.stack([(w * w).sum(-1), -w[..., 1]], -1)
     s = p[..., 0:1] * e[..., 1:2] - p[..., 1:2] * e[..., 0:1]
     p = th.where(s <0, -p, -p)
@@ -115,20 +115,20 @@ def sdf2d_equilateral_triangle(points, side_length):
     # points shape [batch, num_points, 2]
     # width shape [batch, 1]
     k = th.tensor(SQRT_3).to(points.device)
-    points[..., 0] = th.abs(points[..., 0]) - side_length
+    points[..., 0] = th.abs(points[..., 0].clone()) - side_length
     points[..., 1] = points[..., 1] + side_length/k
     condition = (points[..., 0] + (k * points[..., 1]) > 0)
     new_points = th.stack([points[..., 0] - k * points[..., 1],
                             -k * points[..., 0] - points[..., 1]], -1) / 2.0
     points = th.where(condition.unsqueeze(-1), new_points, points)
-    points[..., 0] = points[..., 0] - th.clamp(th.clamp(points[..., 0], min=-2 * side_length), max=0)
+    points[..., 0] = points[..., 0] - th.clamp(th.clamp(points[..., 0].clone(), min=-2 * side_length), max=0)
     sdf = -th.norm(points, dim=-1) * th.sign(points[..., 1])
     return sdf
 
 def sdf2d_isosceles_triangle(points, wi_hi):
     # points shape [batch, num_points, 2]
     # wi_hi shape [batch, 2]
-    points[..., 0] = th.abs(points[..., 0])
+    points[..., 0] = th.abs(points[..., 0].clone())
     wi_hi_ex = wi_hi[..., None, :]
     points[..., 1] = points[..., 1] + wi_hi_ex[..., :, 1]/2.0
     a = points - wi_hi_ex * th.clamp((points * wi_hi_ex).sum(-1, keepdim=True) / ((wi_hi * wi_hi).sum(-1)  + EPSILON), 0, 1)
@@ -189,7 +189,7 @@ def sdf2d_regular_pentagon(points, r):
     k2[0] *=-1
     points = points - 2 * (th.clamp((points * k2[:2]).sum(-1), max=0.)[..., None] * k2[..., :2])
     points = points - 2 * (th.clamp((points * k[:2]).sum(-1), max=0.)[..., None] * k[..., :2])
-    points[..., 0] = points[..., 0] - th.clamp(points[..., 0], -r * k[2], r * k[2])
+    points[..., 0] = points[..., 0] - th.clamp(points[..., 0].clone(), -r * k[2], r * k[2])
     points[..., 1] = points[..., 1] - r
     sdf = th.norm(points, dim=-1) * th.sign(points[..., 1])
     return sdf
@@ -200,7 +200,7 @@ def sdf2d_regular_hexagon(points, r):
     k = th.tensor(HEX_VEC).to(points.device)
     points = th.abs(points)
     points = points - 2 * th.clamp((points * k[:2]).sum(-1), max=0.)[..., None] * k[..., :2]
-    points[..., 0] = points[..., 0] - th.clamp(points[..., 0], -r * k[2], r * k[2])
+    points[..., 0] = points[..., 0] - th.clamp(points[..., 0].clone(), -r * k[2], r * k[2])
     points[..., 1] = points[..., 1] - r
     sdf = th.norm(points, dim=-1) * th.sign(points[..., 1])
     return sdf
@@ -214,7 +214,7 @@ def sdf2d_regular_octagon(points, r):
     k2[0] *= -1
     points = points - 2 * th.clamp((points * k[:2]).sum(-1), max=0.)[..., None] * k[..., :2]
     points = points - 2 * th.clamp((points * k2[:2]).sum(-1), max=0.)[..., None] * k2[..., :2]
-    points[..., 0] = points[..., 0] - th.clamp(points[..., 0], -r * k[2], r * k[2])
+    points[..., 0] = points[..., 0] - th.clamp(points[..., 0].clone(), -r * k[2], r * k[2])
     points[..., 1] = points[..., 1] - r
     sdf = th.norm(points, dim=-1) * th.sign(points[..., 1])
     return sdf
@@ -222,13 +222,12 @@ def sdf2d_regular_octagon(points, r):
 def sdf2d_hexagram(points, r):
     # points shape [batch, num_points, 2]
     # r shape [batch, 1]
-    # TODO: correct for Diff Opt
     k = th.tensor(HEXAGRAM_VEC).to(points.device)
     points = th.abs(points)
     k2 = k.flip(0)
     points = points - 2 * th.clamp((points * k[:2]).sum(-1), max=0.)[..., None] * k[..., :2]
     points = points - 2 * th.clamp((points * k2[2:]).sum(-1), max=0.)[..., None] * k2[..., 2:]
-    points[..., 0] = points[..., 0] - th.clamp(points[..., 0], r * k[2], r * k[3])
+    points[..., 0] = points[..., 0] - th.clamp(points[..., 0].clone(), r * k[2], r * k[3])
     points[..., 1] = points[..., 1] - r
     sdf = th.norm(points, dim=-1) * th.sign(points[..., 1])
     return sdf
@@ -237,7 +236,6 @@ def sdf2d_star_5(points, r, rf):
     # points shape [batch, num_points, 2]
     # r shape [batch, 1]
     # rf shape [batch, 1]
-    # TODO: Fix for singular eval
     k = th.tensor(STAR_VEC).to(points.device)
     k2 = k.clone()
     k2[0] = k2[0] * -1
@@ -515,7 +513,10 @@ def sdf2d_ellipse(points, ab):
     d = c3 + m2 * n2
     g = m + m * n2
     # part 1
-    h = th.acos(q / (c3 + EPSILON)) / 3.0
+    c3 = th.where(th.abs(c3) < EPSILON, EPSILON, c3)
+    z = q / (c3)
+    acos_in = th.clamp(z, min=-1.0 + ACOS_EPSILON, max=1.0 - ACOS_EPSILON)
+    h = th.acos(acos_in) / 3.0
     s = th.cos(h)
     t = th.sin(h) * sqrt_3
     rx = th.sqrt(th.clamp(-c * (s + t + 2.0) + m2, min=EPSILON))
@@ -523,8 +524,8 @@ def sdf2d_ellipse(points, ab):
     co_1 = (ry + th.sign(l) * rx + th.abs(g) / (rx * ry) - m) / 2.0
     # part 2
     h = 2.0 * m * n * th.sqrt(th.clamp(d, min=EPSILON))
-    s = th.sign(q + h) * th.pow(th.abs(q + h), 1/ 3.0)
-    u = th.sign(q - h) * th.pow(th.abs(q - h), 1/ 3.0)
+    s = th.sign(q + h) * th.pow(th.abs(q + h) + EPSILON, 1/ 3.0)
+    u = th.sign(q - h) * th.pow(th.abs(q - h) + EPSILON, 1/ 3.0)
     rx = -s - u - c * 4.0 + 2.0 * m2
     ry = (s - u) * sqrt_3
     rm = th.sqrt(rx * rx + ry * ry + EPSILON)
@@ -545,7 +546,8 @@ def sdf2d_parabola(points, k):
     q = 0.25 * ik * ik * points[..., 0]
     h = q * q - p * p * p
     r = th.sqrt(th.abs(h) + EPSILON)
-    sol_1 = th.pow(q + r, 1.0/3.0) - th.pow(th.abs(q - r), 1.0/3.0) * th.sign(r - q)
+
+    sol_1 = th.pow(th.abs(q + r) + EPSILON, 1.0/3.0) - th.pow(th.abs(q - r) + EPSILON, 1.0/3.0) * th.sign(r - q)
     sol_2 = 2.0 * th.cos(th.atan2(r, q) / 3.0) * th.sqrt(th.clamp(p, min=EPSILON))
     x = th.where(h > 0.0, sol_1, sol_2)
     sdf = th.norm(points - th.stack([x, k * x * x], -1), dim=-1) * th.sign(points[..., 0] - x)
@@ -577,9 +579,10 @@ def sdf2d_blobby_cross(points, he):
     q = pos[..., 0] / (he * he * 16.0 + EPSILON)
     h = q * q - p * p * p
     r_1 = th.sqrt(th.clamp(h, min=EPSILON))
-    x_1 = th.pow(q + r_1, 1.0/3.0) - th.pow(th.abs(q - r_1), 1.0/3.0) * th.sign(r_1 - q)
+    x_1 = th.pow(th.abs(q + r_1) + EPSILON, 1.0/3.0) - th.pow(th.abs(q - r_1) + EPSILON, 1.0/3.0) * th.sign(r_1 - q)
     r_2 = th.sqrt(th.clamp(p, min=EPSILON))
-    x_2 = 2.0 * r_2 * th.cos(th.acos(q / (p * r_2 + EPSILON)) / 3.0)
+    acos_in = th.clamp(q / (p * r_2 + EPSILON), min=-1 + ACOS_EPSILON, max=1 - ACOS_EPSILON)
+    x_2 = 2.0 * r_2 * th.cos(th.acos(acos_in) / 3.0)
     x = th.where(h > 0.0, x_1, x_2)
     x = th.clamp(x, max=SQRT_2/2.0)
     z = th.stack([x, he * (1.0 - 2.0 * x * x)], -1) - pos
@@ -592,7 +595,7 @@ def sdf2d_tunnel(points, wh):
     points[..., 0] = th.abs(points[..., 0])
     points[..., 1] = -points[..., 1]
     q = points - wh[..., None, :]
-    d1 = th.norm(th.stack([th.clamp(q[..., 0], min=0.0), q[..., 1]], -1), dim=-1)
+    d1 = th.norm(th.stack([th.clamp(q[..., 0].clone(), min=0.0), q[..., 1]], -1), dim=-1)
     q[..., 0] = th.where(points[..., 1] > 0.0, q[..., 0], th.norm(points, dim=-1) - wh[..., None, 0])
     d2 = th.norm(th.stack([q[..., 0], th.clamp(q[..., 1], min=0.0)], -1), dim=-1)
     d = th.sqrt(th.minimum(d1, d2) + EPSILON)
@@ -619,7 +622,7 @@ def sdf2d_stairs(p, wh, n):
     dia = th.norm(wh, dim=-1, keepdim=True) + EPSILON
     mat = th.stack([wh[..., 0], -wh[..., 1], wh[..., 1], wh[..., 0]], -1).view(-1, 2, 2)
     p = th.bmm(p, mat) / (dia[..., None])
-    id = th.clamp(th.clamp(th.round(p[..., 0] / dia), min=0.0), max=n - 1.0)
+    id = th.clamp(th.clamp(th.round(p[..., 0].clone() / dia), min=0.0), max=n - 1.0)
     p[..., 0] = p[..., 0] - id * dia
     mat = th.stack([wh[..., 0], wh[..., 1], -wh[..., 1], wh[..., 0]], -1).view(-1, 2, 2)
     p = th.bmm(p, mat) / dia[..., None]
@@ -652,7 +655,8 @@ def sdf2d_quadratic_circle(points):
     t1 = th.sign(h1 - a) * th.pow(th.abs(h1 - a), 1.0/3.0) - th.pow(h1 + a, 1.0/3.0)
     # solution 2
     z2 = th.sqrt(th.clamp(-c, min=EPSILON))
-    v2 = th.acos(a / (c * z2 + EPSILON)) / 3.0
+    acos_in = th.clamp(a / (c * z2 + EPSILON), min=-1 + ACOS_EPSILON, max=1 - ACOS_EPSILON)
+    v2 = th.acos(acos_in) / 3.0
     t2 = -z2 * (th.cos(v2) + th.sin(v2) * SQRT_3)
     t = th.where(cond, t1, t2)
     t = t * 0.5
@@ -687,7 +691,7 @@ def sdf2d_circle_wave(points, tb, ra):
     tb = th.clamp(tb, min=EPSILON)
     tb = np.pi * 5 / 6. * tb
     co = ra * th.cat([th.sin(tb), th.cos(tb)], -1)
-    points[..., 0] = th.abs(th.fmod(points[..., 0], co[..., 0:1] * 4.0) - co[..., 0:1] * 2.0)
+    points[..., 0] = th.abs(th.fmod(points[..., 0].clone(), co[..., 0:1] * 4.0) - co[..., 0:1] * 2.0)
     p1 = points.clone()
     p2 = th.stack([th.abs(points[..., 0] - 2.0 * co[..., 0:1]), -points[..., 1] + 2.0 * co[..., 1:2]], -1)
     cond = co[..., 1:2] * p1[..., 0] > co[..., 0:1] * p1[..., 1]
@@ -711,15 +715,17 @@ def sdf2d_hyperbola(points, k, he):
     cond = h < 0.0
     # solution1
     m1 = th.sqrt(th.clamp(-r, min=EPSILON))
-    u1 = m1 * th.cos(th.acos(q / (r * m1 + EPSILON)) / 3.0)
+    acos_in = th.clamp(q / (r * m1 + EPSILON), min=-1.0 + ACOS_EPSILON, max=1.0 - ACOS_EPSILON)
+    u1 = m1 * th.cos(th.acos(acos_in) / 3.0)
     # solution2
     m2 = th.pow(th.sqrt(th.clamp(h, min=EPSILON)) - q, 1.0/3.0)
     u2 = (m2 - r / (m2 + EPSILON)) / 2.0
     u = th.where(cond, u1, u2)
     w = th.sqrt(th.clamp(u + x2, min=EPSILON))
     b = k * points[..., 1] - x2 * points[..., 0] * 2.0
-    t = points[..., 0] / 4.0 - w + th.sqrt(2.0 * x2 - u + b / (w * 4.0 + EPSILON))
+    t = points[..., 0] / 4.0 - w + th.sqrt(th.clamp(2.0 * x2 - u + b / (w * 4.0 + EPSILON), min=EPSILON))
     t = th.maximum(t, th.sqrt(th.clamp(he * he * 0.5 + k, min=EPSILON)) - he / SQRT_2)
+
     d = th.norm(points - th.stack([t, k / t], -1), dim=-1)
     sdf = th.where(points[..., 0] * points[..., 1] < k, d, -d)
     return sdf
@@ -747,13 +753,14 @@ def sdf2d_quadratic_bezier_curve(points, A, B, C):
     # sol 1
     h1 = th.sqrt(th.clamp(h, min=EPSILON))
     x1 = (th.stack([h1, -h1], -1) - q[..., None]) / 2.0
-    uv1 = th.sign(x1) * th.pow(th.abs(x1), 1.0/3.0)
+    uv1 = th.sign(x1) * th.pow(th.abs(x1) + EPSILON, 1.0/3.0)
     t1 = th.clamp(uv1[..., 0] + uv1[..., 1] - kx, min=0.0, max=1.0)
     t1 = t1[..., None]
     res_1 = th.norm(d + (c + b * t1) * t1, dim=-1)
     # sol 2
     z2 = th.sqrt(th.clamp(-p, min=EPSILON))
-    v2 = th.acos(q / (p * z2 * 2.0 + EPSILON)) / 3.0
+    acos_in = th.clamp(q / (p * z2 * 2.0 + EPSILON), min=-1.0 + ACOS_EPSILON, max=1.0 - ACOS_EPSILON)
+    v2 = th.acos(acos_in) / 3.0
     m2 = th.cos(v2)
     n2 = th.sin(v2) * SQRT_3
     t2 = th.clamp(th.stack([m2 + m2, -n2 - m2, n2 - m2], -1) * z2[..., None] - kx[..., None], min=0.0, max=1.0)
@@ -761,7 +768,6 @@ def sdf2d_quadratic_bezier_curve(points, A, B, C):
                        th.norm(d + (c + b * t2[..., 1:2]) * t2[..., 1:2], dim=-1))
     res = th.where(cond, res_1, res_2)
     return th.sqrt(res + EPSILON)
-    
 
 def sdf2d_segment(points, start_point, end_point):
     # points shape [batch, num_points, 2]

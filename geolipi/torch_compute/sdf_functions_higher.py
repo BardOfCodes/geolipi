@@ -1,7 +1,7 @@
 
 import torch as th
 import numpy as np
-from .common import EPSILON
+from .common import EPSILON, ACOS_EPSILON
 from .sdf_functions_2d import SQRT_3
 # The return of a curve distance should be:
 # 1) The parameter t on the curve (0, 1) which corresponds to the closest point
@@ -130,9 +130,9 @@ def sdf3d_quadratic_bezier_extrude(points, start_point, control_point, end_point
 
     # Multiple roots:
     z = th.sqrt(th.abs(p) + EPSILON)
-    temp = q / (p * z * 2.0)
-    temp = th.clamp(temp, -1 + EPSILON, 1 - EPSILON)
-    v = th.acos(temp) / 3.0
+    acos_in = q / (p * z * 2.0)
+    acos_in = th.clamp(acos_in, -1 + ACOS_EPSILON, 1 - ACOS_EPSILON)
+    v = th.acos(acos_in) / 3.0
     m = th.cos(v)
     n = th.sin(v) * SQRT_3
     new_vec = th.stack([m + m, -n - m], dim=-1)
