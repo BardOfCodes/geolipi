@@ -202,3 +202,6 @@ class InexactAnisotropicGaussian3D(Primitive3D):
 class PreBakedPrimitive3D(Primitive3D):
     ...
 
+
+class NullExpression3D(Primitive3D):
+    ...

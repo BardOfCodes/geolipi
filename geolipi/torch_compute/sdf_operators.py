@@ -42,3 +42,6 @@ def sdf_erode(sdf_a, k):
 
 def sdf_onion(sdf_a, k):
     return th.abs(sdf_a) - k
+
+def sdf_null_op(points):
+    return th.zeros_like(points[...,0]) + EPSILON

@@ -212,3 +212,6 @@ class NoParamCircle2D(Primitive2D):
 
 class NoParamTriangle2D(Primitive2D):
     ...
+
+class NullExpression2D(Primitive2D):
+    ...

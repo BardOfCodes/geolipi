@@ -64,6 +64,8 @@ ROTSYM_TYPE = type_union[RotationSymmetryX3D, RotationSymmetryY3D, RotationSymme
 PRIM_TYPE = type_union[Primitive2D, Primitive3D, HigherOrderPrimitives3D]
 HIGERPRIM_TYPE = HigherOrderPrimitives3D
 
+NULL_EXPR_TYPE = type_union[NullExpression2D, NullExpression3D]
+
 # COLOR_TYPE = type_union[ColorModifier2D, ColorModifier3D]
 COLOR_MOD = type_union[ModifyColor2D, ModifyOpacity2D]
 APPLY_COLOR_TYPE = ApplyColor2D
