@@ -1,6 +1,6 @@
-# GeoLIPI: A DSL for implicit geometric modelling
+# GeoLIPI: A DSL for Implicit Geometric Modelling
 
-[banner]()
+[banner](assets/banner_2.png)
 
 Language for modelling 3D shapes. This is to be treated as a meta-language, from which visual programming languages can be derived. Some of the languages/visual programs that can be executed in this framework are:
 
@@ -74,7 +74,7 @@ Check out other examples in `notebooks/`.
 
 ## Next steps
 
-1) DearPyGui based visualizer for 2D 3D both.
+1) REVL (Read-Eval-Visualize-Loop) using DearPyGui.
 2) Add Marching Primitives / Layer wise SVG optimization.
 3) Add SDS optimization example -> Connecting it to natural language directly.
 4) Add differentiable CSG operation and draw operations (probability over types).

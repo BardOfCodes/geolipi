@@ -294,7 +294,7 @@ def smoothen_sdf(execution, temperature):
 def expr_to_sdf(
     expression: GLFunction,
     sketcher: Sketcher,
-    secondary_sketche: Sketcher = None,
+    secondary_sketcher: Sketcher = None,
     rectify_transform: bool = RECTIFY_TRANSFORM,
     coords: th.Tensor = None,
 ):

@@ -152,8 +152,8 @@ def compile_expr(
             if params:
                 param_list = []
                 for ind, param in enumerate(params):
-                    if param in expression.lookup_table:
-                        cur_param = expression.lookup_table[param]
+                    if param in cur_expr.lookup_table:
+                        cur_param = cur_expr.lookup_table[param]
                         param_list.append(cur_param)
                     else:
                         param_list.append(param)
@@ -185,8 +185,8 @@ def compile_expr(
             params = cur_expr.args
             if params:
                 for ind, param in enumerate(params):
-                    if param in expression.lookup_table:
-                        cur_param = expression.lookup_table[param]
+                    if param in cur_expr.lookup_table:
+                        cur_param = cur_expr.lookup_table[param]
                         param_list.append(cur_param)
                     else:
                         param_list.append(param)
