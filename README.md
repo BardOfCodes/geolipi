@@ -14,7 +14,7 @@ and many more. Check out `languages.md` for more details.
 
 ## Important: Research Code - Use at your own risk
 
-I have added some documentation (with the help of ChatGPT) [here]().
+I have added some documentation (with the help of ChatGPT) [here](https://bardofcodes.github.io/geolipi/index.html).
 
 ## Main usecase
 
@@ -26,7 +26,7 @@ Mainly, GeoLIPI attempts to embed a generic visual language in python, making it
 
 3) Parameter Optimization of arbitrary visual programs (All operations are created to allow differentiable optimization of its parameters). See `notebooks/parameter_optimization.ipynb`.
 
-4) [TBD] Help with searching programs for a desired execution (refer to our recent [paper]()).
+4) [TBD] Help with searching programs for a desired execution (refer to our recent [paper](https://bardofcodes.github.io/coref/)).
 
 5) Batched PyTorch execution code for all the shader toy 2D and 3D primitives described by Inigo Quilez. See `notebooks/torch_sdf2d_example.ipynb` and `notebooks/torch_sdf3d_example.ipynb`.
 
