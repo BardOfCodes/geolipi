@@ -5,9 +5,7 @@
 Language for modelling 3D shapes. This is to be treated as a meta-language, from which visual programming languages can be derived. Some of the languages/visual programs that can be executed in this framework are:
 
 1) CSG 3D Variants
-
 2) GeoCode
-
 3) SVG 2D
 
 and many more. Check out `languages.md` for more details.
@@ -21,13 +19,9 @@ I have added some documentation (with the help of ChatGPT) [here](https://bardof
 Mainly, GeoLIPI attempts to embed a generic visual language in python, making it easier to use and extend for research. Additionally, it provides the following benefits:
 
 1) Fast Batched Execution of programs - useful for training neural networks on large batches of program executions. See a demonstration of this in `notebooks/compiled_execution.ipynb`.
-
 2) Single "symbolic" object, multiple execution strategies. This helps with "executing" the program in different platforms/systems (such as blender for rendering, and pytorch for optimization). See `scripts/blender_render_example.py`.
-
 3) Parameter Optimization of arbitrary visual programs (All operations are created to allow differentiable optimization of its parameters). See `notebooks/parameter_optimization.ipynb`.
-
 4) [TBD] Help with searching programs for a desired execution (refer to our recent [paper](https://bardofcodes.github.io/coref/)).
-
 5) Batched PyTorch execution code for all the shader toy 2D and 3D primitives described by Inigo Quilez. See `notebooks/torch_sdf2d_example.ipynb` and `notebooks/torch_sdf3d_example.ipynb`.
 
 ## Installation
@@ -72,7 +66,7 @@ This results in this output.
 
 Check out other examples in `notebooks/`.
 
-## Next steps
+## Remaining TODOs
 
 1) REVL (Read-Eval-Visualize-Loop) using DearPyGui.
 2) Add Marching Primitives / Layer wise SVG optimization.
