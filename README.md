@@ -79,10 +79,16 @@ plt.axis('off')
 This results in this output.
 
 ![Example svg](assets/example_svg.png)
- 
+
 Check out other examples in `notebooks/`.
 
 ## Remaining TODOs
+
+0) Simple Diff Opt for 2D CSG matching Example.
+1) Simple Diff Opt for Image SVG.
+2) 3D data DiffOpt with primitive soup.
+
+## Future TODOs
 
 1) REVL (Read-Eval-Visualize-Loop) using DearPyGui.
 2) Add Marching Primitives / Layer wise SVG optimization.
