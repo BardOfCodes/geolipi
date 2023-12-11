@@ -39,22 +39,38 @@ export PYTHONPATH=$PYTHONPATH:/path/to/geolipi
 Here is a basic example of using the langauge to create an SVG image.
 
 ```python
+
+import matplotlib.pyplot as plt
 # geolipi.symbolic contains the "language" itself - disentangled from its evaluation/execution.
 import geolipi.symbolic as gls
 from geolipi.torch_compute import recursive_evaluate, Sketcher
 
-expression = gls.SVGOver()
 
 # sketcher is used for creating position grids
-sketcher = Sketcher()
+resolution = 1024
+sketcher_2d = Sketcher(device="cuda", resolution=resolution, n_dims=2)
+device = "cuda"
+
+# Create a complex SVG shape
+# Each star is s Star with a star5 on a reg star
+star_expression = gls.ApplyColor2D(
+    gls.Star2D((0.7,),(0.25,)), sp.Symbol("burgundy"))
+star_reg_expression = gls.ApplyColor2D(
+    gls.RegularStar2D((0.5,), (12.,), (5.,)), sp.Symbol("lilac"))
+circle_expr = gls.ApplyColor2D(
+    gls.Circle2D((0.15,)), sp.Symbol("chartreuse"))
+mix_expr = gls.SourceOver(circle_expr, 
+    gls.SourceAtop(star_expression, star_reg_expression))
+
 
 # Convert to pytorch tensors for evaluation
-expression = expression.to_tensor()
+mix_expr.to_tensor()
 
-output = recursive_evaluate(expression, sketcher)
+output = recursive_evaluate(mix_expr.to_tensor(), sketcher_2d)
 
 image = output.reshape(res, res, 4).detach().cpu().numpy()
 
+# Show image.
 plt.figure(figsize=(10, 10))
 plt.imshow(image)
 plt.axis('off')
@@ -62,8 +78,8 @@ plt.axis('off')
 
 This results in this output.
 
-[]: # Path: repos/geolipi/examples/README.md
-
+![Example svg](assets/example_svg.png)
+ 
 Check out other examples in `notebooks/`.
 
 ## Remaining TODOs
