@@ -3,13 +3,36 @@ import numpy as np
 
 
 class Sketcher:
+    """
+    The Sketcher class provides a framework for creating and manipulating a grid
+    of coordinates in a specified number of dimensions. It supports operations 
+    such as scaling, translating, and generating homogenous coordinates. This 
+    class is designed to work with PyTorch tensors.
 
-    def __init__(self, device="cuda", dtype=th.float32,
-                 resolution=64, mode="direct", n_dims=3,
-                 coord_scale=1.0):
+    Attributes:
+        device (th.device): The PyTorch device (e.g., CUDA or CPU) used for tensor operations.
+        dtype (th.dtype): The data type for PyTorch tensors (e.g., float32).
+        resolution (int): The resolution of the coordinate grid.
+        mode (str): The mode of operation (currently unused).
+        n_dims (int): The number of dimensions for the coordinates.
+        coord_scale (float): The scale factor applied to the coordinates.
+        homogeneous_identity (th.Tensor): An identity matrix in homogeneous coordinates.
+        zero_mat (th.Tensor): A zero matrix of size n_dims x n_dims.
+        coords (th.Tensor): The coordinate grid tensor.
+        scale_identity (th.Tensor): An identity scale tensor.
+        translate_identity (th.Tensor): An identity translate tensor.
+
+    """
+    def __init__(self, device: str = "cuda", dtype: th.dtype = th.float32,
+                 resolution: int = 64, mode: str = "direct", n_dims: int = 3,
+                 coord_scale: float = 1.0):
+
         if dtype == "float32":
             dtype = th.float32
-        self.device = th.device(device)
+        if isinstance(device, str):
+            self.device = th.device(device)
+        else:
+            self.device = device
         self.dtype = dtype
         self.resolution = resolution
         self.mode = mode
@@ -18,24 +41,19 @@ class Sketcher:
         self.homogeneous_identity = th.eye(n_dims + 1, device=self.device)
         self.zero_mat = th.zeros(n_dims, n_dims, device=self.device)
         self.coords = self.create_coords()
-        self.scale_identity = th.ones(
-            n_dims, dtype=self.dtype, device=self.device)
-        self.translate_identity = th.zeros(
-            n_dims, dtype=self.dtype, device=self.device)
+        self.scale_identity = th.ones(n_dims, dtype=self.dtype, device=self.device)
+        self.translate_identity = th.zeros(n_dims, dtype=self.dtype, device=self.device)
 
     def get_scale_identity(self):
-        """Return an identity scale matrix.
-        """
+        """Return an identity scale matrix."""
         return self.scale_identity.clone().detach()
 
     def get_translate_identity(self):
-        """Return an identity translate matrix.
-        """
+        """Return an identity translate matrix."""
         return self.translate_identity.clone().detach()
 
     def get_affine_identity(self):
-        """Return an identity affine matrix.
-        """
+        """Return an identity affine matrix."""
         return self.homogeneous_identity.clone().detach()  # .detach()
 
     def get_color_canvas(self):
@@ -44,10 +62,12 @@ class Sketcher:
 
     def create_coords(self):
         res = self.resolution
-        mesh_grid_inp = [range(res), ] * self.n_dims
+        mesh_grid_inp = [
+            range(res),
+        ] * self.n_dims
         points = np.stack(np.meshgrid(*mesh_grid_inp, indexing="ij"), axis=-1)
         points = points.astype(np.float32)
-        points = (points / (res-1) - 0.5) * 2
+        points = (points / (res - 1) - 0.5) * 2
         points = points * self.coord_scale
         points = th.from_numpy(points)
         points = th.reshape(points, (-1, self.n_dims)).to(self.device)
@@ -56,27 +76,27 @@ class Sketcher:
     def get_coords(self, transform, points):
         if points is None:
             coords = self.get_base_coords()
-        else: 
+        else:
             coords = points
         pad = th.ones_like(coords[:, :1])
         points_hom = th.cat([coords, pad], dim=1)
-        rotated_points_hom = th.einsum('ij,mj->mi', transform, points_hom)
-        rotated_points = rotated_points_hom[:, :self.n_dims]
+        rotated_points_hom = th.einsum("ij,mj->mi", transform, points_hom)
+        rotated_points = rotated_points_hom[:, : self.n_dims]
         return rotated_points
 
     def get_base_coords(self):
         return self.coords.clone().detach()
-    
+
     def get_homogenous_coords(self):
         coords = self.get_base_coords()
         coords = self.make_homogenous_coords(coords)
         return coords
-    
+
     def make_homogenous_coords(self, coords):
         pad = th.ones_like(coords[:, :1])
         points_homog = th.cat([coords, pad], dim=1)
         return points_homog
-        
+
     def empty_sdf(self):
         coords = self.get_base_coords()
         sdf = th.norm(coords, dim=-1)

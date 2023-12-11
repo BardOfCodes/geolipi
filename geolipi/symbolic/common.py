@@ -10,7 +10,13 @@ param_type_3D = type_union[Tuple, SympyTuple, np.ndarray, th.Tensor, Expr, GLExp
 param_type_4D = type_union[Tuple, SympyTuple, np.ndarray, th.Tensor, Expr, GLExpr]
 expr_type = type_union[Expr, GLExpr, GLFunction]
 
-axis_selector = (Symbol("AX2D"), Symbol("AY2D"), Symbol("AX3D"), Symbol("AY3D"), Symbol("AZ3D"))
+axis_selector = (
+    Symbol("AX2D"),
+    Symbol("AY2D"),
+    Symbol("AX3D"),
+    Symbol("AY3D"),
+    Symbol("AZ3D"),
+)
 
 
 def sig_check(sig_tuple_list):

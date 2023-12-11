@@ -2,6 +2,17 @@ from .utils import import_bpy
 # Credits: Extracted from Derek Hsu's code: https://github.com/HTDerekLiu/BlenderToolbox
 
 class colorObj(object):
+    """
+    Represents a color object with various color properties.
+
+    Parameters:
+        RGBA (tuple): The RGBA color values.
+        H (float, optional): Hue component of the color. Defaults to 0.5.
+        S (float, optional): Saturation component of the color. Defaults to 1.0.
+        V (float, optional): Value (brightness) component of the color. Defaults to 1.0.
+        B (float, optional): Additional brightness factor. Defaults to 0.0.
+        C (float, optional): Contrast factor of the color. Defaults to 0.0.
+    """
 
     def __init__(self, RGBA, H=0.5, S=1.0, V=1.0,
                  B=0.0, C=0.0):
@@ -12,8 +23,17 @@ class colorObj(object):
         self.B = B  # birghtness
         self.C = C  # contrast
 
-# For .gltf exports in the website.
 def create_simple_material_tree(material_name, color):
+    """
+    Creates a simple material node tree suitable for .gltf exports.
+
+    Parameters:
+        material_name (str): Name of the new material.
+        color (tuple): RGB color values for the material.
+
+    Returns:
+        bpy.types.Material: The newly created Blender material.
+    """
     bpy = import_bpy()
     RGBA = (color[0], color[1],  color[2], 1)
     mesh_color = colorObj(RGBA, 0.5, 1.0, 1.0, 0.0, 1.0)
@@ -33,8 +53,17 @@ def create_simple_material_tree(material_name, color):
 
     return mat
 
-# For the renders in CoReF paper (ICCV 2023).
 def create_material_tree(material_name, color):
+    """
+    Creates a complex material node tree for the renders in CoReF paper (ICCV 2023).
+
+    Parameters:
+        material_name (str): Name of the new material.
+        color (tuple): RGB color values for the material.
+
+    Returns:
+        bpy.types.Material: The newly created Blender material.
+    """
     bpy = import_bpy()
     RGBA = (color[0], color[1],  color[2], 1)
     mesh_color = colorObj(RGBA, 0.5, 1.0, 1.0, 0.0, 2.0)
@@ -84,6 +113,19 @@ def create_material_tree(material_name, color):
 def create_edge_material_tree(material_name, mesh_color, edge_thickness=0.001, 
                               edge_color=(0, 0, 0), 
                               ao_strength=1.0):
+    """
+    Creates a material node tree with edge highlighting and ambient occlusion.
+
+    Parameters:
+        material_name (str): Name of the new material.
+        mesh_color (tuple): RGB color values for the mesh.
+        edge_thickness (float, optional): Thickness of the edges. Defaults to 0.001.
+        edge_color (tuple, optional): RGB color values for the edges. Defaults to black.
+        ao_strength (float, optional): Strength of the ambient occlusion effect. Defaults to 1.0.
+
+    Returns:
+        bpy.types.Material: The newly created Blender material.
+    """
     rgba = (mesh_color[0], mesh_color[1],  mesh_color[2], 1)
     mesh_color = colorObj(rgba, 0.5, 1.0, 1.0, 0.0, 1.0)
     rgba = (edge_color[0], edge_color[1],  edge_color[2], 1)
@@ -135,6 +177,19 @@ def create_edge_material_tree(material_name, mesh_color, edge_thickness=0.001,
     
 
 def create_monotone_material(material_name, mesh_color, color_list, silhouette_color, shadow_size=0.1):
+    """
+    Creates a monotone material with multiple color levels, silhouette, and shadow effects.
+
+    Parameters:
+        material_name (str): Name of the new material.
+        mesh_color (tuple): RGB color values for the mesh.
+        color_list (list): List of RGB color tuples for different color levels.
+        silhouette_color (tuple): RGB color values for the silhouette effect.
+        shadow_size (float, optional): Size of the shadow effect. Defaults to 0.1.
+
+    Returns:
+        bpy.types.Material: The newly created Blender material.
+    """
     bpy = import_bpy()
     mat = bpy.data.materials.new(material_name)
     mat.use_nodes = True

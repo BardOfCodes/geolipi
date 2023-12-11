@@ -1,24 +1,57 @@
-import re
-import numpy as np
 import torch as th
 from typing import Union as type_union, Tuple
 from .base_symbolic import GLExpr, GLFunction
-from sympy import Function, Expr
 from .base_symbolic import GLExpr, GLFunction
 from sympy import Symbol, Tuple as SympyTuple, Integer as SympyInteger
-from .types import (ALL_REFLECTS, PREFIXED_AXIS_REFLECT, AXIAL_REFLECT,
-                    ALL_SYMS, PREFIXED_AXIS_SYM, AXIAL_PARAM_SYM)
+from .types import (
+    ALL_REFLECTS,
+    PREFIXED_AXIS_REFLECT,
+    AXIAL_REFLECT,
+    ALL_SYMS,
+    PREFIXED_AXIS_SYM,
+    AXIAL_PARAM_SYM,
+)
 
-from .transforms_3d import (Reflect3D, ReflectCoords3D, Translate3D, EulerRotate3D, Scale3D,
-                            TranslationSymmetry3D, RotationSymmetry3D, ScaleSymmetry3D,
-                            ReflectX3D, ReflectY3D, ReflectZ3D, RotationSymmetryX3D,
-                            RotationSymmetryY3D, RotationSymmetryZ3D, TranslationSymmetryX3D,
-                            TranslationSymmetryY3D, TranslationSymmetryZ3D, AxialScaleSymmetry3D,
-                            AxialReflect3D, AxialRotationSymmetry3D, AxialTranslationSymmetry3D)
-from .transforms_2d import (Reflect2D, ReflectCoords2D, Translate2D, EulerRotate2D, Scale2D,
-                            TranslationSymmetry2D, RotationSymmetry2D, ScaleSymmetry2D,
-                            ReflectX2D, ReflectY2D, TranslationSymmetryX2D, TranslationSymmetryY2D,
-                            AxialScaleSymmetry2D, AxialTranslationSymmetry2D, AxialReflect2D)
+from .transforms_3d import (
+    Reflect3D,
+    ReflectCoords3D,
+    Translate3D,
+    EulerRotate3D,
+    Scale3D,
+    TranslationSymmetry3D,
+    RotationSymmetry3D,
+    ScaleSymmetry3D,
+    ReflectX3D,
+    ReflectY3D,
+    ReflectZ3D,
+    RotationSymmetryX3D,
+    RotationSymmetryY3D,
+    RotationSymmetryZ3D,
+    TranslationSymmetryX3D,
+    TranslationSymmetryY3D,
+    TranslationSymmetryZ3D,
+    AxialScaleSymmetry3D,
+    AxialReflect3D,
+    AxialRotationSymmetry3D,
+    AxialTranslationSymmetry3D,
+)
+from .transforms_2d import (
+    Reflect2D,
+    ReflectCoords2D,
+    Translate2D,
+    EulerRotate2D,
+    Scale2D,
+    TranslationSymmetry2D,
+    RotationSymmetry2D,
+    ScaleSymmetry2D,
+    ReflectX2D,
+    ReflectY2D,
+    TranslationSymmetryX2D,
+    TranslationSymmetryY2D,
+    AxialScaleSymmetry2D,
+    AxialTranslationSymmetry2D,
+    AxialReflect2D,
+)
 from .combinators import Union
 
 AXIS_MAPPER = {
@@ -61,14 +94,12 @@ SYM_OP_MAP = {
     TranslationSymmetryZ3D: Translate3D,
     AxialTranslationSymmetry3D: Translate3D,
     TranslationSymmetry3D: Translate3D,
-
     RotationSymmetry2D: EulerRotate2D,
     RotationSymmetryX3D: EulerRotate3D,
     RotationSymmetryY3D: EulerRotate3D,
     RotationSymmetryZ3D: EulerRotate3D,
     RotationSymmetry3D: EulerRotate3D,
     AxialRotationSymmetry3D: EulerRotate3D,
-
     ScaleSymmetry2D: Scale2D,
     ScaleSymmetry3D: Scale3D,
 }
@@ -77,7 +108,7 @@ SYM_OP_MAP = {
 
 
 def resolve_macros(expr: GLFunction, device):
-    """To resolve macros in GLExprs. Mostly useful in the SDF estimation process."""
+    """Extends macros in GeoLIPI."""
     resolved_args = []
     for sub_expr in expr.args:
         if isinstance(sub_expr, (Tuple, SympyTuple, SympyInteger)):
@@ -119,7 +150,7 @@ def resolve_macros(expr: GLFunction, device):
             dir = 1
         all_subexprs = []
         trans_func = SYM_OP_MAP[expr.__class__]
-        for ind in range(0, n_count-1):
+        for ind in range(0, n_count - 1):
             delta = dist * (ind + 1) * dir
             all_subexprs.append(trans_func(subexpr, delta))
         all_subexprs.insert(0, subexpr)

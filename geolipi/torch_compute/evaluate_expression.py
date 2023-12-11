@@ -1,13 +1,23 @@
-
-from sympy import Symbol, Function
+from sympy import Symbol
 from geolipi.symbolic.base_symbolic import GLExpr, GLFunction
 import torch as th
-import numpy as np
-import sympy as sp
 from geolipi.symbolic.resolve import resolve_macros
-from geolipi.symbolic.types import (MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE, TRANSSYM_TYPE, 
-                                    COMBINATOR_TYPE, TRANSFORM_TYPE, POSITIONALMOD_TYPE, SDFMOD_TYPE, HIGERPRIM_TYPE,
-                                    COLOR_MOD, APPLY_COLOR_TYPE, SVG_COMBINATORS)
+from geolipi.symbolic.types import (
+    MACRO_TYPE,
+    MOD_TYPE,
+    TRANSLATE_TYPE,
+    SCALE_TYPE,
+    PRIM_TYPE,
+    TRANSSYM_TYPE,
+    COMBINATOR_TYPE,
+    TRANSFORM_TYPE,
+    POSITIONALMOD_TYPE,
+    SDFMOD_TYPE,
+    HIGERPRIM_TYPE,
+    COLOR_MOD,
+    APPLY_COLOR_TYPE,
+    SVG_COMBINATORS,
+)
 from .sketcher import Sketcher
 from .utils import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP, COLOR_FUNCTIONS
 from .common import EPSILON, RECTIFY_TRANSFORM
@@ -16,9 +26,36 @@ from geolipi.symbolic import Union, Intersection, Difference, Revolution3D
 from .color_functions import source_over_seq
 
 
-def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize=True, 
-                          rectify_transform=RECTIFY_TRANSFORM, coords=None, tracked_scale=None,
-                          relaxed_occupancy=False, relax_temperature=0.0):
+def recursive_evaluate(
+    expression: GLFunction,
+    sketcher: Sketcher,
+    secondary_sketcher: Sketcher = None,
+    initialize: bool = True,
+    rectify_transform: bool = RECTIFY_TRANSFORM,
+    coords: th.Tensor = None,
+    tracked_scale: th.Tensor = None,
+    relaxed_occupancy: bool = False,
+    relax_temperature: float = 0.0,
+):
+    """
+    Recursively evaluates a GeoLIPI expression to generate a signed distance field (SDF) or a color canvas.
+
+    This function can handles all GeoLIPI operations but is slower than the other evaluation methods.
+
+    Parameters:
+        expression (GLFunction): The GLFunction expression to evaluate.
+        sketcher (Sketcher): Primary sketcher object for SDF or color generation.
+        secondary_sketcher (Sketcher, optional): Secondary sketcher for higher-order primitives.
+        initialize (bool): Flag to initialize coordinates and scale if True. Used for the first call.
+        rectify_transform (bool): Flag to rectify transformations.
+        coords (th.Tensor, optional): Coordinates for evaluation. If None, generated from sketcher.
+        tracked_scale (th.Tensor, optional): Scale tracking tensor. If None, generated from sketcher.
+        relaxed_occupancy (bool): Flag to use relaxed occupancy for soft SDFs. Useful with Parameter Optimization of SVG expressions.
+        relax_temperature (float): Temperature parameter for relaxed occupancy. Defaults to 0.0.
+
+    Returns:
+        th.Tensor: The resulting SDF or color canvas from evaluating the expression.
+    """
     if initialize:
         if coords is None:
             coords = sketcher.get_homogenous_coords()
@@ -28,11 +65,17 @@ def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize
 
     if isinstance(expression, MACRO_TYPE):
         resolved_expr = resolve_macros(expression, device=sketcher.device)
-        return recursive_evaluate(resolved_expr, sketcher, secondary_sketcher=secondary_sketcher,
-                                     initialize=False, rectify_transform=rectify_transform,
-                                     coords=coords, tracked_scale=tracked_scale,
-                                        relaxed_occupancy=relaxed_occupancy,
-                                         relax_temperature=relax_temperature)
+        return recursive_evaluate(
+            resolved_expr,
+            sketcher,
+            secondary_sketcher=secondary_sketcher,
+            initialize=False,
+            rectify_transform=rectify_transform,
+            coords=coords,
+            tracked_scale=tracked_scale,
+            relaxed_occupancy=relaxed_occupancy,
+            relax_temperature=relax_temperature,
+        )
     elif isinstance(expression, MOD_TYPE):
         sub_expr = expression.args[0]
         params = expression.args[1:]
@@ -46,55 +89,79 @@ def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize
                     tracked_scale *= params[0]
             identity_mat = sketcher.get_affine_identity()
             new_transform = MODIFIER_MAP[type(expression)](identity_mat, *params)
-            coords = th.einsum('ij,mj->mi', new_transform, coords)
-            return recursive_evaluate(sub_expr, sketcher, secondary_sketcher=secondary_sketcher, 
-                                         initialize=False, rectify_transform=rectify_transform,
-                                         coords=coords, tracked_scale=tracked_scale,
-                                         relaxed_occupancy=relaxed_occupancy,
-                                         relax_temperature=relax_temperature)
+            coords = th.einsum("ij,mj->mi", new_transform, coords)
+            return recursive_evaluate(
+                sub_expr,
+                sketcher,
+                secondary_sketcher=secondary_sketcher,
+                initialize=False,
+                rectify_transform=rectify_transform,
+                coords=coords,
+                tracked_scale=tracked_scale,
+                relaxed_occupancy=relaxed_occupancy,
+                relax_temperature=relax_temperature,
+            )
         elif isinstance(expression, POSITIONALMOD_TYPE):
             # instantiate positions and send that as input with affine set to None
             coords = MODIFIER_MAP[type(expression)](coords, *params)
-            return recursive_evaluate(sub_expr, sketcher, secondary_sketcher=secondary_sketcher,
-                                         initialize=False, rectify_transform=rectify_transform,
-                                         coords=coords, tracked_scale=tracked_scale,
-                                         relaxed_occupancy=relaxed_occupancy,
-                                         relax_temperature=relax_temperature)
+            return recursive_evaluate(
+                sub_expr,
+                sketcher,
+                secondary_sketcher=secondary_sketcher,
+                initialize=False,
+                rectify_transform=rectify_transform,
+                coords=coords,
+                tracked_scale=tracked_scale,
+                relaxed_occupancy=relaxed_occupancy,
+                relax_temperature=relax_temperature,
+            )
         elif isinstance(expression, SDFMOD_TYPE):
             # calculate sdf then create change before returning.
-            sdf_estimate = recursive_evaluate(sub_expr, sketcher, secondary_sketcher=secondary_sketcher,
-                                                 initialize=False, 
-                                                 rectify_transform=rectify_transform,
-                                                 coords=coords, tracked_scale=tracked_scale,
-                                         relaxed_occupancy=relaxed_occupancy,
-                                         relax_temperature=relax_temperature)
+            sdf_estimate = recursive_evaluate(
+                sub_expr,
+                sketcher,
+                secondary_sketcher=secondary_sketcher,
+                initialize=False,
+                rectify_transform=rectify_transform,
+                coords=coords,
+                tracked_scale=tracked_scale,
+                relaxed_occupancy=relaxed_occupancy,
+                relax_temperature=relax_temperature,
+            )
             updated_sdf = MODIFIER_MAP[type(expression)](sdf_estimate, *params)
             return updated_sdf
     elif isinstance(expression, PRIM_TYPE):
         # create sdf and return.
-        
+
         if isinstance(expression, HIGERPRIM_TYPE):
             params = expression.args[1:]
         else:
             params = expression.args
-        
+
         params = parse_tensor_from_expr(expression, params)
         n_dims = sketcher.n_dims
-        coords = coords[..., :n_dims]/(coords[..., n_dims:n_dims+1] + EPSILON)
-        
+        coords = coords[..., :n_dims] / (coords[..., n_dims : n_dims + 1] + EPSILON)
+
         if isinstance(expression, HIGERPRIM_TYPE):
-            param_points, scale_factor = PRIMITIVE_MAP[type(expression)](coords, *params)
-            
+            param_points, scale_factor = PRIMITIVE_MAP[type(expression)](
+                coords, *params
+            )
+
             distance_field_2d = param_points[..., :2].clone()
             pad = th.ones_like(distance_field_2d[:, :1])
             homo_dist_field_2d = th.cat([distance_field_2d, pad], dim=1)
-            scale_t = 1.0# get_scale(param_points)
+            scale_t = 1.0  # get_scale(param_points)
             sub_expr = expression.args[0]
             # No Color OP but is 3D tracked scale to be used for 2D scale?
-            in_plane_distance = recursive_evaluate(sub_expr, secondary_sketcher, secondary_sketcher=None,
-                                                      initialize=False, 
-                                                      rectify_transform=rectify_transform,
-                                                      coords=homo_dist_field_2d, tracked_scale=None)
+            in_plane_distance = recursive_evaluate(
+                sub_expr,
+                secondary_sketcher,
+                secondary_sketcher=None,
+                initialize=False,
+                rectify_transform=rectify_transform,
+                coords=homo_dist_field_2d,
+                tracked_scale=None,
+            )
             in_plane_distance = in_plane_distance / scale_t
             # TODO: Very Unclean.
             if isinstance(expression, Revolution3D):
@@ -118,13 +185,17 @@ def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize
                 tree_branches.append(arg)
         sdf_list = []
         for child in tree_branches:
-            cur_sdf = recursive_evaluate(child, sketcher, secondary_sketcher=secondary_sketcher,
-                                            initialize=False,
-                                            rectify_transform=rectify_transform,
-                                            coords=coords.clone(),
-                                            tracked_scale=tracked_scale.clone(),
-                                            relaxed_occupancy=relaxed_occupancy,
-                                         relax_temperature=relax_temperature)
+            cur_sdf = recursive_evaluate(
+                child,
+                sketcher,
+                secondary_sketcher=secondary_sketcher,
+                initialize=False,
+                rectify_transform=rectify_transform,
+                coords=coords.clone(),
+                tracked_scale=tracked_scale.clone(),
+                relaxed_occupancy=relaxed_occupancy,
+                relax_temperature=relax_temperature,
+            )
             sdf_list.append(cur_sdf)
         channel_count = sdf_list[0].shape[-1]
         if channel_count == 4:
@@ -136,18 +207,21 @@ def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize
     elif isinstance(expression, SVG_COMBINATORS):
         output_seq = []
         for expr in expression.args:
-            canvas = recursive_evaluate(expr, sketcher, 
-                                            secondary_sketcher=secondary_sketcher,
-                                            initialize=False,
-                                            rectify_transform=rectify_transform,
-                                            coords=coords.clone(),
-                                            tracked_scale=tracked_scale.clone(),
-                                            relaxed_occupancy=relaxed_occupancy,
-                                            relax_temperature=relax_temperature)
+            canvas = recursive_evaluate(
+                expr,
+                sketcher,
+                secondary_sketcher=secondary_sketcher,
+                initialize=False,
+                rectify_transform=rectify_transform,
+                coords=coords.clone(),
+                tracked_scale=tracked_scale.clone(),
+                relaxed_occupancy=relaxed_occupancy,
+                relax_temperature=relax_temperature,
+            )
             output_seq.append(canvas)
         output_canvas = COLOR_FUNCTIONS[type(expression)](*output_seq)
         return output_canvas
-        
+
     elif isinstance(expression, APPLY_COLOR_TYPE):
         sdf_expr = expression.args[0]
         color = expression.args[1]
@@ -156,13 +230,17 @@ def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize
             color = COLOR_MAP[color.name].to(sketcher.device)
         else:
             color = expression.lookup_table[color]
-        cur_sdf = recursive_evaluate(sdf_expr, sketcher, secondary_sketcher=secondary_sketcher,
-                                        initialize=False,
-                                        rectify_transform=rectify_transform,
-                                        coords=coords,
-                                        tracked_scale=tracked_scale,
-                                        relaxed_occupancy=relaxed_occupancy,
-                                         relax_temperature=relax_temperature)
+        cur_sdf = recursive_evaluate(
+            sdf_expr,
+            sketcher,
+            secondary_sketcher=secondary_sketcher,
+            initialize=False,
+            rectify_transform=rectify_transform,
+            coords=coords,
+            tracked_scale=tracked_scale,
+            relaxed_occupancy=relaxed_occupancy,
+            relax_temperature=relax_temperature,
+        )
         if relaxed_occupancy:
             cur_occ = smoothen_sdf(cur_sdf, relax_temperature)
         else:
@@ -179,16 +257,20 @@ def recursive_evaluate(expression, sketcher, secondary_sketcher=None, initialize
         else:
             color = expression.lookup_table[color]
 
-        colored_canvas = recursive_evaluate(color_expr, sketcher, secondary_sketcher=secondary_sketcher,
-                                        initialize=False,
-                                        rectify_transform=rectify_transform,
-                                        coords=coords,
-                                        tracked_scale=tracked_scale,
-                                        relaxed_occupancy=relaxed_occupancy,
-                                         relax_temperature=relax_temperature)
+        colored_canvas = recursive_evaluate(
+            color_expr,
+            sketcher,
+            secondary_sketcher=secondary_sketcher,
+            initialize=False,
+            rectify_transform=rectify_transform,
+            coords=coords,
+            tracked_scale=tracked_scale,
+            relaxed_occupancy=relaxed_occupancy,
+            relax_temperature=relax_temperature,
+        )
         colored_canvas = COLOR_FUNCTIONS[type(expression)](colored_canvas, color)
         return colored_canvas
-    
+
 
 def parse_tensor_from_expr(expression, params):
     if params:
@@ -202,15 +284,35 @@ def parse_tensor_from_expr(expression, params):
         params = param_list
     return params
 
+
 def smoothen_sdf(execution, temperature):
     output_tanh = th.tanh(execution * temperature)
     output_shape = th.nn.functional.sigmoid(-output_tanh * temperature)
     return output_shape
 
-def expr_to_sdf(expression: GLExpr, sketcher: Sketcher,
-                rectify_transform=RECTIFY_TRANSFORM,
-                secondary_sketcher=None,
-                coords=None):
+
+def expr_to_sdf(
+    expression: GLFunction,
+    sketcher: Sketcher,
+    secondary_sketche: Sketcher = None,
+    rectify_transform: bool = RECTIFY_TRANSFORM,
+    coords: th.Tensor = None,
+):
+    """
+    Converts a GeoLIPI SDF expression into a Signed Distance Field (SDF) using a sketcher.
+    This function is faster than `recursive_evaluate` as it evaluates the expression using a stack-based approach. 
+    However, it does not support all GeoLIPI operations, notably higher-order primitives, and certain modifiers. 
+
+    Parameters:
+        expression (GLExpr): The GLExpr expression to be converted to an SDF.
+        sketcher (Sketcher): The primary sketcher object used for generating SDFs.
+        rectify_transform (bool): Flag to apply rectified transformations. Defaults to RECTIFY_TRANSFORM.
+        secondary_sketcher (Sketcher, optional): Secondary sketcher - Never used.
+        coords (Tensor, optional): Custom coordinates to use for the SDF generation.
+
+    Returns:
+        Tensor: The generated SDF corresponding to the input expression.
+    """
     transforms_stack = [sketcher.get_affine_identity()]
     execution_stack = []
     operator_stack = []
@@ -220,7 +322,7 @@ def expr_to_sdf(expression: GLExpr, sketcher: Sketcher,
     if rectify_transform:
         scale_stack = [sketcher.get_scale_identity()]
     parser_list = [expression]
-    while (parser_list):
+    while parser_list:
         cur_expr = parser_list.pop()
         if isinstance(cur_expr, MACRO_TYPE):
             new_expr = resolve_macros(cur_expr, device=sketcher.device)
@@ -291,9 +393,13 @@ def expr_to_sdf(expression: GLExpr, sketcher: Sketcher,
             execution = PRIMITIVE_MAP[type(cur_expr)](cur_coords, *params)
             execution_stack.append(execution)
         else:
-            raise ValueError(f'Unknown expression type {type(cur_expr)}')
+            raise ValueError(f"Unknown expression type {type(cur_expr)}")
 
-        while (operator_stack and len(execution_stack) - execution_pointer_index[-1] >= operator_nargs_stack[-1]):
+        while (
+            operator_stack
+            and len(execution_stack) - execution_pointer_index[-1]
+            >= operator_nargs_stack[-1]
+        ):
             n_args = operator_nargs_stack.pop()
             operator = operator_stack.pop()
             _ = execution_pointer_index.pop()
@@ -306,11 +412,18 @@ def expr_to_sdf(expression: GLExpr, sketcher: Sketcher,
     sdf = execution_stack[0]
     return sdf
 
-def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher, 
-                           rectify_transform=RECTIFY_TRANSFORM, 
-                           relaxed_occupancy=False, temperature=0.0,
-                           coords=None):
-    
+
+def expr_to_colored_canvas(
+    expression: GLExpr,
+    sketcher: Sketcher,
+    rectify_transform=RECTIFY_TRANSFORM,
+    relaxed_occupancy=False,
+    temperature=0.0,
+    coords=None,
+):
+    """
+    TODO: This function is to be tested.
+    """
     transforms_stack = [sketcher.get_affine_identity()]
     execution_stack = []
     execution_pointer_index = []
@@ -319,7 +432,7 @@ def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher,
     parser_list = [expression]
     color_stack = [Symbol("gray")]
     colored_canvas = sketcher.get_color_canvas()
-    while (parser_list):
+    while parser_list:
         cur_expr = parser_list.pop()
         if isinstance(cur_expr, MACRO_TYPE):
             new_expr = resolve_macros(cur_expr, device=sketcher.device)
@@ -340,7 +453,7 @@ def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher,
                 scale = scale_stack.pop()
                 scale_chain = [scale.clone() for x in range(n_args)]
                 scale_stack.extend(scale_chain)
-                
+
             next_to_parse = cur_expr.args[::-1]
             parser_list.extend(next_to_parse)
             execution_pointer_index.append(len(execution_stack))
@@ -382,7 +495,7 @@ def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher,
             else:
                 valid_color = color
             # For differentiable relax, this also has to be relaxed.
-            
+
             if relaxed_occupancy:
                 # from the sdf execution compute occupancy
                 occ = relaxed_occupancy(execution, temperature=temperature)
@@ -399,9 +512,8 @@ def expr_to_colored_canvas(expression: GLExpr, sketcher: Sketcher,
         elif isinstance(cur_expr, (Intersection, Difference)):
             # Technicall you can - as long as you define the operators properly.
 
-            raise ValueError(f'Cannot use {type(cur_expr)} for coloring')
+            raise ValueError(f"Cannot use {type(cur_expr)} for coloring")
         else:
-            raise ValueError(f'Unknown expression type {type(cur_expr)}')
+            raise ValueError(f"Unknown expression type {type(cur_expr)}")
 
     return colored_canvas
-

@@ -6,6 +6,24 @@ import matplotlib.pyplot as plt
 
 
 def get_figure(sdf, input_type="SDF", res=128, point_count=2500, r=1):
+    """
+    Generates a 3D plot of points representing a Signed Distance Function (SDF) or occupancy grid.
+
+    This function visualizes the given SDF or occupancy grid as a scatter plot in 3D space. 
+    It selects points within the SDF or occupancy grid and displays them with random colors.
+
+    Parameters:
+        sdf (torch.Tensor or numpy.ndarray): The SDF or occupancy grid to be visualized. 
+                                             This should be a 3D tensor or array.
+        input_type (str): Type of input data. Either "SDF" for Signed Distance Function or 
+                          any other string for occupancy grid.
+        res (int): Resolution of the input grid. It's assumed that the grid is a cube.
+        point_count (int): The number of points to sample from the SDF or occupancy grid for visualization.
+        r (int): The size of the markers in the scatter plot.
+
+    Returns:
+        plotly.graph_objs.Figure: A Plotly Figure object representing the 3D visualization.
+    """
     if isinstance(sdf, th.Tensor):
         sdf = sdf.detach().cpu().numpy()
     if len(sdf.shape) < 3:

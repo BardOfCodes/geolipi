@@ -1,12 +1,38 @@
 from collections import defaultdict
 from typing import List
 import torch as th
-import numpy as np
 from geolipi.symbolic.base_symbolic import PrimitiveSpec
 from geolipi.symbolic.types import COMBINATOR_TYPE
 from .utils import PRIMITIVE_MAP, COMBINATOR_MAP
 
+
 def create_evaluation_batches(compiled_expr_list: List[object], convert_to_cuda=True):
+    """
+    Creates evaluation batches from a list of compiled expressions.
+
+    This function processes a list of compiled expressions and organizes them into batches for
+    evaluation. It consolidates transformation matrices, inversion matrices, and parameters for
+    each primitive type, and optionally converts them to CUDA tensors.
+
+    Parameters:
+        compiled_expr_list (List[object]):
+            A list where each element is a tuple containing the expression, primitive transformation
+            matrix, primitive inversion matrix, and primitive parameters.
+        convert_to_cuda (bool, optional):
+            If True, converts the matrices and parameters to CUDA tensors. Defaults to True.
+
+    Returns:
+        tuple: A tuple containing:
+            - all_expressions (List): A list of all expressions.
+            - all_prim_transforms (dict): A dictionary with primitive types as keys and their
+              concatenated transformation matrices as values.
+            - all_prim_inversion (dict): A dictionary with primitive types as keys and their
+              concatenated inversion matrices as values.
+            - all_prim_param (dict): A dictionary with primitive types as keys and a list of
+              their parameters as values.
+            - batch_limiter (List[dict]): A list of dictionaries for each expression indicating
+              the batch size for each primitive type.
+    """
     batch_limiter = []
     all_expressions = []
     all_prim_transforms = defaultdict(list)
@@ -27,10 +53,10 @@ def create_evaluation_batches(compiled_expr_list: List[object], convert_to_cuda=
             batch_count[prim_type] = transforms.shape[0]
         all_expressions.append(expression)
         batch_limiter.append(batch_count)
-        
+
     for prim_type in all_prim_transforms.keys():
         if all_prim_transforms[prim_type]:
-            all_prim_transforms[prim_type] =  th.cat(all_prim_transforms[prim_type], 0)
+            all_prim_transforms[prim_type] = th.cat(all_prim_transforms[prim_type], 0)
             all_prim_inversion[prim_type] = th.cat(all_prim_inversion[prim_type], 0)
             if prim_type in all_prim_param.keys():
                 params = all_prim_param[prim_type]
@@ -40,26 +66,34 @@ def create_evaluation_batches(compiled_expr_list: List[object], convert_to_cuda=
                     final_params.append(th.cat([x[ind] for x in params], 0))
                 all_prim_param[prim_type] = final_params
     if convert_to_cuda:
-        all_prim_transforms = {x:y.cuda() for x, y in all_prim_transforms.items()}
-        all_prim_inversion = {x:y.cuda() for x, y in all_prim_inversion.items()}
+        all_prim_transforms = {x: y.cuda() for x, y in all_prim_transforms.items()}
+        all_prim_inversion = {x: y.cuda() for x, y in all_prim_inversion.items()}
 
         for prim_type, prim_param_list in all_prim_param.items():
             all_prim_param[prim_type] = [x.cuda() for x in prim_param_list]
         # all_prim_param = {x:y.cuda() for x, y in all_prim_param.items()}
 
-    return all_expressions, all_prim_transforms, all_prim_inversion, all_prim_param, batch_limiter
+    return (
+        all_expressions,
+        all_prim_transforms,
+        all_prim_inversion,
+        all_prim_param,
+        batch_limiter,
+    )
 
 
 def batch_evaluate(expr_set: List[object], sketcher, coords=None):
-    """Batch evaluate a set of expressions.
+    """
+    Evaluates a batch of expressions to generate signed distance fields (SDFs) using a sketcher.
 
-    Args:
-        expr_set (List[object]): combine all the compiled exprs into a single list.
-        batch_limiter (List[Dict[type, int]]): per expression counter of number of primitives of each type.
-        sketcher (Sketcher): The sketcher object which creates the sdfs.
+    Parameters:
+        expr_set (List[object]): A list containing expressions, transformations, inversions,
+            parameters, and batch size limits.
+        sketcher (Sketcher): The sketcher object for creating SDFs.
+        coords (optional): Custom coordinates for evaluation. Defaults to None.
 
     Returns:
-        all_sdfs (th.Tensor): The output sdf for each expression.
+        th.Tensor: A tensor of SDFs for each expression in the batch.
     """
     expressions = expr_set[0]
     prim_transforms = expr_set[1]
@@ -80,13 +114,12 @@ def batch_evaluate(expr_set: List[object], sketcher, coords=None):
     for draw_type, transforms in prim_transforms.items():
         if transforms == []:
             continue
-        
+
         cur_points = points_hom.clone()
         # Apply the rotation matrices to the point cloud using einsum
-        transformed_points_hom = th.einsum(
-            'nij,mj->nmi', transforms, cur_points)
+        transformed_points_hom = th.einsum("nij,mj->nmi", transforms, cur_points)
         # Extract the rotated points from the homogeneous coordinates
-        rotated_points = transformed_points_hom[:, :, :sketcher.n_dims]
+        rotated_points = transformed_points_hom[:, :, : sketcher.n_dims]
 
         draw_func = PRIMITIVE_MAP[draw_type]
         params = prim_params[draw_type]
@@ -106,27 +139,29 @@ def batch_evaluate(expr_set: List[object], sketcher, coords=None):
         if expression is None:
             sdf = sketcher.empty_sdf()
         else:
-            sdf = execute_compiled_expression(
-                expression, type_wise_primitives, type_wise_draw_count)
+            sdf = _execute_compiled_expression(
+                expression, type_wise_primitives, type_wise_draw_count
+            )
         all_sdfs.append(sdf)
         draw_specs = batch_limiter[ind]
         for draw_type in type_wise_draw_count.keys():
             type_wise_draw_count[draw_type] += draw_specs[draw_type]
-        
+
     if all_sdfs:
         all_sdfs = th.stack(all_sdfs, 0)
 
     return all_sdfs
 
 
-
-def execute_compiled_expression(expression, type_wise_primitives, type_wise_draw_count):
+def _execute_compiled_expression(
+    expression, type_wise_primitives, type_wise_draw_count
+):
     execution_stack = []
     operator_stack = []
     operator_nargs_stack = []
     execution_pointer_index = []
     parser_list = [expression]
-    while (parser_list):
+    while parser_list:
         cur_expr = parser_list.pop()
         if isinstance(cur_expr, COMBINATOR_TYPE):
             operator_stack.append(type(cur_expr))
@@ -142,9 +177,13 @@ def execute_compiled_expression(expression, type_wise_primitives, type_wise_draw
             execution = type_wise_primitives[c_symbol][idx]
             execution_stack.append(execution)
         else:
-            raise ValueError(f'Unknown expression type {type(cur_expr)}')
+            raise ValueError(f"Unknown expression type {type(cur_expr)}")
 
-        while (operator_stack and len(execution_stack) - execution_pointer_index[-1] >= operator_nargs_stack[-1]):
+        while (
+            operator_stack
+            and len(execution_stack) - execution_pointer_index[-1]
+            >= operator_nargs_stack[-1]
+        ):
             n_args = operator_nargs_stack.pop()
             operator = operator_stack.pop()
             _ = execution_pointer_index.pop()
@@ -155,4 +194,3 @@ def execute_compiled_expression(expression, type_wise_primitives, type_wise_draw
     assert len(execution_stack) == 1
     sdf = execution_stack[0]
     return sdf
-

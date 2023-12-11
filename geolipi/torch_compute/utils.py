@@ -1,19 +1,12 @@
-
 import os
-import inspect
 import torch as th
-import numpy as np
 import matplotlib.colors
-from .sketcher import Sketcher
-from sympy import Symbol, Function
-from typing import Dict, List, Tuple, Union as type_union
 
-from geolipi.symbolic.base_symbolic import GLExpr, GLFunction
 import geolipi.symbolic.combinators as sym_comb
 import geolipi.symbolic.primitives_3d as sym_prim3d
 import geolipi.symbolic.primitives_2d as sym_prim2d
 import geolipi.symbolic.transforms_3d as sym_t3d
-import geolipi.symbolic.transforms_2d as sym_t2d 
+import geolipi.symbolic.transforms_2d as sym_t2d
 import geolipi.symbolic.primitives_higher as sym_higher
 import geolipi.symbolic.color as sym_color
 
@@ -23,15 +16,17 @@ import geolipi.torch_compute.sdf_functions_3d as sdf3d_bank
 import geolipi.torch_compute.transforms as transform_bank
 import geolipi.torch_compute.sdf_functions_higher as higher_sdf_bank
 import geolipi.torch_compute.color_functions as color_func_bank
+
 COMBINATOR_MAP = {
     sym_comb.Union: sdf_op_bank.sdf_union,
+    sym_comb.JoinUnion: sdf_op_bank.sdf_union,
     sym_comb.Intersection: sdf_op_bank.sdf_intersection,
     sym_comb.Complement: sdf_op_bank.sdf_complement,
     sym_comb.Difference: sdf_op_bank.sdf_difference,
     sym_comb.SwitchedDifference: sdf_op_bank.sdf_switched_difference,
     sym_comb.SmoothUnion: sdf_op_bank.sdf_smooth_union,
     sym_comb.SmoothIntersection: sdf_op_bank.sdf_smooth_intersection,
-    sym_comb.SmoothDifference: sdf_op_bank.sdf_smooth_difference  
+    sym_comb.SmoothDifference: sdf_op_bank.sdf_smooth_difference,
 }
 
 PRIMITIVE_MAP = {
@@ -174,11 +169,16 @@ NORMAL_MAP = {
     sym_comb.Intersection: sym_comb.Intersection,
     sym_comb.Difference: sym_comb.Intersection,
 }
-ONLY_SIMPLIFY_RULES = set([(sym_comb.Intersection, sym_comb.Intersection), 
-                           (sym_comb.Union, sym_comb.Union)])
-ALL_RULES = set([(sym_comb.Intersection, sym_comb.Intersection),
-                (sym_comb.Union, sym_comb.Union), 
-                (sym_comb.Intersection, sym_comb.Union)])
+ONLY_SIMPLIFY_RULES = set(
+    [(sym_comb.Intersection, sym_comb.Intersection), (sym_comb.Union, sym_comb.Union)]
+)
+ALL_RULES = set(
+    [
+        (sym_comb.Intersection, sym_comb.Intersection),
+        (sym_comb.Union, sym_comb.Union),
+        (sym_comb.Intersection, sym_comb.Union),
+    ]
+)
 
 
 # use XKCD colors: https://xkcd.com/color/rgb.txt
@@ -197,9 +197,9 @@ COLOR_FUNCTIONS = {
     sym_color.SourceOut: color_func_bank.source_out,
     sym_color.SourceOver: color_func_bank.source_over,
     sym_color.SourceAtop: color_func_bank.source_atop,
-    sym_color.SVGXOR : color_func_bank.svg_xor,
+    sym_color.SVGXOR: color_func_bank.svg_xor,
     sym_color.ApplyColor2D: color_func_bank.apply_color,
     sym_color.ModifyOpacity2D: color_func_bank.modify_opacity,
     sym_color.ModifyColor2D: color_func_bank.modify_color,
-    sym_color.SourceOverSequence: color_func_bank.source_over_seq
+    sym_color.SourceOverSequence: color_func_bank.source_over_seq,
 }

@@ -13,7 +13,27 @@ NUM_ITERATIONS = 2000
 CONVERGENCE_THRESHOLD = 1e-3
 
 class Renderer:
+    """
+    The Renderer class is designed to render 3D scenes based on provided signed distance
+    function (SDF) expressions. It supports various rendering settings including camera
+    parameters, lighting settings, and material properties. The class can handle both 
+    standard and recursive SDF evaluation and offers options for compiling expressions
+    to reduce the rendering time.
 
+    Attributes:
+        dtype (th.dtype): The data type for PyTorch tensors.
+        device (str): The device (e.g., "cuda", "cpu") used for tensor operations.
+        resolution (tuple): The resolution of the rendered image.
+        camera_params (dict): Parameters defining the camera settings.
+        light_setting (dict): Settings for the lighting conditions in the scene.
+        num_iterations (int): Number of iterations for the rendering loop.
+        convergence_threshold (float): Threshold for convergence in the rendering process.
+        sketcher (Sketcher): An instance of the Sketcher class for coordinate manipulation.
+        recursive_evaluator (bool): Flag to use recursive evaluation of SDFs.
+        secondary_sketcher (Sketcher or None): Secondary Sketcher instance for 2D coordinates.
+        compile_expression (bool): Flag to compile the SDF expressions for performance.
+
+    """
     def __init__(self, resolution=(512, 512), num_iterations=NUM_ITERATIONS,
                  convergence_threshold=CONVERGENCE_THRESHOLD,
                  camera_params=None, light_setting=None,
@@ -116,7 +136,20 @@ class Renderer:
     def render(self, sdf_expression, ground_expression=None, 
                material_setting=None, finite_difference_epsilon=None,
                convergence_threshold=None, num_iterations=None):
+        """
+        Renders a 3D scene based on the provided signed distance function (SDF) expressions.
 
+        Args:
+            sdf_expression: The primary SDF expression defining the shapes in the scene.
+            ground_expression (optional): An additional SDF expression for the ground plane or similar.
+            material_setting (optional): Settings for the material properties of the rendered objects.
+            finite_difference_epsilon (optional): The epsilon value used in finite difference calculations for normals.
+            convergence_threshold (optional): Threshold for convergence in the rendering loop. Defaults to class attribute if None.
+            num_iterations (optional): Number of iterations for the rendering loop. Defaults to class attribute if None.
+
+        Returns:
+            A tensor representing the rendered image, with shape corresponding to the specified resolution.
+        """
         if convergence_threshold is None:
             convergence_threshold = self.convergence_threshold
         if num_iterations is None:
@@ -281,7 +314,28 @@ def render_expression(sdf_eval_func, ground_eval_func,
                       material_setting,
                       num_iterations, convergence_threshold,
                       finite_difference_epsilon=None):
+    """
+    Renders a 3D scene using the provided sdf evaluation functions and rendering settings.
 
+    This function implements the rendering pipeline, including sphere tracing for surface
+    detection, normal computation, Phong shading for color calculation, ground and shadow
+    handling, and convergence checks.
+
+    Args:
+        sdf_eval_func: A function to evaluate the shape's signed distance function (SDF).
+        ground_eval_func: A function to evaluate the ground SDF.
+        ray_positions: The starting positions of the rays.
+        ray_directions: The directions of the rays.
+        camera_position: The position of the camera.
+        light_setting: Settings for the scene's lighting conditions.
+        material_setting: Settings for the material properties of the objects.
+        num_iterations (int): Number of iterations for sphere tracing.
+        convergence_threshold (float): Threshold for convergence in the sphere tracing.
+        finite_difference_epsilon (optional): Epsilon value for finite difference in normal computation.
+
+    Returns:
+        A tensor representing the rendered image, with shading and lighting effects applied.
+    """
 
     surface_positions, converged = sphere_tracing(
         sdf_eval_func=sdf_eval_func,

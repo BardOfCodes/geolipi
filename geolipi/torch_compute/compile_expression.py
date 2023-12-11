@@ -1,30 +1,35 @@
-
-
-from typing import Dict, List, Tuple, Union as type_union
 from collections import defaultdict
 import numpy as np
 import torch as th
-import inspect
-from sympy import Symbol
 import rustworkx as rx
+
 from geolipi.symbolic import Combinator, Difference, Intersection, Union
 from geolipi.symbolic.base_symbolic import GLExpr
-from geolipi.symbolic.types import MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE, TRANSSYM_TYPE
+from geolipi.symbolic.types import (
+    MACRO_TYPE,
+    MOD_TYPE,
+    TRANSLATE_TYPE,
+    SCALE_TYPE,
+    PRIM_TYPE,
+    TRANSSYM_TYPE,
+)
 from geolipi.symbolic.base_symbolic import PrimitiveSpec
 from geolipi.symbolic.resolve import resolve_macros
+
 from .sketcher import Sketcher
 from .utils import MODIFIER_MAP
 from .common import RECTIFY_TRANSFORM
-from .utils import INVERTED_MAP, NORMAL_MAP, ONLY_SIMPLIFY_RULES, ALL_RULES 
+from .utils import INVERTED_MAP, NORMAL_MAP, ONLY_SIMPLIFY_RULES, ALL_RULES
 
 # Don't resolve when expression is crazy big.
 MAX_EXPR_SIZE = 500
+
 
 def expr_prim_count(expression: GLExpr):
     """Get the number of primitives of each kind in the expression."""
     prim_count_dict = defaultdict(int)
     parser_list = [expression]
-    while (parser_list):
+    while parser_list:
         cur_expr = parser_list.pop()
         if isinstance(cur_expr, Combinator):
             next_to_parse = cur_expr.args[::-1]
@@ -35,13 +40,33 @@ def expr_prim_count(expression: GLExpr):
         elif isinstance(cur_expr, PRIM_TYPE):
             prim_count_dict[type(cur_expr)] += 1
         else:
-            raise ValueError(f'Unknown expression type {type(cur_expr)}')
+            raise ValueError(f"Unknown expression type {type(cur_expr)}")
     return prim_count_dict
 
 
-def compile_expr(expression: GLExpr, sketcher: Sketcher = None,
-                 rectify_transform=RECTIFY_TRANSFORM):
-    """Gather & Compute the transforms, Gather the primitive_params, Remove Difference, and Resolve Complement,"""
+def compile_expr(
+    expression: GLExpr, sketcher: Sketcher = None, rectify_transform=RECTIFY_TRANSFORM
+):
+    """
+    Compiles a GL expression into a format suitable for batch evaluation, gathering transformations,
+    primitive parameters, and handling difference and complement operations.
+
+    This function traverses the expression tree to extract and organize necessary data for
+    rendering the expression. It accounts for transformations, inversion modes, and primitive
+    parameters, and resolves any complex operations like Difference and Complement.
+
+    Parameters:
+        expression (GLExpr): The GL expression to be compiled.
+        sketcher (Sketcher, optional): The sketcher object used for affine transformations.
+            Defaults to None.
+        rectify_transform (bool, optional): Flag to determine if transformations should be rectified.
+            Defaults to RECTIFY_TRANSFORM.
+
+    Returns:
+        tuple: A tuple containing the compiled expression, primitive transformations, primitive
+        inversions, and primitive parameters. These are organized to facilitate batch evaluation
+        of the expression.
+    """
 
     prim_count_dict = expr_prim_count(expression)
     # trasforms
@@ -55,18 +80,21 @@ def compile_expr(expression: GLExpr, sketcher: Sketcher = None,
     prim_params = defaultdict(list)
     prim_counter = {x: 0 for x in prim_count_dict.keys()}
     for prim_type, prim_count in prim_count_dict.items():
-        prim_transforms[prim_type] = th.zeros((prim_count, sketcher.n_dims + 1, 
-                                               sketcher.n_dims + 1),
-                                              dtype=sketcher.dtype, device=sketcher.device)
-        prim_inversions[prim_type] = th.zeros((prim_count),
-                                              dtype=th.bool, device=sketcher.device)
+        prim_transforms[prim_type] = th.zeros(
+            (prim_count, sketcher.n_dims + 1, sketcher.n_dims + 1),
+            dtype=sketcher.dtype,
+            device=sketcher.device,
+        )
+        prim_inversions[prim_type] = th.zeros(
+            (prim_count), dtype=th.bool, device=sketcher.device
+        )
         # Todo: Handle parameterized Primitives
         # Add type annotation to functions.
-        n_params = 0# len(inspect.signature(prim_type).parameters) # but each might not be singleton.
+        n_params = 0  # len(inspect.signature(prim_type).parameters) # but each might not be singleton.
         if n_params > 0:
-            prim_params[prim_type] = th.zeros((prim_count, n_params),
-                                              dtype=sketcher.dtype, device=sketcher.device)
-            
+            prim_params[prim_type] = th.zeros(
+                (prim_count, n_params), dtype=sketcher.dtype, device=sketcher.device
+            )
 
     execution_stack = []
     execution_pointer_index = []
@@ -77,12 +105,14 @@ def compile_expr(expression: GLExpr, sketcher: Sketcher = None,
         scale_stack = [sketcher.get_scale_identity()]
 
     parser_list = [expression]
-    while (parser_list):
+    while parser_list:
         cur_expr = parser_list.pop()
         inversion_mode = inversion_stack.pop()
         if isinstance(cur_expr, MACRO_TYPE):
-            raise ValueError('Direct use of Macros not supported in compile_expr. \
-                Resolve with resolve_macros first')
+            raise ValueError(
+                "Direct use of Macros not supported in compile_expr. \
+                Resolve with resolve_macros first"
+            )
         elif isinstance(cur_expr, Combinator):
             tree_branches, param_list = [], []
             for arg in cur_expr.args:
@@ -167,9 +197,13 @@ def compile_expr(expression: GLExpr, sketcher: Sketcher = None,
             execution_stack.append(prim_spec)
             prim_counter[prim_type] += 1
         else:
-            raise ValueError(f'Unknown expression type {type(cur_expr)}')
+            raise ValueError(f"Unknown expression type {type(cur_expr)}")
 
-        while (operator_stack and len(execution_stack) - execution_pointer_index[-1] >= operator_nargs_stack[-1]):
+        while (
+            operator_stack
+            and len(execution_stack) - execution_pointer_index[-1]
+            >= operator_nargs_stack[-1]
+        ):
             n_args = operator_nargs_stack.pop()
             operator = operator_stack.pop()
             _ = execution_pointer_index.pop()
@@ -191,13 +225,20 @@ def compile_expr(expression: GLExpr, sketcher: Sketcher = None,
 
 
 def expr_to_graph(expression):
-    """Convert sympy expression to a rustworkx graph.
-    Note it is only valid for compiled graph."""
+    """
+    Converts a sympy expression to a rustworkx graph. This is valid only for compiled graphs.
+    Used for simplifying the expression to DNF form.
 
+    Parameters:
+        expression: A sympy expression representing a mathematical or logical construct.
+
+    Returns:
+        A rustworkx PyDiGraph representing the structure of the expression.
+    """
     graph = rx.PyDiGraph()
     parser_list = [expression]
     parent_ids = [None]
-    while (parser_list):
+    while parser_list:
         cur_expr = parser_list.pop()
         parent_id = parent_ids.pop()
         if isinstance(cur_expr, Combinator):
@@ -214,20 +255,28 @@ def expr_to_graph(expression):
 
 
 def graph_to_expr(graph):
-    """Convert a rustworkx graph to a sympy expression."""
+    """
+    Converts a rustworkx graph back to a sympy expression.
+    Used to get the expression back after converting to the DNF form.
 
+    Parameters:
+        graph: A rustworkx PyDiGraph generated from a sympy expression.
+
+    Returns:
+        A sympy expression reconstructed from the graph.
+    """
     prim_stack = []
     prim_stack_pointer = []
     operator_stack = []
     operator_nargs_stack = []
 
     parser_list = [0]
-    while (parser_list):
+    while parser_list:
         cur_id = parser_list.pop()
         cur_node = graph[cur_id]
-        c_type = cur_node['type']
+        c_type = cur_node["type"]
         if c_type == PrimitiveSpec:
-            prim_stack.append(cur_node['expr'])
+            prim_stack.append(cur_node["expr"])
         elif issubclass(c_type, Combinator):
             operator_stack.append(c_type)
             next_to_parse = list(graph.successor_indices(cur_id))
@@ -236,7 +285,10 @@ def graph_to_expr(graph):
             parser_list.extend(next_to_parse)
             prim_stack_pointer.append(len(prim_stack))
 
-        while (operator_stack and len(prim_stack) - prim_stack_pointer[-1] >= operator_nargs_stack[-1]):
+        while (
+            operator_stack
+            and len(prim_stack) - prim_stack_pointer[-1] >= operator_nargs_stack[-1]
+        ):
             n_args = operator_nargs_stack.pop()
             operator = operator_stack.pop()
             _ = prim_stack_pointer.pop()
@@ -248,7 +300,16 @@ def graph_to_expr(graph):
 
 
 def expr_to_dnf(expression, max_expr_size=MAX_EXPR_SIZE):
-    # convert to tree for easy usage:
+    """
+    Converts an expression to its Disjunctive Normal Form (DNF) using graph transformation rules.
+
+    Parameters:
+        expression: The expression to convert.
+        max_expr_size (int): The maximum allowed size of the expression during conversion.
+
+    Returns:
+        A sympy expression in DNF.
+    """
     graph = expr_to_graph(expression)
     # RULES:
     # Intersection-> Intersection = collapse
@@ -256,7 +317,7 @@ def expr_to_dnf(expression, max_expr_size=MAX_EXPR_SIZE):
     # Intersection -> Union = invert
     # Union -> Intersection = retain
     rule_match = None
-    while (True):
+    while True:
         rule_match = get_rule_match(graph, only_simplify=True)
         if rule_match is None:
             rule_match = get_rule_match(graph, only_simplify=False)
@@ -273,6 +334,16 @@ def expr_to_dnf(expression, max_expr_size=MAX_EXPR_SIZE):
 
 
 def get_rule_match(graph, only_simplify=False):
+    """
+    Identifies a rule match in a graph that represents an expression.
+
+    Parameters:
+        graph: The graph representation of the expression.
+        only_simplify (bool): If True, only simplification rules are applied.
+
+    Returns:
+        A match if a rule can be applied, else None.
+    """
     if only_simplify:
         rule_set = ONLY_SIMPLIFY_RULES  # ["i->i", "u->u"]
     else:
@@ -282,13 +353,13 @@ def get_rule_match(graph, only_simplify=False):
     while node_ids:
         cur_id = node_ids.pop()
         cur_node = graph[cur_id]
-        c_type = cur_node['type']
+        c_type = cur_node["type"]
         if issubclass(c_type, Combinator):
             children = list(graph.successor_indices(cur_id))
             node_ids.extend(children[::-1])
             for ind, child_id in enumerate(children):
                 child_node = graph[child_id]
-                child_type = child_node['type']
+                child_type = child_node["type"]
                 rel_sig = (c_type, child_type)
                 if rel_sig in rule_set:
                     rule_match = (cur_id, child_id, rel_sig)
@@ -299,7 +370,16 @@ def get_rule_match(graph, only_simplify=False):
 
 
 def resolve_rule(graph, resolve_rule):
+    """
+    Applies a rule to transform a graph representing an expression.
 
+    Parameters:
+        graph: The graph representation of the expression.
+        resolve_rule: The rule to be applied to the graph.
+
+    Returns:
+        The graph after applying the transformation rule.
+    """
     node_a_id = resolve_rule[0]
     node_b_id = resolve_rule[1]
     match_type = resolve_rule[2]
@@ -312,7 +392,7 @@ def resolve_rule(graph, resolve_rule):
         graph.remove_edge(node_a_id, node_b_id)
         # graph.remove_node(node_b_id)
     elif match_type == (Intersection, Union):
-        node_a['type'] = Union
+        node_a["type"] = Union
         children_a = list(graph.successor_indices(node_a_id))
         children_a_not_b = [ind for ind in children_a if ind != node_b_id]
         children_b = list(graph.successor_indices(node_b_id))
@@ -331,11 +411,30 @@ def resolve_rule(graph, resolve_rule):
     return graph
 
 
-def create_compiled_expr(expression, sketcher, resolve_to_dnf=False,
-                         convert_to_cpu=True,
-                         rectify_transform=RECTIFY_TRANSFORM):
+def create_compiled_expr(
+    expression,
+    sketcher,
+    resolve_to_dnf=False,
+    convert_to_cpu=True,
+    rectify_transform=RECTIFY_TRANSFORM,
+):
+    """
+    Compiles an expression and optionally converts it to Disjunctive Normal Form (DNF) and to CPU.
+
+    Parameters:
+        expression: The expression to compile.
+        sketcher: The sketcher object used in compilation.
+        resolve_to_dnf (bool): If True, converts the expression to DNF.
+        convert_to_cpu (bool): If True, converts tensors to CPU tensors.
+        rectify_transform (bool): If True, rectifies transformations during compilation.
+
+    Returns:
+        A tuple containing the compiled expression, transforms, inversions, and parameters.
+    """
     expression = resolve_macros(expression, device=sketcher.device)
-    compiled_expr = compile_expr(expression, sketcher=sketcher, rectify_transform=rectify_transform)
+    compiled_expr = compile_expr(
+        expression, sketcher=sketcher, rectify_transform=rectify_transform
+    )
     expr, transforms, inversions, params = compiled_expr
 
     if resolve_to_dnf:
@@ -347,5 +446,5 @@ def create_compiled_expr(expression, sketcher, resolve_to_dnf=False,
         for prim_type, prim_param_list in params.items():
             params[prim_type] = [x.cpu() for x in prim_param_list]
         # params = {x: y.cpu() for x, y in params.items()}
-    
+
     return expr, transforms, inversions, params
