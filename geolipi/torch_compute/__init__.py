@@ -4,5 +4,3 @@ from .batch_evaluate_sdf import create_evaluation_batches, batch_evaluate
 
 from .sketcher import Sketcher
 from .visualizer import get_figure
-
-__all__ = ["expr_to_sdf", "Sketcher", "create_compiled_expr"]

@@ -1,4 +1,4 @@
-from .utils import import_bpy
+from .bl_utils import import_bpy
 # Credits: Extracted from Derek Hsu's code: https://github.com/HTDerekLiu/BlenderToolbox
 
 class colorObj(object):

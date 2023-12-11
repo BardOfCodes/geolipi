@@ -5,9 +5,8 @@ from geolipi.symbolic import Combinator
 from geolipi.symbolic.resolve import resolve_macros
 from geolipi.symbolic.types import MACRO_TYPE, MOD_TYPE, PRIM_TYPE
 from geolipi.symbolic.combinators import Difference, JoinUnion
-from .utils import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP
+from .utils import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP, BASE_COLORS
 from .geonodes import create_geonode_tree
-from .utils import BASE_COLORS
 from .materials import (
     create_material_tree,
     create_simple_material_tree,

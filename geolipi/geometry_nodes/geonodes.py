@@ -1,5 +1,5 @@
 import sys
-from .utils import import_bpy
+from .bl_utils import import_bpy
 
 
 def create_geonode_tree(dummy_obj, mod_name="CSG-GN", group_name="CSG-GN"):

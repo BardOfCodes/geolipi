@@ -1,4 +1,5 @@
-# GeoLIPI
+# GeoLIPI: Geometry with Symbols
+
 
 [banner]()
 
@@ -28,6 +29,15 @@ Mainly, GeoLIPI attempts to embed a generic visual language in python, making it
 ## Examples
 
 Check out the python notebooks in `examples/` for more details.
+
+## Next steps
+
+0) Visualizer for 3D Programs (quick rendering)
+1) DearPyGui based visualizer for 2D 3D both.
+2) Add Marching Primitives / Layer wise SVG optimization.
+3) Add SDS optimization example -> Connecting it to natural language directly.
+4) Add differentiable CSG operation and draw operations (probability over types).
+5) Stochastic primitives?
 
 ## High level issues
 
@@ -61,4 +71,4 @@ Many other awesome libraries exist which help with pythonic 3D modelling. I have
 5) Thanks to [Tim Nelson](https://cs.brown.edu/~tbn/)'s Logic for Systems course made the DNF/CNF stuff much easier to understand.
 6) Thanks to my PhD Advisor [Daniel Ritchie](https://dritchie.github.io/) for his support and guidance. 
 7) Thanks to my lab mates [Arman Maesumi](https://armanmaesumi.github.io/) and [R. Kenny Jones](https://rkjones4.github.io/) for their feedback and support.
-
+8) [Hiroki Sakuma](https://hirokisakuma.com/)'s [Torch-Sphere-Tracer](https://github.com/skmhrk1209/Torch-Sphere-Tracer) helped write my tiny dirty sphere tracer.
