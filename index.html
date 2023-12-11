@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GeoLIPI: DSL for implicit geometric modelling &mdash; GeoLIPI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="GeoLIPI Introduction" href="intro.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            GeoLIPI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">GeoLIPI Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="languages.html">Visual Languages in GeoLIPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">geolipi</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">GeoLIPI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">GeoLIPI: DSL for implicit geometric modelling</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="geolipi-dsl-for-implicit-geometric-modelling">
+<h1>GeoLIPI: DSL for implicit geometric modelling<a class="headerlink" href="#geolipi-dsl-for-implicit-geometric-modelling" title="Link to this heading"></a></h1>
+<p>GeoLIPI is a language for modelling 3D shapes. This is to be treated as a meta-language, from which visual programming languages can be derived. Some of the languages/visual programs that can be executed in this framework are:</p>
+<ol class="arabic simple">
+<li><p>CSG 3D Variants</p></li>
+<li><p>GeoCode</p></li>
+<li><p>SVG 2D</p></li>
+</ol>
+<p>and many more. Check out <cite>languages.md</cite> for more details.</p>
+</section>
+<section id="main-usecase">
+<h1>Main usecase<a class="headerlink" href="#main-usecase" title="Link to this heading"></a></h1>
+<p>Mainly, GeoLIPI attempts to embed a generic visual language in python, making it easier to use and extend for research. Additionally, it provides the following benefits:</p>
+<ol class="arabic simple">
+<li><p>Fast Batched Execution of programs - useful for training neural networks on large batches of program executions.</p></li>
+<li><p>Single “symbolic” object, multiple execution strategies. This helps with “executing” the program in different platforms/systems (such as blender for rendering, and pytorch for optimization).</p></li>
+<li><p>Parameter Optimization of arbitrary visual programs (All operations are created to allow differentiable optimization of its parameters).</p></li>
+<li><p>[TBD] Help with searching programs for a desired execution (refer to our recent [paper](<a class="reference external" href="https://bardofcodes.github.io/coref/">https://bardofcodes.github.io/coref/</a>)).</p></li>
+<li><p>Batched PyTorch execution code for all the shader toy 2D and 3D primitives described by Inigo Quilez.</p></li>
+</ol>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">GeoLIPI Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="languages.html">Visual Languages in GeoLIPI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="languages.html#d-languages">2D Languages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="languages.html#id1">3D Languages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="languages.html#not-in-geolipi-yet">Not in GeoLIPI (yet)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="languages.html#reference">Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">geolipi</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="geometry_nodes.html">geometry_nodes package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="geometry_nodes.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="geometry_nodes.html#module-geometry_nodes.bl_utils">geometry_nodes.bl_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.bl_utils.blender_importer"><code class="docutils literal notranslate"><span class="pre">blender_importer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.bl_utils.clean_up"><code class="docutils literal notranslate"><span class="pre">clean_up()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.bl_utils.get_obj_min_z"><code class="docutils literal notranslate"><span class="pre">get_obj_min_z()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.bl_utils.import_bpy"><code class="docutils literal notranslate"><span class="pre">import_bpy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.bl_utils.init_camera"><code class="docutils literal notranslate"><span class="pre">init_camera()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.bl_utils.init_lights"><code class="docutils literal notranslate"><span class="pre">init_lights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.bl_utils.render_with_rotation"><code class="docutils literal notranslate"><span class="pre">render_with_rotation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.bl_utils.set_render_settings"><code class="docutils literal notranslate"><span class="pre">set_render_settings()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="geometry_nodes.html#module-geometry_nodes.evaluate_graph">geometry_nodes.evaluate_graph module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.evaluate_graph.expr_to_geonode_graph"><code class="docutils literal notranslate"><span class="pre">expr_to_geonode_graph()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="geometry_nodes.html#module-geometry_nodes.geonodes">geometry_nodes.geonodes module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.geonodes.create_boolean_difference_node_seq"><code class="docutils literal notranslate"><span class="pre">create_boolean_difference_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.geonodes.create_boolean_intersection_node_seq"><code class="docutils literal notranslate"><span class="pre">create_boolean_intersection_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.geonodes.create_boolean_join_node_seq"><code class="docutils literal notranslate"><span class="pre">create_boolean_join_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.geonodes.create_boolean_union_node_seq"><code class="docutils literal notranslate"><span class="pre">create_boolean_union_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.geonodes.create_cuboid_node_seq"><code class="docutils literal notranslate"><span class="pre">create_cuboid_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.geonodes.create_cylinder_node_seq"><code class="docutils literal notranslate"><span class="pre">create_cylinder_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.geonodes.create_geonode_tree"><code class="docutils literal notranslate"><span class="pre">create_geonode_tree()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.geonodes.create_prebaked_primitive_node_seq"><code class="docutils literal notranslate"><span class="pre">create_prebaked_primitive_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.geonodes.create_reflect_node_seq"><code class="docutils literal notranslate"><span class="pre">create_reflect_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.geonodes.create_sphere_node_seq"><code class="docutils literal notranslate"><span class="pre">create_sphere_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.geonodes.create_transform_node_seq"><code class="docutils literal notranslate"><span class="pre">create_transform_node_seq()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="geometry_nodes.html#module-geometry_nodes.materials">geometry_nodes.materials module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.materials.colorObj"><code class="docutils literal notranslate"><span class="pre">colorObj</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.materials.create_edge_material_tree"><code class="docutils literal notranslate"><span class="pre">create_edge_material_tree()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.materials.create_material_tree"><code class="docutils literal notranslate"><span class="pre">create_material_tree()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.materials.create_monotone_material"><code class="docutils literal notranslate"><span class="pre">create_monotone_material()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="geometry_nodes.html#geometry_nodes.materials.create_simple_material_tree"><code class="docutils literal notranslate"><span class="pre">create_simple_material_tree()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="geometry_nodes.html#module-geometry_nodes.utils">geometry_nodes.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="symbolic.html">symbolic package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="symbolic.html#symbolic.get_cmd_mapper"><code class="docutils literal notranslate"><span class="pre">get_cmd_mapper()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="symbolic.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="symbolic.html#module-symbolic.base_symbolic">symbolic.base_symbolic module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLExpr"><code class="docutils literal notranslate"><span class="pre">GLExpr</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLExpr.args"><code class="docutils literal notranslate"><span class="pre">GLExpr.args</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLExpr.to"><code class="docutils literal notranslate"><span class="pre">GLExpr.to()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction"><code class="docutils literal notranslate"><span class="pre">GLFunction</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction.cpu"><code class="docutils literal notranslate"><span class="pre">GLFunction.cpu()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction.cuda"><code class="docutils literal notranslate"><span class="pre">GLFunction.cuda()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction.default_assumptions"><code class="docutils literal notranslate"><span class="pre">GLFunction.default_assumptions</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction.device"><code class="docutils literal notranslate"><span class="pre">GLFunction.device</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction.doit"><code class="docutils literal notranslate"><span class="pre">GLFunction.doit()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction.eval"><code class="docutils literal notranslate"><span class="pre">GLFunction.eval()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction.gather_tensor_list"><code class="docutils literal notranslate"><span class="pre">GLFunction.gather_tensor_list()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction.inject_tensor_list"><code class="docutils literal notranslate"><span class="pre">GLFunction.inject_tensor_list()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction.numpy"><code class="docutils literal notranslate"><span class="pre">GLFunction.numpy()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction.pretty_print"><code class="docutils literal notranslate"><span class="pre">GLFunction.pretty_print()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction.sympy"><code class="docutils literal notranslate"><span class="pre">GLFunction.sympy()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction.to"><code class="docutils literal notranslate"><span class="pre">GLFunction.to()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction.to_tensor"><code class="docutils literal notranslate"><span class="pre">GLFunction.to_tensor()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLSymbol"><code class="docutils literal notranslate"><span class="pre">GLSymbol()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.PrimitiveSpec"><code class="docutils literal notranslate"><span class="pre">PrimitiveSpec</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.PrimitiveSpec.default_assumptions"><code class="docutils literal notranslate"><span class="pre">PrimitiveSpec.default_assumptions</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.PrimitiveSpec.eval"><code class="docutils literal notranslate"><span class="pre">PrimitiveSpec.eval()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.magic_method_decorator"><code class="docutils literal notranslate"><span class="pre">magic_method_decorator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.base_symbolic.magic_method_decorator_for_function"><code class="docutils literal notranslate"><span class="pre">magic_method_decorator_for_function()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="symbolic.html#module-symbolic.color">symbolic.color module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.ApplyColor2D"><code class="docutils literal notranslate"><span class="pre">ApplyColor2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.ApplyColor2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ApplyColor2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.ColorModifier2D"><code class="docutils literal notranslate"><span class="pre">ColorModifier2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.ColorModifier2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ColorModifier2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.DestinationAtop"><code class="docutils literal notranslate"><span class="pre">DestinationAtop</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.DestinationAtop.default_assumptions"><code class="docutils literal notranslate"><span class="pre">DestinationAtop.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.DestinationIn"><code class="docutils literal notranslate"><span class="pre">DestinationIn</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.DestinationIn.default_assumptions"><code class="docutils literal notranslate"><span class="pre">DestinationIn.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.DestinationOut"><code class="docutils literal notranslate"><span class="pre">DestinationOut</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.DestinationOut.default_assumptions"><code class="docutils literal notranslate"><span class="pre">DestinationOut.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.DestinationOver"><code class="docutils literal notranslate"><span class="pre">DestinationOver</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.DestinationOver.default_assumptions"><code class="docutils literal notranslate"><span class="pre">DestinationOver.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.ModifyColor2D"><code class="docutils literal notranslate"><span class="pre">ModifyColor2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.ModifyColor2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ModifyColor2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.ModifyOpacity2D"><code class="docutils literal notranslate"><span class="pre">ModifyOpacity2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.ModifyOpacity2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ModifyOpacity2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.SVGCombinator"><code class="docutils literal notranslate"><span class="pre">SVGCombinator</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.SVGCombinator.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SVGCombinator.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.SVGXOR"><code class="docutils literal notranslate"><span class="pre">SVGXOR</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.SVGXOR.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SVGXOR.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.SourceAtop"><code class="docutils literal notranslate"><span class="pre">SourceAtop</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.SourceAtop.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SourceAtop.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.SourceIn"><code class="docutils literal notranslate"><span class="pre">SourceIn</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.SourceIn.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SourceIn.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.SourceOut"><code class="docutils literal notranslate"><span class="pre">SourceOut</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.SourceOut.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SourceOut.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.SourceOver"><code class="docutils literal notranslate"><span class="pre">SourceOver</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.SourceOver.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SourceOver.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.color.SourceOverSequence"><code class="docutils literal notranslate"><span class="pre">SourceOverSequence</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.color.SourceOverSequence.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SourceOverSequence.default_assumptions</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="symbolic.html#module-symbolic.combinators">symbolic.combinators module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.combinators.Combinator"><code class="docutils literal notranslate"><span class="pre">Combinator</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.combinators.Combinator.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Combinator.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.combinators.Complement"><code class="docutils literal notranslate"><span class="pre">Complement</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.combinators.Complement.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Complement.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.combinators.Difference"><code class="docutils literal notranslate"><span class="pre">Difference</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.combinators.Difference.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Difference.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.combinators.Intersection"><code class="docutils literal notranslate"><span class="pre">Intersection</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.combinators.Intersection.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Intersection.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.combinators.JoinUnion"><code class="docutils literal notranslate"><span class="pre">JoinUnion</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.combinators.JoinUnion.default_assumptions"><code class="docutils literal notranslate"><span class="pre">JoinUnion.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.combinators.SmoothDifference"><code class="docutils literal notranslate"><span class="pre">SmoothDifference</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.combinators.SmoothDifference.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SmoothDifference.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.combinators.SmoothIntersection"><code class="docutils literal notranslate"><span class="pre">SmoothIntersection</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.combinators.SmoothIntersection.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SmoothIntersection.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.combinators.SmoothUnion"><code class="docutils literal notranslate"><span class="pre">SmoothUnion</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.combinators.SmoothUnion.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SmoothUnion.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.combinators.SwitchedDifference"><code class="docutils literal notranslate"><span class="pre">SwitchedDifference</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.combinators.SwitchedDifference.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SwitchedDifference.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.combinators.Union"><code class="docutils literal notranslate"><span class="pre">Union</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.combinators.Union.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Union.default_assumptions</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="symbolic.html#module-symbolic.common">symbolic.common module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.common.sig_check"><code class="docutils literal notranslate"><span class="pre">sig_check()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="symbolic.html#module-symbolic.primitives_2d">symbolic.primitives_2d module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Arc2D"><code class="docutils literal notranslate"><span class="pre">Arc2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Arc2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Arc2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.BlobbyCross2D"><code class="docutils literal notranslate"><span class="pre">BlobbyCross2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.BlobbyCross2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">BlobbyCross2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Box2D"><code class="docutils literal notranslate"><span class="pre">Box2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Box2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Box2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Circle2D"><code class="docutils literal notranslate"><span class="pre">Circle2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Circle2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Circle2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.CircleWave2D"><code class="docutils literal notranslate"><span class="pre">CircleWave2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.CircleWave2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">CircleWave2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.CoolS2D"><code class="docutils literal notranslate"><span class="pre">CoolS2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.CoolS2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">CoolS2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Cross2D"><code class="docutils literal notranslate"><span class="pre">Cross2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Cross2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Cross2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.CutDisk2D"><code class="docutils literal notranslate"><span class="pre">CutDisk2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.CutDisk2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">CutDisk2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Egg2D"><code class="docutils literal notranslate"><span class="pre">Egg2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Egg2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Egg2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Ellipse2D"><code class="docutils literal notranslate"><span class="pre">Ellipse2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Ellipse2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Ellipse2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.EquilateralTriangle2D"><code class="docutils literal notranslate"><span class="pre">EquilateralTriangle2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.EquilateralTriangle2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">EquilateralTriangle2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Heart2D"><code class="docutils literal notranslate"><span class="pre">Heart2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Heart2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Heart2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Hexagram2D"><code class="docutils literal notranslate"><span class="pre">Hexagram2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Hexagram2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Hexagram2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.HorseShoe2D"><code class="docutils literal notranslate"><span class="pre">HorseShoe2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.HorseShoe2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">HorseShoe2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Hyperbola2D"><code class="docutils literal notranslate"><span class="pre">Hyperbola2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Hyperbola2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Hyperbola2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.IsoscelesTriangle2D"><code class="docutils literal notranslate"><span class="pre">IsoscelesTriangle2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.IsoscelesTriangle2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">IsoscelesTriangle2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Moon2D"><code class="docutils literal notranslate"><span class="pre">Moon2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Moon2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Moon2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.NoParamCircle2D"><code class="docutils literal notranslate"><span class="pre">NoParamCircle2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.NoParamCircle2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">NoParamCircle2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.NoParamRectangle2D"><code class="docutils literal notranslate"><span class="pre">NoParamRectangle2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.NoParamRectangle2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">NoParamRectangle2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.NoParamTriangle2D"><code class="docutils literal notranslate"><span class="pre">NoParamTriangle2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.NoParamTriangle2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">NoParamTriangle2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.NullExpression2D"><code class="docutils literal notranslate"><span class="pre">NullExpression2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.NullExpression2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">NullExpression2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.OrientedBox2D"><code class="docutils literal notranslate"><span class="pre">OrientedBox2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.OrientedBox2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">OrientedBox2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.OrientedVesica2D"><code class="docutils literal notranslate"><span class="pre">OrientedVesica2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.OrientedVesica2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">OrientedVesica2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Parabola2D"><code class="docutils literal notranslate"><span class="pre">Parabola2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Parabola2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Parabola2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.ParabolaSegment2D"><code class="docutils literal notranslate"><span class="pre">ParabolaSegment2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.ParabolaSegment2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ParabolaSegment2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Parallelogram2D"><code class="docutils literal notranslate"><span class="pre">Parallelogram2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Parallelogram2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Parallelogram2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Pie2D"><code class="docutils literal notranslate"><span class="pre">Pie2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Pie2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Pie2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Polygon2D"><code class="docutils literal notranslate"><span class="pre">Polygon2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Polygon2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Polygon2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Primitive2D"><code class="docutils literal notranslate"><span class="pre">Primitive2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Primitive2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Primitive2D.default_assumptions</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Primitive2D.pretty_print"><code class="docutils literal notranslate"><span class="pre">Primitive2D.pretty_print()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.QuadraticBezierCurve2D"><code class="docutils literal notranslate"><span class="pre">QuadraticBezierCurve2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.QuadraticBezierCurve2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">QuadraticBezierCurve2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.QuadraticCircle2D"><code class="docutils literal notranslate"><span class="pre">QuadraticCircle2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.QuadraticCircle2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">QuadraticCircle2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Rectangle2D"><code class="docutils literal notranslate"><span class="pre">Rectangle2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Rectangle2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Rectangle2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.RegularHexagon2D"><code class="docutils literal notranslate"><span class="pre">RegularHexagon2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.RegularHexagon2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RegularHexagon2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.RegularPentagon2D"><code class="docutils literal notranslate"><span class="pre">RegularPentagon2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.RegularPentagon2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RegularPentagon2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.RegularStar2D"><code class="docutils literal notranslate"><span class="pre">RegularStar2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.RegularStar2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RegularStar2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Rhombus2D"><code class="docutils literal notranslate"><span class="pre">Rhombus2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Rhombus2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Rhombus2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.RoundedBox2D"><code class="docutils literal notranslate"><span class="pre">RoundedBox2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.RoundedBox2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RoundedBox2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.RoundedCross2D"><code class="docutils literal notranslate"><span class="pre">RoundedCross2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.RoundedCross2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RoundedCross2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.RoundedX2D"><code class="docutils literal notranslate"><span class="pre">RoundedX2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.RoundedX2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RoundedX2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Segment2D"><code class="docutils literal notranslate"><span class="pre">Segment2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Segment2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Segment2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Stairs2D"><code class="docutils literal notranslate"><span class="pre">Stairs2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Stairs2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Stairs2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Star2D"><code class="docutils literal notranslate"><span class="pre">Star2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Star2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Star2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Trapezoid2D"><code class="docutils literal notranslate"><span class="pre">Trapezoid2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Trapezoid2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Trapezoid2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Triangle2D"><code class="docutils literal notranslate"><span class="pre">Triangle2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Triangle2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Triangle2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Tunnel2D"><code class="docutils literal notranslate"><span class="pre">Tunnel2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Tunnel2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Tunnel2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.UnevenCapsule2D"><code class="docutils literal notranslate"><span class="pre">UnevenCapsule2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.UnevenCapsule2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">UnevenCapsule2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Vesica2D"><code class="docutils literal notranslate"><span class="pre">Vesica2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_2d.Vesica2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Vesica2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="symbolic.html#module-symbolic.primitives_3d">symbolic.primitives_3d module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.ArbitraryCappedCone"><code class="docutils literal notranslate"><span class="pre">ArbitraryCappedCone</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.ArbitraryCappedCone.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ArbitraryCappedCone.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.ArbitraryCappedCylinder3D"><code class="docutils literal notranslate"><span class="pre">ArbitraryCappedCylinder3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.ArbitraryCappedCylinder3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ArbitraryCappedCylinder3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.ArbitraryRoundCone3D"><code class="docutils literal notranslate"><span class="pre">ArbitraryRoundCone3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.ArbitraryRoundCone3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ArbitraryRoundCone3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Box3D"><code class="docutils literal notranslate"><span class="pre">Box3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Box3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Box3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.BoxFrame3D"><code class="docutils literal notranslate"><span class="pre">BoxFrame3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.BoxFrame3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">BoxFrame3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.CappedCone3D"><code class="docutils literal notranslate"><span class="pre">CappedCone3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.CappedCone3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">CappedCone3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.CappedCylinder3D"><code class="docutils literal notranslate"><span class="pre">CappedCylinder3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.CappedCylinder3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">CappedCylinder3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.CappedTorus3D"><code class="docutils literal notranslate"><span class="pre">CappedTorus3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.CappedTorus3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">CappedTorus3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Capsule3D"><code class="docutils literal notranslate"><span class="pre">Capsule3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Capsule3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Capsule3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Cone3D"><code class="docutils literal notranslate"><span class="pre">Cone3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Cone3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Cone3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Cuboid3D"><code class="docutils literal notranslate"><span class="pre">Cuboid3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Cuboid3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Cuboid3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.CutHollowSphere"><code class="docutils literal notranslate"><span class="pre">CutHollowSphere</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.CutHollowSphere.default_assumptions"><code class="docutils literal notranslate"><span class="pre">CutHollowSphere.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.CutSphere3D"><code class="docutils literal notranslate"><span class="pre">CutSphere3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.CutSphere3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">CutSphere3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Cylinder3D"><code class="docutils literal notranslate"><span class="pre">Cylinder3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Cylinder3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Cylinder3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.DeathStar3D"><code class="docutils literal notranslate"><span class="pre">DeathStar3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.DeathStar3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">DeathStar3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.HexPrism3D"><code class="docutils literal notranslate"><span class="pre">HexPrism3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.HexPrism3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">HexPrism3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.InexactAnisotropicGaussian3D"><code class="docutils literal notranslate"><span class="pre">InexactAnisotropicGaussian3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.InexactAnisotropicGaussian3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">InexactAnisotropicGaussian3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.InexactCone3D"><code class="docutils literal notranslate"><span class="pre">InexactCone3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.InexactCone3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">InexactCone3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.InexactEllipsoid3D"><code class="docutils literal notranslate"><span class="pre">InexactEllipsoid3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.InexactEllipsoid3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">InexactEllipsoid3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.InexactOctahedron3D"><code class="docutils literal notranslate"><span class="pre">InexactOctahedron3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.InexactOctahedron3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">InexactOctahedron3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.InexactSuperQuadrics3D"><code class="docutils literal notranslate"><span class="pre">InexactSuperQuadrics3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.InexactSuperQuadrics3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">InexactSuperQuadrics3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.InfiniteCone3D"><code class="docutils literal notranslate"><span class="pre">InfiniteCone3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.InfiniteCone3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">InfiniteCone3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.InfiniteCylinder3D"><code class="docutils literal notranslate"><span class="pre">InfiniteCylinder3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.InfiniteCylinder3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">InfiniteCylinder3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Link3D"><code class="docutils literal notranslate"><span class="pre">Link3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Link3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Link3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.NoParamCuboid3D"><code class="docutils literal notranslate"><span class="pre">NoParamCuboid3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.NoParamCuboid3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">NoParamCuboid3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.NoParamCylinder3D"><code class="docutils literal notranslate"><span class="pre">NoParamCylinder3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.NoParamCylinder3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">NoParamCylinder3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.NoParamSphere3D"><code class="docutils literal notranslate"><span class="pre">NoParamSphere3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.NoParamSphere3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">NoParamSphere3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.NullExpression3D"><code class="docutils literal notranslate"><span class="pre">NullExpression3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.NullExpression3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">NullExpression3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Octahedron3D"><code class="docutils literal notranslate"><span class="pre">Octahedron3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Octahedron3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Octahedron3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Plane3D"><code class="docutils literal notranslate"><span class="pre">Plane3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Plane3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Plane3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.PreBakedPrimitive3D"><code class="docutils literal notranslate"><span class="pre">PreBakedPrimitive3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.PreBakedPrimitive3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">PreBakedPrimitive3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Primitive3D"><code class="docutils literal notranslate"><span class="pre">Primitive3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Primitive3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Primitive3D.default_assumptions</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Primitive3D.pretty_print"><code class="docutils literal notranslate"><span class="pre">Primitive3D.pretty_print()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Pyramid3D"><code class="docutils literal notranslate"><span class="pre">Pyramid3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Pyramid3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Pyramid3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Quadrilateral3D"><code class="docutils literal notranslate"><span class="pre">Quadrilateral3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Quadrilateral3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Quadrilateral3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.RevolvedVesica3D"><code class="docutils literal notranslate"><span class="pre">RevolvedVesica3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.RevolvedVesica3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RevolvedVesica3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Rhombus3D"><code class="docutils literal notranslate"><span class="pre">Rhombus3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Rhombus3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Rhombus3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.RoundCone3D"><code class="docutils literal notranslate"><span class="pre">RoundCone3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.RoundCone3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RoundCone3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.RoundedBox3D"><code class="docutils literal notranslate"><span class="pre">RoundedBox3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.RoundedBox3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RoundedBox3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.RoundedCylinder3D"><code class="docutils literal notranslate"><span class="pre">RoundedCylinder3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.RoundedCylinder3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RoundedCylinder3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.SolidAngle3D"><code class="docutils literal notranslate"><span class="pre">SolidAngle3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.SolidAngle3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SolidAngle3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Sphere3D"><code class="docutils literal notranslate"><span class="pre">Sphere3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Sphere3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Sphere3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Torus3D"><code class="docutils literal notranslate"><span class="pre">Torus3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Torus3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Torus3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.TriPrism3D"><code class="docutils literal notranslate"><span class="pre">TriPrism3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.TriPrism3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">TriPrism3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Triangle3D"><code class="docutils literal notranslate"><span class="pre">Triangle3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.Triangle3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Triangle3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.VerticalCappedCylinder3D"><code class="docutils literal notranslate"><span class="pre">VerticalCappedCylinder3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.VerticalCappedCylinder3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">VerticalCappedCylinder3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.VerticalCapsule3D"><code class="docutils literal notranslate"><span class="pre">VerticalCapsule3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_3d.VerticalCapsule3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">VerticalCapsule3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="symbolic.html#module-symbolic.primitives_higher">symbolic.primitives_higher module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.CubicBezierExtrude3D"><code class="docutils literal notranslate"><span class="pre">CubicBezierExtrude3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.CubicBezierExtrude3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">CubicBezierExtrude3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.CurvePrimitive3D"><code class="docutils literal notranslate"><span class="pre">CurvePrimitive3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.CurvePrimitive3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">CurvePrimitive3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.HigherOrderPrimitives3D"><code class="docutils literal notranslate"><span class="pre">HigherOrderPrimitives3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.HigherOrderPrimitives3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">HigherOrderPrimitives3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.LinearCurve1D"><code class="docutils literal notranslate"><span class="pre">LinearCurve1D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.LinearCurve1D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">LinearCurve1D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.LinearExtrude3D"><code class="docutils literal notranslate"><span class="pre">LinearExtrude3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.LinearExtrude3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">LinearExtrude3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.PolyQuadBezierExtrude3D"><code class="docutils literal notranslate"><span class="pre">PolyQuadBezierExtrude3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.PolyQuadBezierExtrude3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">PolyQuadBezierExtrude3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.PolyStraightLineCurve1D"><code class="docutils literal notranslate"><span class="pre">PolyStraightLineCurve1D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.PolyStraightLineCurve1D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">PolyStraightLineCurve1D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.Primitive1D"><code class="docutils literal notranslate"><span class="pre">Primitive1D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.Primitive1D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Primitive1D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.QuadraticBezierExtrude3D"><code class="docutils literal notranslate"><span class="pre">QuadraticBezierExtrude3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.QuadraticBezierExtrude3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">QuadraticBezierExtrude3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.QuadraticCurve1D"><code class="docutils literal notranslate"><span class="pre">QuadraticCurve1D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.QuadraticCurve1D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">QuadraticCurve1D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.Revolution3D"><code class="docutils literal notranslate"><span class="pre">Revolution3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.Revolution3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Revolution3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.SimpleExtrusion3D"><code class="docutils literal notranslate"><span class="pre">SimpleExtrusion3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.primitives_higher.SimpleExtrusion3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SimpleExtrusion3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="symbolic.html#module-symbolic.reference">symbolic.reference module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.reference.Point3D"><code class="docutils literal notranslate"><span class="pre">Point3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.reference.Point3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Point3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.reference.PointRef"><code class="docutils literal notranslate"><span class="pre">PointRef</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.reference.PointRef.default_assumptions"><code class="docutils literal notranslate"><span class="pre">PointRef.default_assumptions</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.reference.PointRef.doit"><code class="docutils literal notranslate"><span class="pre">PointRef.doit()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.reference.PointRef.pretty_print"><code class="docutils literal notranslate"><span class="pre">PointRef.pretty_print()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="symbolic.html#module-symbolic.resolve">symbolic.resolve module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.resolve.load_expr_from_str"><code class="docutils literal notranslate"><span class="pre">load_expr_from_str()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.resolve.resolve_macros"><code class="docutils literal notranslate"><span class="pre">resolve_macros()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="symbolic.html#module-symbolic.transforms_2d">symbolic.transforms_2d module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.AxialReflect2D"><code class="docutils literal notranslate"><span class="pre">AxialReflect2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.AxialReflect2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">AxialReflect2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.AxialScaleSymmetry2D"><code class="docutils literal notranslate"><span class="pre">AxialScaleSymmetry2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.AxialScaleSymmetry2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">AxialScaleSymmetry2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.AxialTranslationSymmetry2D"><code class="docutils literal notranslate"><span class="pre">AxialTranslationSymmetry2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.AxialTranslationSymmetry2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">AxialTranslationSymmetry2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Dilate2D"><code class="docutils literal notranslate"><span class="pre">Dilate2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Dilate2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Dilate2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Distort2D"><code class="docutils literal notranslate"><span class="pre">Distort2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Distort2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Distort2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Erode2D"><code class="docutils literal notranslate"><span class="pre">Erode2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Erode2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Erode2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.EulerRotate2D"><code class="docutils literal notranslate"><span class="pre">EulerRotate2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.EulerRotate2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">EulerRotate2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Macro2D"><code class="docutils literal notranslate"><span class="pre">Macro2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Macro2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Macro2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Modifier2D"><code class="docutils literal notranslate"><span class="pre">Modifier2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Modifier2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Modifier2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Onion2D"><code class="docutils literal notranslate"><span class="pre">Onion2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Onion2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Onion2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.PositionalTransform2D"><code class="docutils literal notranslate"><span class="pre">PositionalTransform2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.PositionalTransform2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">PositionalTransform2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Reflect2D"><code class="docutils literal notranslate"><span class="pre">Reflect2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Reflect2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Reflect2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.ReflectCoords2D"><code class="docutils literal notranslate"><span class="pre">ReflectCoords2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.ReflectCoords2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ReflectCoords2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.ReflectX2D"><code class="docutils literal notranslate"><span class="pre">ReflectX2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.ReflectX2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ReflectX2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.ReflectY2D"><code class="docutils literal notranslate"><span class="pre">ReflectY2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.ReflectY2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ReflectY2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.RotationSymmetry2D"><code class="docutils literal notranslate"><span class="pre">RotationSymmetry2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.RotationSymmetry2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RotationSymmetry2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.SDFModifier2D"><code class="docutils literal notranslate"><span class="pre">SDFModifier2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.SDFModifier2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SDFModifier2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Scale2D"><code class="docutils literal notranslate"><span class="pre">Scale2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Scale2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Scale2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.ScaleSymmetry2D"><code class="docutils literal notranslate"><span class="pre">ScaleSymmetry2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.ScaleSymmetry2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ScaleSymmetry2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Shear2D"><code class="docutils literal notranslate"><span class="pre">Shear2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Shear2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Shear2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Transform2D"><code class="docutils literal notranslate"><span class="pre">Transform2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Transform2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Transform2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Translate2D"><code class="docutils literal notranslate"><span class="pre">Translate2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.Translate2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Translate2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.TranslationSymmetry2D"><code class="docutils literal notranslate"><span class="pre">TranslationSymmetry2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.TranslationSymmetry2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">TranslationSymmetry2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.TranslationSymmetryX2D"><code class="docutils literal notranslate"><span class="pre">TranslationSymmetryX2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.TranslationSymmetryX2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">TranslationSymmetryX2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.TranslationSymmetryY2D"><code class="docutils literal notranslate"><span class="pre">TranslationSymmetryY2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_2d.TranslationSymmetryY2D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">TranslationSymmetryY2D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="symbolic.html#module-symbolic.transforms_3d">symbolic.transforms_3d module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.AxialReflect3D"><code class="docutils literal notranslate"><span class="pre">AxialReflect3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.AxialReflect3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">AxialReflect3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.AxialRotationSymmetry3D"><code class="docutils literal notranslate"><span class="pre">AxialRotationSymmetry3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.AxialRotationSymmetry3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">AxialRotationSymmetry3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.AxialScaleSymmetry3D"><code class="docutils literal notranslate"><span class="pre">AxialScaleSymmetry3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.AxialScaleSymmetry3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">AxialScaleSymmetry3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.AxialTranslationSymmetry3D"><code class="docutils literal notranslate"><span class="pre">AxialTranslationSymmetry3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.AxialTranslationSymmetry3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">AxialTranslationSymmetry3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Bend3D"><code class="docutils literal notranslate"><span class="pre">Bend3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Bend3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Bend3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Dilate3D"><code class="docutils literal notranslate"><span class="pre">Dilate3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Dilate3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Dilate3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Distort3D"><code class="docutils literal notranslate"><span class="pre">Distort3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Distort3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Distort3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Erode3D"><code class="docutils literal notranslate"><span class="pre">Erode3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Erode3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Erode3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.EulerRotate3D"><code class="docutils literal notranslate"><span class="pre">EulerRotate3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.EulerRotate3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">EulerRotate3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Macro3D"><code class="docutils literal notranslate"><span class="pre">Macro3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Macro3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Macro3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Modifier3D"><code class="docutils literal notranslate"><span class="pre">Modifier3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Modifier3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Modifier3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Onion3D"><code class="docutils literal notranslate"><span class="pre">Onion3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Onion3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Onion3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.PositionalTransform3D"><code class="docutils literal notranslate"><span class="pre">PositionalTransform3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.PositionalTransform3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">PositionalTransform3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.QuaternionRotate3D"><code class="docutils literal notranslate"><span class="pre">QuaternionRotate3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.QuaternionRotate3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">QuaternionRotate3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Reflect3D"><code class="docutils literal notranslate"><span class="pre">Reflect3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Reflect3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Reflect3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.ReflectCoords3D"><code class="docutils literal notranslate"><span class="pre">ReflectCoords3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.ReflectCoords3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ReflectCoords3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.ReflectX3D"><code class="docutils literal notranslate"><span class="pre">ReflectX3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.ReflectX3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ReflectX3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.ReflectY3D"><code class="docutils literal notranslate"><span class="pre">ReflectY3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.ReflectY3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ReflectY3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.ReflectZ3D"><code class="docutils literal notranslate"><span class="pre">ReflectZ3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.ReflectZ3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ReflectZ3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Rotate5D"><code class="docutils literal notranslate"><span class="pre">Rotate5D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Rotate5D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Rotate5D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Rotate6D"><code class="docutils literal notranslate"><span class="pre">Rotate6D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Rotate6D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Rotate6D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Rotate9D"><code class="docutils literal notranslate"><span class="pre">Rotate9D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Rotate9D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Rotate9D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.RotationSymmetry3D"><code class="docutils literal notranslate"><span class="pre">RotationSymmetry3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.RotationSymmetry3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RotationSymmetry3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.RotationSymmetryX3D"><code class="docutils literal notranslate"><span class="pre">RotationSymmetryX3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.RotationSymmetryX3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RotationSymmetryX3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.RotationSymmetryY3D"><code class="docutils literal notranslate"><span class="pre">RotationSymmetryY3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.RotationSymmetryY3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RotationSymmetryY3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.RotationSymmetryZ3D"><code class="docutils literal notranslate"><span class="pre">RotationSymmetryZ3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.RotationSymmetryZ3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">RotationSymmetryZ3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.SDFModifier3D"><code class="docutils literal notranslate"><span class="pre">SDFModifier3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.SDFModifier3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">SDFModifier3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Scale3D"><code class="docutils literal notranslate"><span class="pre">Scale3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Scale3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Scale3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.ScaleSymmetry3D"><code class="docutils literal notranslate"><span class="pre">ScaleSymmetry3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.ScaleSymmetry3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">ScaleSymmetry3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Shear3D"><code class="docutils literal notranslate"><span class="pre">Shear3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Shear3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Shear3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Transform3D"><code class="docutils literal notranslate"><span class="pre">Transform3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Transform3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Transform3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Translate3D"><code class="docutils literal notranslate"><span class="pre">Translate3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Translate3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Translate3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.TranslationSymmetry3D"><code class="docutils literal notranslate"><span class="pre">TranslationSymmetry3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.TranslationSymmetry3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">TranslationSymmetry3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.TranslationSymmetryX3D"><code class="docutils literal notranslate"><span class="pre">TranslationSymmetryX3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.TranslationSymmetryX3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">TranslationSymmetryX3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.TranslationSymmetryY3D"><code class="docutils literal notranslate"><span class="pre">TranslationSymmetryY3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.TranslationSymmetryY3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">TranslationSymmetryY3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.TranslationSymmetryZ3D"><code class="docutils literal notranslate"><span class="pre">TranslationSymmetryZ3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.TranslationSymmetryZ3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">TranslationSymmetryZ3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Twist3D"><code class="docutils literal notranslate"><span class="pre">Twist3D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="symbolic.html#symbolic.transforms_3d.Twist3D.default_assumptions"><code class="docutils literal notranslate"><span class="pre">Twist3D.default_assumptions</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="symbolic.html#module-symbolic.types">symbolic.types module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="torch_compute.html">torch_compute package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#module-torch_compute.batch_evaluate_sdf">torch_compute.batch_evaluate_sdf module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.batch_evaluate_sdf.batch_evaluate"><code class="docutils literal notranslate"><span class="pre">batch_evaluate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.batch_evaluate_sdf.create_evaluation_batches"><code class="docutils literal notranslate"><span class="pre">create_evaluation_batches()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#module-torch_compute.color_functions">torch_compute.color_functions module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.apply_color"><code class="docutils literal notranslate"><span class="pre">apply_color()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.destination_atop"><code class="docutils literal notranslate"><span class="pre">destination_atop()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.destination_in"><code class="docutils literal notranslate"><span class="pre">destination_in()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.destination_out"><code class="docutils literal notranslate"><span class="pre">destination_out()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.destination_over"><code class="docutils literal notranslate"><span class="pre">destination_over()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.get_premultiplied_form"><code class="docutils literal notranslate"><span class="pre">get_premultiplied_form()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.get_unmultiplied_form"><code class="docutils literal notranslate"><span class="pre">get_unmultiplied_form()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.modify_color"><code class="docutils literal notranslate"><span class="pre">modify_color()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.modify_opacity"><code class="docutils literal notranslate"><span class="pre">modify_opacity()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.source_atop"><code class="docutils literal notranslate"><span class="pre">source_atop()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.source_in"><code class="docutils literal notranslate"><span class="pre">source_in()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.source_out"><code class="docutils literal notranslate"><span class="pre">source_out()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.source_over"><code class="docutils literal notranslate"><span class="pre">source_over()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.source_over_seq"><code class="docutils literal notranslate"><span class="pre">source_over_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.color_functions.svg_xor"><code class="docutils literal notranslate"><span class="pre">svg_xor()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#module-torch_compute.common">torch_compute.common module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#module-torch_compute.compile_expression">torch_compute.compile_expression module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.compile_expression.compile_expr"><code class="docutils literal notranslate"><span class="pre">compile_expr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.compile_expression.create_compiled_expr"><code class="docutils literal notranslate"><span class="pre">create_compiled_expr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.compile_expression.expr_prim_count"><code class="docutils literal notranslate"><span class="pre">expr_prim_count()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.compile_expression.expr_to_dnf"><code class="docutils literal notranslate"><span class="pre">expr_to_dnf()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.compile_expression.expr_to_graph"><code class="docutils literal notranslate"><span class="pre">expr_to_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.compile_expression.get_rule_match"><code class="docutils literal notranslate"><span class="pre">get_rule_match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.compile_expression.graph_to_expr"><code class="docutils literal notranslate"><span class="pre">graph_to_expr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.compile_expression.resolve_rule"><code class="docutils literal notranslate"><span class="pre">resolve_rule()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#module-torch_compute.evaluate_expression">torch_compute.evaluate_expression module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.evaluate_expression.expr_to_colored_canvas"><code class="docutils literal notranslate"><span class="pre">expr_to_colored_canvas()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.evaluate_expression.expr_to_sdf"><code class="docutils literal notranslate"><span class="pre">expr_to_sdf()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.evaluate_expression.parse_tensor_from_expr"><code class="docutils literal notranslate"><span class="pre">parse_tensor_from_expr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.evaluate_expression.recursive_evaluate"><code class="docutils literal notranslate"><span class="pre">recursive_evaluate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.evaluate_expression.smoothen_sdf"><code class="docutils literal notranslate"><span class="pre">smoothen_sdf()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#module-torch_compute.sdf_functions_2d">torch_compute.sdf_functions_2d module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.ndot"><code class="docutils literal notranslate"><span class="pre">ndot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_arc"><code class="docutils literal notranslate"><span class="pre">sdf2d_arc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_blobby_cross"><code class="docutils literal notranslate"><span class="pre">sdf2d_blobby_cross()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_box"><code class="docutils literal notranslate"><span class="pre">sdf2d_box()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_circle"><code class="docutils literal notranslate"><span class="pre">sdf2d_circle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_circle_wave"><code class="docutils literal notranslate"><span class="pre">sdf2d_circle_wave()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_cool_s"><code class="docutils literal notranslate"><span class="pre">sdf2d_cool_s()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_cross"><code class="docutils literal notranslate"><span class="pre">sdf2d_cross()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_cut_disk"><code class="docutils literal notranslate"><span class="pre">sdf2d_cut_disk()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_egg"><code class="docutils literal notranslate"><span class="pre">sdf2d_egg()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_ellipse"><code class="docutils literal notranslate"><span class="pre">sdf2d_ellipse()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_equilateral_triangle"><code class="docutils literal notranslate"><span class="pre">sdf2d_equilateral_triangle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_heart"><code class="docutils literal notranslate"><span class="pre">sdf2d_heart()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_hexagram"><code class="docutils literal notranslate"><span class="pre">sdf2d_hexagram()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_horse_shoe"><code class="docutils literal notranslate"><span class="pre">sdf2d_horse_shoe()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_hyperbola"><code class="docutils literal notranslate"><span class="pre">sdf2d_hyperbola()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_isosceles_triangle"><code class="docutils literal notranslate"><span class="pre">sdf2d_isosceles_triangle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_moon"><code class="docutils literal notranslate"><span class="pre">sdf2d_moon()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_no_param_circle"><code class="docutils literal notranslate"><span class="pre">sdf2d_no_param_circle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_no_param_rectangle"><code class="docutils literal notranslate"><span class="pre">sdf2d_no_param_rectangle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_no_param_triangle"><code class="docutils literal notranslate"><span class="pre">sdf2d_no_param_triangle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_oriented_box"><code class="docutils literal notranslate"><span class="pre">sdf2d_oriented_box()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_oriented_vesica"><code class="docutils literal notranslate"><span class="pre">sdf2d_oriented_vesica()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_parabola"><code class="docutils literal notranslate"><span class="pre">sdf2d_parabola()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_parabola_segment"><code class="docutils literal notranslate"><span class="pre">sdf2d_parabola_segment()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_parallelogram"><code class="docutils literal notranslate"><span class="pre">sdf2d_parallelogram()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_pie"><code class="docutils literal notranslate"><span class="pre">sdf2d_pie()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_polygon"><code class="docutils literal notranslate"><span class="pre">sdf2d_polygon()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_quadratic_bezier_curve"><code class="docutils literal notranslate"><span class="pre">sdf2d_quadratic_bezier_curve()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_quadratic_circle"><code class="docutils literal notranslate"><span class="pre">sdf2d_quadratic_circle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_regular_hexagon"><code class="docutils literal notranslate"><span class="pre">sdf2d_regular_hexagon()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_regular_octagon"><code class="docutils literal notranslate"><span class="pre">sdf2d_regular_octagon()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_regular_pentagon"><code class="docutils literal notranslate"><span class="pre">sdf2d_regular_pentagon()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_regular_star"><code class="docutils literal notranslate"><span class="pre">sdf2d_regular_star()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_rhombus"><code class="docutils literal notranslate"><span class="pre">sdf2d_rhombus()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_rounded_box"><code class="docutils literal notranslate"><span class="pre">sdf2d_rounded_box()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_rounded_cross"><code class="docutils literal notranslate"><span class="pre">sdf2d_rounded_cross()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_rounded_x"><code class="docutils literal notranslate"><span class="pre">sdf2d_rounded_x()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_segment"><code class="docutils literal notranslate"><span class="pre">sdf2d_segment()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_stairs"><code class="docutils literal notranslate"><span class="pre">sdf2d_stairs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_star_5"><code class="docutils literal notranslate"><span class="pre">sdf2d_star_5()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_trapezoid"><code class="docutils literal notranslate"><span class="pre">sdf2d_trapezoid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_triangle"><code class="docutils literal notranslate"><span class="pre">sdf2d_triangle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_tunnel"><code class="docutils literal notranslate"><span class="pre">sdf2d_tunnel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_uneven_capsule"><code class="docutils literal notranslate"><span class="pre">sdf2d_uneven_capsule()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_2d.sdf2d_vesica"><code class="docutils literal notranslate"><span class="pre">sdf2d_vesica()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#module-torch_compute.sdf_functions_3d">torch_compute.sdf_functions_3d module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_arbitrary_capped_cone"><code class="docutils literal notranslate"><span class="pre">sdf3d_arbitrary_capped_cone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_arbitrary_capped_cylinder"><code class="docutils literal notranslate"><span class="pre">sdf3d_arbitrary_capped_cylinder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_arbitrary_round_cone"><code class="docutils literal notranslate"><span class="pre">sdf3d_arbitrary_round_cone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_box"><code class="docutils literal notranslate"><span class="pre">sdf3d_box()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_box_frame"><code class="docutils literal notranslate"><span class="pre">sdf3d_box_frame()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_capped_cone"><code class="docutils literal notranslate"><span class="pre">sdf3d_capped_cone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_capped_cylinder"><code class="docutils literal notranslate"><span class="pre">sdf3d_capped_cylinder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_capped_torus"><code class="docutils literal notranslate"><span class="pre">sdf3d_capped_torus()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_capsule"><code class="docutils literal notranslate"><span class="pre">sdf3d_capsule()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_cone"><code class="docutils literal notranslate"><span class="pre">sdf3d_cone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_cut_hollow_sphere"><code class="docutils literal notranslate"><span class="pre">sdf3d_cut_hollow_sphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_cut_sphere"><code class="docutils literal notranslate"><span class="pre">sdf3d_cut_sphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_death_star"><code class="docutils literal notranslate"><span class="pre">sdf3d_death_star()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_hex_prism"><code class="docutils literal notranslate"><span class="pre">sdf3d_hex_prism()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_inexact_anisotropic_gaussian"><code class="docutils literal notranslate"><span class="pre">sdf3d_inexact_anisotropic_gaussian()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_inexact_cone"><code class="docutils literal notranslate"><span class="pre">sdf3d_inexact_cone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_inexact_ellipsoid"><code class="docutils literal notranslate"><span class="pre">sdf3d_inexact_ellipsoid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_inexact_octahedron"><code class="docutils literal notranslate"><span class="pre">sdf3d_inexact_octahedron()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_inexact_super_quadrics"><code class="docutils literal notranslate"><span class="pre">sdf3d_inexact_super_quadrics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_infinite_cone"><code class="docutils literal notranslate"><span class="pre">sdf3d_infinite_cone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_infinite_cylinder"><code class="docutils literal notranslate"><span class="pre">sdf3d_infinite_cylinder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_link"><code class="docutils literal notranslate"><span class="pre">sdf3d_link()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_no_param_cuboid"><code class="docutils literal notranslate"><span class="pre">sdf3d_no_param_cuboid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_no_param_cylinder"><code class="docutils literal notranslate"><span class="pre">sdf3d_no_param_cylinder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_no_param_sphere"><code class="docutils literal notranslate"><span class="pre">sdf3d_no_param_sphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_octahedron"><code class="docutils literal notranslate"><span class="pre">sdf3d_octahedron()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_plane"><code class="docutils literal notranslate"><span class="pre">sdf3d_plane()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_pyramid"><code class="docutils literal notranslate"><span class="pre">sdf3d_pyramid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_quadrilateral"><code class="docutils literal notranslate"><span class="pre">sdf3d_quadrilateral()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_revolved_vesica"><code class="docutils literal notranslate"><span class="pre">sdf3d_revolved_vesica()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_rhombus"><code class="docutils literal notranslate"><span class="pre">sdf3d_rhombus()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_round_cone"><code class="docutils literal notranslate"><span class="pre">sdf3d_round_cone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_rounded_box"><code class="docutils literal notranslate"><span class="pre">sdf3d_rounded_box()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_rounded_cylinder"><code class="docutils literal notranslate"><span class="pre">sdf3d_rounded_cylinder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_solid_angle"><code class="docutils literal notranslate"><span class="pre">sdf3d_solid_angle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_sphere"><code class="docutils literal notranslate"><span class="pre">sdf3d_sphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_torus"><code class="docutils literal notranslate"><span class="pre">sdf3d_torus()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_tri_prism"><code class="docutils literal notranslate"><span class="pre">sdf3d_tri_prism()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_triangle"><code class="docutils literal notranslate"><span class="pre">sdf3d_triangle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_vertical_capped_cylinder"><code class="docutils literal notranslate"><span class="pre">sdf3d_vertical_capped_cylinder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_3d.sdf3d_vertical_capsule"><code class="docutils literal notranslate"><span class="pre">sdf3d_vertical_capsule()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#module-torch_compute.sdf_functions_higher">torch_compute.sdf_functions_higher module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_higher.cro"><code class="docutils literal notranslate"><span class="pre">cro()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_higher.dot2"><code class="docutils literal notranslate"><span class="pre">dot2()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_higher.linear_curve_1d"><code class="docutils literal notranslate"><span class="pre">linear_curve_1d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_higher.perpendicular_vectors"><code class="docutils literal notranslate"><span class="pre">perpendicular_vectors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_higher.quadratic_curve_1d"><code class="docutils literal notranslate"><span class="pre">quadratic_curve_1d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_higher.sdf3d_linear_extrude"><code class="docutils literal notranslate"><span class="pre">sdf3d_linear_extrude()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_higher.sdf3d_quadratic_bezier_extrude"><code class="docutils literal notranslate"><span class="pre">sdf3d_quadratic_bezier_extrude()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_higher.sdf3d_revolution"><code class="docutils literal notranslate"><span class="pre">sdf3d_revolution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_functions_higher.sdf3d_simple_extrusion"><code class="docutils literal notranslate"><span class="pre">sdf3d_simple_extrusion()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#module-torch_compute.sdf_operators">torch_compute.sdf_operators module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_operators.sdf_complement"><code class="docutils literal notranslate"><span class="pre">sdf_complement()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_operators.sdf_difference"><code class="docutils literal notranslate"><span class="pre">sdf_difference()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_operators.sdf_dilate"><code class="docutils literal notranslate"><span class="pre">sdf_dilate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_operators.sdf_erode"><code class="docutils literal notranslate"><span class="pre">sdf_erode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_operators.sdf_intersection"><code class="docutils literal notranslate"><span class="pre">sdf_intersection()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_operators.sdf_null_op"><code class="docutils literal notranslate"><span class="pre">sdf_null_op()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_operators.sdf_onion"><code class="docutils literal notranslate"><span class="pre">sdf_onion()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_operators.sdf_smooth_difference"><code class="docutils literal notranslate"><span class="pre">sdf_smooth_difference()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_operators.sdf_smooth_intersection"><code class="docutils literal notranslate"><span class="pre">sdf_smooth_intersection()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_operators.sdf_smooth_union"><code class="docutils literal notranslate"><span class="pre">sdf_smooth_union()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_operators.sdf_switched_difference"><code class="docutils literal notranslate"><span class="pre">sdf_switched_difference()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sdf_operators.sdf_union"><code class="docutils literal notranslate"><span class="pre">sdf_union()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#module-torch_compute.sketcher">torch_compute.sketcher module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher"><code class="docutils literal notranslate"><span class="pre">Sketcher</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.device"><code class="docutils literal notranslate"><span class="pre">Sketcher.device</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.dtype"><code class="docutils literal notranslate"><span class="pre">Sketcher.dtype</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.resolution"><code class="docutils literal notranslate"><span class="pre">Sketcher.resolution</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.mode"><code class="docutils literal notranslate"><span class="pre">Sketcher.mode</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.n_dims"><code class="docutils literal notranslate"><span class="pre">Sketcher.n_dims</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.coord_scale"><code class="docutils literal notranslate"><span class="pre">Sketcher.coord_scale</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.homogeneous_identity"><code class="docutils literal notranslate"><span class="pre">Sketcher.homogeneous_identity</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.zero_mat"><code class="docutils literal notranslate"><span class="pre">Sketcher.zero_mat</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.coords"><code class="docutils literal notranslate"><span class="pre">Sketcher.coords</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.scale_identity"><code class="docutils literal notranslate"><span class="pre">Sketcher.scale_identity</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.translate_identity"><code class="docutils literal notranslate"><span class="pre">Sketcher.translate_identity</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.create_coords"><code class="docutils literal notranslate"><span class="pre">Sketcher.create_coords()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.empty_sdf"><code class="docutils literal notranslate"><span class="pre">Sketcher.empty_sdf()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.get_affine_identity"><code class="docutils literal notranslate"><span class="pre">Sketcher.get_affine_identity()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.get_base_coords"><code class="docutils literal notranslate"><span class="pre">Sketcher.get_base_coords()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.get_color_canvas"><code class="docutils literal notranslate"><span class="pre">Sketcher.get_color_canvas()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.get_coords"><code class="docutils literal notranslate"><span class="pre">Sketcher.get_coords()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.get_homogenous_coords"><code class="docutils literal notranslate"><span class="pre">Sketcher.get_homogenous_coords()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.get_scale_identity"><code class="docutils literal notranslate"><span class="pre">Sketcher.get_scale_identity()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.get_translate_identity"><code class="docutils literal notranslate"><span class="pre">Sketcher.get_translate_identity()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sketcher.Sketcher.make_homogenous_coords"><code class="docutils literal notranslate"><span class="pre">Sketcher.make_homogenous_coords()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#module-torch_compute.sphere_marcher">torch_compute.sphere_marcher module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer"><code class="docutils literal notranslate"><span class="pre">Renderer</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.dtype"><code class="docutils literal notranslate"><span class="pre">Renderer.dtype</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.device"><code class="docutils literal notranslate"><span class="pre">Renderer.device</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.resolution"><code class="docutils literal notranslate"><span class="pre">Renderer.resolution</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.camera_params"><code class="docutils literal notranslate"><span class="pre">Renderer.camera_params</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.light_setting"><code class="docutils literal notranslate"><span class="pre">Renderer.light_setting</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.num_iterations"><code class="docutils literal notranslate"><span class="pre">Renderer.num_iterations</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.convergence_threshold"><code class="docutils literal notranslate"><span class="pre">Renderer.convergence_threshold</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.sketcher"><code class="docutils literal notranslate"><span class="pre">Renderer.sketcher</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.recursive_evaluator"><code class="docutils literal notranslate"><span class="pre">Renderer.recursive_evaluator</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.secondary_sketcher"><code class="docutils literal notranslate"><span class="pre">Renderer.secondary_sketcher</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.compile_expression"><code class="docutils literal notranslate"><span class="pre">Renderer.compile_expression</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.create_ground_expr"><code class="docutils literal notranslate"><span class="pre">Renderer.create_ground_expr()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.get_camera_matrix"><code class="docutils literal notranslate"><span class="pre">Renderer.get_camera_matrix()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.get_camera_position"><code class="docutils literal notranslate"><span class="pre">Renderer.get_camera_position()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.get_camera_rotation"><code class="docutils literal notranslate"><span class="pre">Renderer.get_camera_rotation()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.get_rays"><code class="docutils literal notranslate"><span class="pre">Renderer.get_rays()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.make_random_material"><code class="docutils literal notranslate"><span class="pre">Renderer.make_random_material()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.Renderer.render"><code class="docutils literal notranslate"><span class="pre">Renderer.render()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.compute_normal"><code class="docutils literal notranslate"><span class="pre">compute_normal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.compute_shadows"><code class="docutils literal notranslate"><span class="pre">compute_shadows()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.phong_shading"><code class="docutils literal notranslate"><span class="pre">phong_shading()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.render_expression"><code class="docutils literal notranslate"><span class="pre">render_expression()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.sphere_marcher.sphere_tracing"><code class="docutils literal notranslate"><span class="pre">sphere_tracing()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#module-torch_compute.transforms">torch_compute.transforms module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.transforms.get_affine_reflection_2D"><code class="docutils literal notranslate"><span class="pre">get_affine_reflection_2D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.transforms.get_affine_reflection_3D"><code class="docutils literal notranslate"><span class="pre">get_affine_reflection_3D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.transforms.get_affine_rotate_2D"><code class="docutils literal notranslate"><span class="pre">get_affine_rotate_2D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.transforms.get_affine_rotate_euler_3D"><code class="docutils literal notranslate"><span class="pre">get_affine_rotate_euler_3D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.transforms.get_affine_scale_2D"><code class="docutils literal notranslate"><span class="pre">get_affine_scale_2D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.transforms.get_affine_scale_3D"><code class="docutils literal notranslate"><span class="pre">get_affine_scale_3D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.transforms.get_affine_shear_2D"><code class="docutils literal notranslate"><span class="pre">get_affine_shear_2D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.transforms.get_affine_shear_3D"><code class="docutils literal notranslate"><span class="pre">get_affine_shear_3D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.transforms.get_affine_translate_2D"><code class="docutils literal notranslate"><span class="pre">get_affine_translate_2D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.transforms.get_affine_translate_3D"><code class="docutils literal notranslate"><span class="pre">get_affine_translate_3D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.transforms.position_cheap_bend"><code class="docutils literal notranslate"><span class="pre">position_cheap_bend()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.transforms.position_distort"><code class="docutils literal notranslate"><span class="pre">position_distort()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.transforms.position_twist"><code class="docutils literal notranslate"><span class="pre">position_twist()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#module-torch_compute.utils">torch_compute.utils module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="torch_compute.html#module-torch_compute.visualizer">torch_compute.visualizer module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch_compute.html#torch_compute.visualizer.get_figure"><code class="docutils literal notranslate"><span class="pre">get_figure()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="intro.html" class="btn btn-neutral float-right" title="GeoLIPI Introduction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Aditya Ganeshan.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

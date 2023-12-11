@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>geometry_nodes package &mdash; GeoLIPI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="symbolic package" href="symbolic.html" />
+    <link rel="prev" title="geolipi" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GeoLIPI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">GeoLIPI Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="languages.html">Visual Languages in GeoLIPI</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">geolipi</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">geometry_nodes package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-geometry_nodes.bl_utils">geometry_nodes.bl_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.bl_utils.blender_importer"><code class="docutils literal notranslate"><span class="pre">blender_importer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.bl_utils.clean_up"><code class="docutils literal notranslate"><span class="pre">clean_up()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.bl_utils.get_obj_min_z"><code class="docutils literal notranslate"><span class="pre">get_obj_min_z()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.bl_utils.import_bpy"><code class="docutils literal notranslate"><span class="pre">import_bpy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.bl_utils.init_camera"><code class="docutils literal notranslate"><span class="pre">init_camera()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.bl_utils.init_lights"><code class="docutils literal notranslate"><span class="pre">init_lights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.bl_utils.render_with_rotation"><code class="docutils literal notranslate"><span class="pre">render_with_rotation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.bl_utils.set_render_settings"><code class="docutils literal notranslate"><span class="pre">set_render_settings()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-geometry_nodes.evaluate_graph">geometry_nodes.evaluate_graph module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.evaluate_graph.expr_to_geonode_graph"><code class="docutils literal notranslate"><span class="pre">expr_to_geonode_graph()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-geometry_nodes.geonodes">geometry_nodes.geonodes module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.geonodes.create_boolean_difference_node_seq"><code class="docutils literal notranslate"><span class="pre">create_boolean_difference_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.geonodes.create_boolean_intersection_node_seq"><code class="docutils literal notranslate"><span class="pre">create_boolean_intersection_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.geonodes.create_boolean_join_node_seq"><code class="docutils literal notranslate"><span class="pre">create_boolean_join_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.geonodes.create_boolean_union_node_seq"><code class="docutils literal notranslate"><span class="pre">create_boolean_union_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.geonodes.create_cuboid_node_seq"><code class="docutils literal notranslate"><span class="pre">create_cuboid_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.geonodes.create_cylinder_node_seq"><code class="docutils literal notranslate"><span class="pre">create_cylinder_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.geonodes.create_geonode_tree"><code class="docutils literal notranslate"><span class="pre">create_geonode_tree()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.geonodes.create_prebaked_primitive_node_seq"><code class="docutils literal notranslate"><span class="pre">create_prebaked_primitive_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.geonodes.create_reflect_node_seq"><code class="docutils literal notranslate"><span class="pre">create_reflect_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.geonodes.create_sphere_node_seq"><code class="docutils literal notranslate"><span class="pre">create_sphere_node_seq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.geonodes.create_transform_node_seq"><code class="docutils literal notranslate"><span class="pre">create_transform_node_seq()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-geometry_nodes.materials">geometry_nodes.materials module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.materials.colorObj"><code class="docutils literal notranslate"><span class="pre">colorObj</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.materials.create_edge_material_tree"><code class="docutils literal notranslate"><span class="pre">create_edge_material_tree()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.materials.create_material_tree"><code class="docutils literal notranslate"><span class="pre">create_material_tree()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.materials.create_monotone_material"><code class="docutils literal notranslate"><span class="pre">create_monotone_material()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#geometry_nodes.materials.create_simple_material_tree"><code class="docutils literal notranslate"><span class="pre">create_simple_material_tree()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-geometry_nodes.utils">geometry_nodes.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="symbolic.html">symbolic package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="torch_compute.html">torch_compute package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GeoLIPI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">geolipi</a></li>
+      <li class="breadcrumb-item active">geometry_nodes package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/geometry_nodes.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-geometry_nodes">
+<span id="geometry-nodes-package"></span><h1>geometry_nodes package<a class="headerlink" href="#module-geometry_nodes" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-geometry_nodes.bl_utils">
+<span id="geometry-nodes-bl-utils-module"></span><h2>geometry_nodes.bl_utils module<a class="headerlink" href="#module-geometry_nodes.bl_utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.bl_utils.blender_importer">
+<span class="sig-name descname"><span class="pre">blender_importer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.bl_utils.blender_importer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.bl_utils.clean_up">
+<span class="sig-name descname"><span class="pre">clean_up</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">avoid_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.bl_utils.clean_up" title="Link to this definition"></a></dt>
+<dd><p>Cleans up the Blender scene by removing various data types except those specified in the avoid list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>avoid_keys</strong> (<em>list</em><em>, </em><em>optional</em>) – A list of keys (names) to avoid deleting. Defaults to an empty list.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.bl_utils.get_obj_min_z">
+<span class="sig-name descname"><span class="pre">get_obj_min_z</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.bl_utils.get_obj_min_z" title="Link to this definition"></a></dt>
+<dd><p>Calculates the minimum Z-coordinate of an object in global space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<em>bpy.types.Object</em>) – The Blender object to calculate the minimum Z-coordinate for.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The minimum Z-coordinate of the object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.bl_utils.import_bpy">
+<span class="sig-name descname"><span class="pre">import_bpy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.bl_utils.import_bpy" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.bl_utils.init_camera">
+<span class="sig-name descname"><span class="pre">init_camera</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.bl_utils.init_camera" title="Link to this definition"></a></dt>
+<dd><p>Initializes and positions a camera in the Blender scene pointing towards the origin.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.bl_utils.init_lights">
+<span class="sig-name descname"><span class="pre">init_lights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sun_energy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.bl_utils.init_lights" title="Link to this definition"></a></dt>
+<dd><p>Initializes lighting in the Blender scene with a SUN light type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sun_energy</strong> (<em>float</em><em>, </em><em>optional</em>) – The energy level of the sun light. Defaults to 3.5.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.bl_utils.render_with_rotation">
+<span class="sig-name descname"><span class="pre">render_with_rotation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xy_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_frames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_loc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.bl_utils.render_with_rotation" title="Link to this definition"></a></dt>
+<dd><p>Renders the scene with the camera rotating around the origin.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xy_size</strong> (<em>float</em>) – The distance of the camera from the origin in the XY plane.</p></li>
+<li><p><strong>number_frames</strong> (<em>int</em>) – The number of frames to render, dictating the rotation increment.</p></li>
+<li><p><strong>save_loc</strong> (<em>str</em>) – The location to save the rendered images.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.bl_utils.set_render_settings">
+<span class="sig-name descname"><span class="pre">set_render_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shadow_catch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shadow_catcher_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transparent_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_thickness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.bl_utils.set_render_settings" title="Link to this definition"></a></dt>
+<dd><p>Configures render settings in the Blender scene.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resolution</strong> (<em>int</em><em>, </em><em>optional</em>) – The resolution for rendering. Defaults to 1024.</p></li>
+<li><p><strong>shadow_catch</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag to add a shadow catcher plane. Defaults to False.</p></li>
+<li><p><strong>shadow_catcher_z</strong> (<em>float</em><em>, </em><em>optional</em>) – Z-coordinate for the shadow catcher plane. Defaults to -1.</p></li>
+<li><p><strong>transparent_mode</strong> (<em>bool</em><em>, </em><em>optional</em>) – Enables or disables transparent mode. Defaults to True.</p></li>
+<li><p><strong>line_thickness</strong> (<em>float</em><em>, </em><em>optional</em>) – Thickness of the lines in the render. Defaults to 0.25.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-geometry_nodes.evaluate_graph">
+<span id="geometry-nodes-evaluate-graph-module"></span><h2>geometry_nodes.evaluate_graph module<a class="headerlink" href="#module-geometry_nodes.evaluate_graph" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.evaluate_graph.expr_to_geonode_graph">
+<span class="sig-name descname"><span class="pre">expr_to_geonode_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expression</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">GLFunction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dummy_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_material</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">material_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'base'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.evaluate_graph.expr_to_geonode_graph" title="Link to this definition"></a></dt>
+<dd><p>Converts a geometric expression into a Blender geometry node graph.
+Currently, this function only supports the NoParam 2D/3D Primitives, and basic boolean/transform operations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>expression</strong> (<a class="reference internal" href="symbolic.html#symbolic.base_symbolic.GLFunction" title="symbolic.base_symbolic.GLFunction"><em>GLFunction</em></a>) – The geometric expression to be converted into a node graph.</p></li>
+<li><p><strong>dummy_obj</strong> (<em>bpy.types.Object</em>) – The Blender object to which the node graph will be attached.</p></li>
+<li><p><strong>device</strong> – The device used for any necessary computations (e.g., resolving macros).</p></li>
+<li><p><strong>create_material</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to create materials for the geometry. Defaults to True.</p></li>
+<li><p><strong>colors</strong> (<em>list</em><em>, </em><em>optional</em>) – A list of colors to be used for the materials. If None, BASE_COLORS is used. Defaults to None.</p></li>
+<li><p><strong>material_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Specifies the type of material to be created. Options are “base”, “simple”, “with_edge”, “monotone”. Defaults to “base”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The newly created geometry node tree.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bpy.types.NodeTree</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If an unknown expression type is encountered.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-geometry_nodes.geonodes">
+<span id="geometry-nodes-geonodes-module"></span><h2>geometry_nodes.geonodes module<a class="headerlink" href="#module-geometry_nodes.geonodes" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.geonodes.create_boolean_difference_node_seq">
+<span class="sig-name descname"><span class="pre">create_boolean_difference_node_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.geonodes.create_boolean_difference_node_seq" title="Link to this definition"></a></dt>
+<dd><p>Creates a sequence of nodes for performing a boolean difference operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node_group</strong> (<em>bpy.types.NodeTree</em>) – The node tree to which the nodes will be added.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list containing the boolean difference node.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.geonodes.create_boolean_intersection_node_seq">
+<span class="sig-name descname"><span class="pre">create_boolean_intersection_node_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.geonodes.create_boolean_intersection_node_seq" title="Link to this definition"></a></dt>
+<dd><p>Creates a sequence of nodes for performing a boolean intersection operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node_group</strong> (<em>bpy.types.NodeTree</em>) – The node tree to which the nodes will be added.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list containing the boolean intersection node.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.geonodes.create_boolean_join_node_seq">
+<span class="sig-name descname"><span class="pre">create_boolean_join_node_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.geonodes.create_boolean_join_node_seq" title="Link to this definition"></a></dt>
+<dd><p>Creates a sequence of nodes for joining multiple geometries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node_group</strong> (<em>bpy.types.NodeTree</em>) – The node tree to which the nodes will be added.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list containing the join geometry node.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.geonodes.create_boolean_union_node_seq">
+<span class="sig-name descname"><span class="pre">create_boolean_union_node_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.geonodes.create_boolean_union_node_seq" title="Link to this definition"></a></dt>
+<dd><p>Creates a sequence of nodes for performing a boolean union operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node_group</strong> (<em>bpy.types.NodeTree</em>) – The node tree to which the nodes will be added.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list containing the boolean union node.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.geonodes.create_cuboid_node_seq">
+<span class="sig-name descname"><span class="pre">create_cuboid_node_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.geonodes.create_cuboid_node_seq" title="Link to this definition"></a></dt>
+<dd><p>Creates a sequence of nodes for generating a cuboid geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node_group</strong> (<em>bpy.types.NodeTree</em>) – The node tree to which the nodes will be added.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of created nodes in the sequence.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.geonodes.create_cylinder_node_seq">
+<span class="sig-name descname"><span class="pre">create_cylinder_node_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.geonodes.create_cylinder_node_seq" title="Link to this definition"></a></dt>
+<dd><p>Creates a sequence of nodes for generating a cylinder geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node_group</strong> (<em>bpy.types.NodeTree</em>) – The node tree to which the nodes will be added.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of created nodes in the sequence.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.geonodes.create_geonode_tree">
+<span class="sig-name descname"><span class="pre">create_geonode_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dummy_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mod_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CSG-GN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CSG-GN'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.geonodes.create_geonode_tree" title="Link to this definition"></a></dt>
+<dd><p>Creates a new geometry node tree and attaches it to a given object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dummy_obj</strong> (<em>bpy.types.Object</em>) – The Blender object to attach the node tree to.</p></li>
+<li><p><strong>mod_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the modifier to be used. Defaults to ‘CSG-GN’.</p></li>
+<li><p><strong>group_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the new node group. Defaults to ‘CSG-GN’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The newly created node tree.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bpy.types.NodeTree</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.geonodes.create_prebaked_primitive_node_seq">
+<span class="sig-name descname"><span class="pre">create_prebaked_primitive_node_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.geonodes.create_prebaked_primitive_node_seq" title="Link to this definition"></a></dt>
+<dd><p>Creates a sequence of nodes for using a prebaked mesh from a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node_group</strong> (<em>bpy.types.NodeTree</em>) – The node tree to which the nodes will be added.</p></li>
+<li><p><strong>filepath</strong> (<em>str</em>) – File path to the mesh file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of created nodes in the sequence.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.geonodes.create_reflect_node_seq">
+<span class="sig-name descname"><span class="pre">create_reflect_node_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.geonodes.create_reflect_node_seq" title="Link to this definition"></a></dt>
+<dd><p>Creates a sequence of nodes for reflecting a geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node_group</strong> (<em>bpy.types.NodeTree</em>) – The node tree to which the nodes will be added.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of created nodes in the sequence including the reflect operation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.geonodes.create_sphere_node_seq">
+<span class="sig-name descname"><span class="pre">create_sphere_node_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.geonodes.create_sphere_node_seq" title="Link to this definition"></a></dt>
+<dd><p>Creates a sequence of nodes for generating a sphere geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node_group</strong> (<em>bpy.types.NodeTree</em>) – The node tree to which the nodes will be added.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of created nodes in the sequence.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.geonodes.create_transform_node_seq">
+<span class="sig-name descname"><span class="pre">create_transform_node_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.geonodes.create_transform_node_seq" title="Link to this definition"></a></dt>
+<dd><p>Creates a sequence of nodes for applying transformations to a geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node_group</strong> (<em>bpy.types.NodeTree</em>) – The node tree to which the nodes will be added.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list containing the transform node.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-geometry_nodes.materials">
+<span id="geometry-nodes-materials-module"></span><h2>geometry_nodes.materials module<a class="headerlink" href="#module-geometry_nodes.materials" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="geometry_nodes.materials.colorObj">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">colorObj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">RGBA</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">S</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.materials.colorObj" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents a color object with various color properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>RGBA</strong> (<em>tuple</em>) – The RGBA color values.</p></li>
+<li><p><strong>H</strong> (<em>float</em><em>, </em><em>optional</em>) – Hue component of the color. Defaults to 0.5.</p></li>
+<li><p><strong>S</strong> (<em>float</em><em>, </em><em>optional</em>) – Saturation component of the color. Defaults to 1.0.</p></li>
+<li><p><strong>V</strong> (<em>float</em><em>, </em><em>optional</em>) – Value (brightness) component of the color. Defaults to 1.0.</p></li>
+<li><p><strong>B</strong> (<em>float</em><em>, </em><em>optional</em>) – Additional brightness factor. Defaults to 0.0.</p></li>
+<li><p><strong>C</strong> (<em>float</em><em>, </em><em>optional</em>) – Contrast factor of the color. Defaults to 0.0.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.materials.create_edge_material_tree">
+<span class="sig-name descname"><span class="pre">create_edge_material_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">material_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh_color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_thickness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ao_strength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.materials.create_edge_material_tree" title="Link to this definition"></a></dt>
+<dd><p>Creates a material node tree with edge highlighting and ambient occlusion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>material_name</strong> (<em>str</em>) – Name of the new material.</p></li>
+<li><p><strong>mesh_color</strong> (<em>tuple</em>) – RGB color values for the mesh.</p></li>
+<li><p><strong>edge_thickness</strong> (<em>float</em><em>, </em><em>optional</em>) – Thickness of the edges. Defaults to 0.001.</p></li>
+<li><p><strong>edge_color</strong> (<em>tuple</em><em>, </em><em>optional</em>) – RGB color values for the edges. Defaults to black.</p></li>
+<li><p><strong>ao_strength</strong> (<em>float</em><em>, </em><em>optional</em>) – Strength of the ambient occlusion effect. Defaults to 1.0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The newly created Blender material.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bpy.types.Material</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.materials.create_material_tree">
+<span class="sig-name descname"><span class="pre">create_material_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">material_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.materials.create_material_tree" title="Link to this definition"></a></dt>
+<dd><p>Creates a complex material node tree for the renders in CoReF paper (ICCV 2023).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>material_name</strong> (<em>str</em>) – Name of the new material.</p></li>
+<li><p><strong>color</strong> (<em>tuple</em>) – RGB color values for the material.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The newly created Blender material.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bpy.types.Material</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.materials.create_monotone_material">
+<span class="sig-name descname"><span class="pre">create_monotone_material</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">material_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh_color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silhouette_color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shadow_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.materials.create_monotone_material" title="Link to this definition"></a></dt>
+<dd><p>Creates a monotone material with multiple color levels, silhouette, and shadow effects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>material_name</strong> (<em>str</em>) – Name of the new material.</p></li>
+<li><p><strong>mesh_color</strong> (<em>tuple</em>) – RGB color values for the mesh.</p></li>
+<li><p><strong>color_list</strong> (<em>list</em>) – List of RGB color tuples for different color levels.</p></li>
+<li><p><strong>silhouette_color</strong> (<em>tuple</em>) – RGB color values for the silhouette effect.</p></li>
+<li><p><strong>shadow_size</strong> (<em>float</em><em>, </em><em>optional</em>) – Size of the shadow effect. Defaults to 0.1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The newly created Blender material.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bpy.types.Material</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="geometry_nodes.materials.create_simple_material_tree">
+<span class="sig-name descname"><span class="pre">create_simple_material_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">material_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geometry_nodes.materials.create_simple_material_tree" title="Link to this definition"></a></dt>
+<dd><p>Creates a simple material node tree suitable for .gltf exports.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>material_name</strong> (<em>str</em>) – Name of the new material.</p></li>
+<li><p><strong>color</strong> (<em>tuple</em>) – RGB color values for the material.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The newly created Blender material.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bpy.types.Material</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-geometry_nodes.utils">
+<span id="geometry-nodes-utils-module"></span><h2>geometry_nodes.utils module<a class="headerlink" href="#module-geometry_nodes.utils" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="geolipi" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="symbolic.html" class="btn btn-neutral float-right" title="symbolic package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Aditya Ganeshan.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
