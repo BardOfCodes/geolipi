@@ -1,6 +1,6 @@
 # GeoLIPI: A DSL for Implicit Geometric Modelling
 
-[banner](assets/banner_2.png)
+![banner](assets/banner_2.png)
 
 Language for modelling 3D shapes. This is to be treated as a meta-language, from which visual programming languages can be derived. Some of the languages/visual programs that can be executed in this framework are:
 
