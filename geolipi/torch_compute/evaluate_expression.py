@@ -418,7 +418,7 @@ def expr_to_colored_canvas(
     sketcher: Sketcher,
     rectify_transform=RECTIFY_TRANSFORM,
     relaxed_occupancy=False,
-    temperature=0.0,
+    relax_temperature=0.0,
     coords=None,
 ):
     """
@@ -498,7 +498,7 @@ def expr_to_colored_canvas(
 
             if relaxed_occupancy:
                 # from the sdf execution compute occupancy
-                occ = relaxed_occupancy(execution, temperature=temperature)
+                occ = relaxed_occupancy(execution, temperature=relax_temperature)
             else:
                 occ = execution <= 0
             # Amazing source: https://ciechanow.ski/alpha-compositing/

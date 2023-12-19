@@ -1,6 +1,6 @@
 # GeoLIPI: A DSL for Implicit Geometric Modelling
 
-![banner](assets/banner_2.png)
+![banner](assets/banner_3.png)
 
 Language for modelling 3D shapes. This is to be treated as a meta-language, from which visual programming languages can be derived. Some of the languages/visual programs that can be executed in this framework are:
 
@@ -33,6 +33,7 @@ git clone git@github.com:BardOfCodes/geolipi.git
 # Add path to your PYTHONPATH
 export PYTHONPATH=$PYTHONPATH:/path/to/geolipi
 ```
+
 
 ## Examples
 
@@ -91,7 +92,7 @@ Check out other examples in `notebooks/`.
 ## Future TODOs
 
 1) REVL (Read-Eval-Visualize-Loop) using DearPyGui.
-2) Add Marching Primitives / Layer wise SVG optimization.
+2) Add DiffVG executor (for correct diff Opt of SVG)
 3) Add SDS optimization example -> Connecting it to natural language directly.
 4) Add differentiable CSG operation and draw operations (probability over types).
 5) Stochastic primitives?
