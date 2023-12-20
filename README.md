@@ -93,9 +93,7 @@ Here is an example of optimizing such expressions. Check out other examples in `
 
 ## Remaining TODOs
 
-0) Simple Diff Opt for 2D CSG matching Example.
-1) Simple Diff Opt for Image SVG.
-2) 3D data DiffOpt with primitive soup.
+1) 3D data DiffOpt with primitive soup.
 
 ## Future TODOs
 
