@@ -2,13 +2,19 @@
 
 ![banner](assets/banner_3.png)
 
-Language for modelling 3D shapes. This is to be treated as a meta-language, from which visual programming languages can be derived. Some of the languages/visual programs that can be executed in this framework are:
+GeoLIPI is a Language for modelling 2D/3D geometric objects. This is to be treated as a meta-language, from which visual programming languages can be derived. Some of the languages/visual programs that can be executed in this framework are:
 
-1) CSG 3D Variants
-2) GeoCode
-3) SVG 2D
+1. CSG 3D Variants
+2. GeoCode
+3. SVG 2D
 
-and many more. Check out `languages.md` for more details.
+and many more. Check out `languages.md` for more details. The banner image shows ome of the highlights:
+
+1. (top-left) Execute and render 3D Geometric expressions in Blender.
+2. (top-right) Different 2D and 3D types of data that can be generated with GeoLIPI.
+3. (mid-left) Batched Execution of expressions - speedy data generation.
+4. (lower) Parameter Optimization for a 3D target shape.
+5. (bottom) Parameter Optimization for 2D shapes.
 
 ## Important: Research Code - Use at your own risk
 
@@ -20,9 +26,10 @@ Mainly, GeoLIPI attempts to embed a generic visual language in python, making it
 
 1) Fast Batched Execution of programs - useful for training neural networks on large batches of program executions. See a demonstration of this in `notebooks/compiled_execution.ipynb`.
 2) Single "symbolic" object, multiple execution strategies. This helps with "executing" the program in different platforms/systems (such as blender for rendering, and pytorch for optimization). See `scripts/blender_render_example.py`.
-3) Parameter Optimization of arbitrary visual programs (All operations are created to allow differentiable optimization of its parameters). See `notebooks/parameter_optimization.ipynb`.
+3) Parameter Optimization of arbitrary visual programs (All operations allow differentiable optimization of its parameters). See `notebooks/parameter_optimization.ipynb`.
 4) [TBD] Help with searching programs for a desired execution (refer to our recent [paper](https://bardofcodes.github.io/coref/)).
 5) Batched PyTorch execution code for all the shader toy 2D and 3D primitives described by Inigo Quilez. See `notebooks/torch_sdf2d_example.ipynb` and `notebooks/torch_sdf3d_example.ipynb`.
+
 
 ## Installation
 
@@ -34,10 +41,9 @@ git clone git@github.com:BardOfCodes/geolipi.git
 export PYTHONPATH=$PYTHONPATH:/path/to/geolipi
 ```
 
-
 ## Examples
 
-Here is a basic example of using the langauge to create an SVG image.
+Here is a basic example of using the language to create an SVG image.
 
 ```python
 
@@ -81,7 +87,9 @@ This results in this output.
 
 ![Example svg](assets/example_svg.png)
 
-Check out other examples in `notebooks/`.
+Here is an example of optimizing such expressions. Check out other examples in `notebooks/`.
+
+![Example OPT](assets/starry.gif)
 
 ## Remaining TODOs
 
