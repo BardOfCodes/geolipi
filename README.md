@@ -135,3 +135,7 @@ Many other awesome libraries exist which help with pythonic 3D modelling. I have
 6) Thanks to my PhD Advisor [Daniel Ritchie](https://dritchie.github.io/) for his support and guidance.
 7) Thanks to my lab mates [Arman Maesumi](https://armanmaesumi.github.io/) and [R. Kenny Jones](https://rkjones4.github.io/) for their feedback.
 8) [Hiroki Sakuma](https://hirokisakuma.com/)'s [Torch-Sphere-Tracer](https://github.com/skmhrk1209/Torch-Sphere-Tracer) helped write my tiny dirty sphere tracer.
+
+## Naming
+
+GeoLIPI stands for Geometry-Lipi. Lipi is a Hindi Language term which stands for "script" (So, Geometry-Script basically). Also, the abbreviation `gls` for `geolipi.symbolic` (which contains all the sympy expressions etc.) is inspired by OpenGL Shading Language's abbreviation `glsl`.
