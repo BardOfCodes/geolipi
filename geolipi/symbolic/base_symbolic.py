@@ -16,6 +16,7 @@ from sympy.logic.boolalg import Boolean as SympyBoolean
 from sympy import FunctionClass as SympyFC
 
 SYMPY_TYPES = (SympyTuple, SympyInteger, SympyFloat, SympyBoolean, SympyFC)
+SYMPY_ARG_TYPES = (Symbol, SympyTuple, SympyInteger, SympyFloat, SympyBoolean)
 
 
 def magic_method_decorator(cls):
@@ -385,7 +386,83 @@ class GLFunction(Function):
             else:
                 length += 0
         return length
+    
+    # for pickle
+    # def __getstate__(self):
+    #     tensor_dict = {}
+    #     stack = [self]
+    #     while stack:
+    #         cur_expr = stack.pop()
+    #         if isinstance(cur_expr, GLFunction):
+    #             stack.extend(cur_expr.args)
+    #             tensor_dict.update(cur_expr.lookup_table)
+    #     state = {
+    #         "tensor_args": tensor_dict,
+    #     }
+    #     return state
 
+    # def __setstate__(self, state):
+    #     tensor_args = state["tensor_args"]
+    #     stack = [self]
+    #     while stack:
+    #         cur_expr = stack.pop()
+    #         if isinstance(cur_expr, GLFunction):
+    #             stack.extend(cur_expr.args)
+    #             for arg in cur_expr.args:
+    #                 if arg in tensor_args:
+    #                     cur_expr.lookup_table[arg] = tensor_args[arg]
+    
+    # Could be useful ref. in something else...
+    # def __getstate__(self):
+    #     tensor_dict = {}
+    #     expression_list = []
+    #     n_ops = []
+    #     stack = [self]
+    #     print("getting state")
+    #     # Do a depth first traversal
+    #     while stack:
+    #         cur_expr = stack.pop()
+    #         if isinstance(cur_expr, GLFunction):
+    #             cur_token = cur_expr.func
+    #             n_ops.append(len(cur_expr.args))
+    #             expression_list.append(cur_token)
+    #             stack.extend(cur_expr.args[::-1])
+    #             tensor_dict.update(cur_expr.lookup_table)
+    #         else:
+    #             expression_list.append(cur_expr)
+                
+    #     state = {
+    #         "tensor_args": tensor_dict,
+    #         "n_ops": n_ops,
+    #         "expression_list": expression_list,
+    #     }
+    #     return state
+
+    # def __setstate__(self, state):
+    #     tensor_args = state["tensor_args"]
+    #     n_ops = state["n_ops"]
+    #     expression_list = state["expression_list"]
+    #     print("setting state")
+    #     arg_stack = []
+    #     while(expression_list):
+    #         cur_expr = expression_list.pop()
+    #         if isinstance(cur_expr, SYMPY_ARG_TYPES):
+    #             arg_stack.append(cur_expr)
+    #         else:
+    #             # Need this if condition or not?
+    #             # if issubclass(cur_expr, GLFunction):
+    #             n_op = n_ops.pop()
+    #             cur_args = []
+    #             for _ in range(n_op):
+    #                 arg = arg_stack.pop()
+    #                 if arg in tensor_args:
+    #                     cur_args.append(tensor_args[arg])
+    #                 else:
+    #                     cur_args.append(arg)
+    #             arg_stack.append(cur_expr(*cur_args))
+    #     new_expr = arg_stack[0]
+    #     print(new_expr)
+    #     return new_expr
 
 class PrimitiveSpec(GLFunction):
     """Base Class nodes (or expression) in the compiled expressions."""
