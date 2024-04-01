@@ -24,7 +24,7 @@ expr = gls.RotationSymmetryY3D(
                     gls.EulerRotate3D(gls.Torus3D((0.5, 0.1)), (np.pi/2, 0, 0))),
                 (1.5, 0., 1.5)),
             np.pi/4, 8)
-expr = expr.to_tensor().cuda()
+expr = expr.tensor().cuda()
 print(expr.pretty_print())
 # use compile_expression for faster rendering
 renderer = Renderer(resolution=resolution, device=device, dtype=dtype, 

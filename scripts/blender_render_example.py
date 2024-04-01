@@ -25,7 +25,8 @@ for key in delete_key:
     
 import geolipi.symbolic as gls
 from geolipi.geometry_nodes.evaluate_graph import expr_to_geonode_graph
-from geolipi.geometry_nodes.bl_utils import clean_up, init_camera, init_lights, set_render_settings, BASE_COLORS
+from geolipi.geometry_nodes.bl_utils import clean_up, init_camera, init_lights, set_render_settings
+from geolipi.geometry_nodes.utils import BASE_COLORS
 
 
 

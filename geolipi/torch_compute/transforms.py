@@ -3,6 +3,7 @@ import numpy as np
 from .common import EPSILON
 
 CONVENTION = ("X", "Y", "Z")
+# CONVENTION = ("Z", "Y", "X")
 
 
 def get_affine_translate_2D(matrix, param):

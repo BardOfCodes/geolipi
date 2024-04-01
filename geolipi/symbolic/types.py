@@ -22,7 +22,7 @@ PARAM_TYPE = type_union[np.ndarray, th.Tensor]
 # Combinators:
 COMBINATOR_TYPE = Combinator
 BASE_COMBINATORS = type_union[
-    Union, Intersection, Difference, Complement, SwitchedDifference
+    Union, Intersection, Difference, SwitchedDifference
 ]
 PARAMETERIZED_COMBINATORS = type_union[
     SmoothUnion, SmoothIntersection, SmoothDifference

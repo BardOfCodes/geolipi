@@ -284,7 +284,10 @@ class GLFunction(Function):
                 arg = sub_expr.sympy()
             elif isinstance(sub_expr, Symbol):
                 if sub_expr in self.lookup_table.keys():
-                    arg = tuple(self.lookup_table[sub_expr].cpu().numpy().tolist())
+                    arg = self.lookup_table[sub_expr].cpu().numpy().tolist()
+                    if not isinstance(arg, list):
+                        arg = [arg, ]
+                    arg = tuple(arg)
                 else:
                     arg = sub_expr
             elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
@@ -296,11 +299,11 @@ class GLFunction(Function):
         new_expr = type(self)(*resolved_args)
         return new_expr
 
-    def to_tensor(self, dtype=th.float32, device="cuda"):
+    def tensor(self, dtype=th.float32, device="cuda"):
         resolved_args = []
         for sub_expr in self.args:
             if isinstance(sub_expr, GLFunction):
-                arg = sub_expr.to_tensor()
+                arg = sub_expr.tensor()
             elif isinstance(sub_expr, Symbol):
                 if sub_expr in self.lookup_table.keys():
                     arg = self.lookup_table[sub_expr].to(dtype=dtype, device=device)
@@ -386,39 +389,29 @@ class GLFunction(Function):
             else:
                 length += 0
         return length
-    
-    # for pickle
-    # def __getstate__(self):
-    #     tensor_dict = {}
-    #     stack = [self]
-    #     while stack:
-    #         cur_expr = stack.pop()
-    #         if isinstance(cur_expr, GLFunction):
-    #             stack.extend(cur_expr.args)
-    #             tensor_dict.update(cur_expr.lookup_table)
-    #     state = {
-    #         "tensor_args": tensor_dict,
-    #     }
-    #     return state
 
-    # def __setstate__(self, state):
-    #     tensor_args = state["tensor_args"]
-    #     stack = [self]
-    #     while stack:
-    #         cur_expr = stack.pop()
-    #         if isinstance(cur_expr, GLFunction):
-    #             stack.extend(cur_expr.args)
-    #             for arg in cur_expr.args:
-    #                 if arg in tensor_args:
-    #                     cur_expr.lookup_table[arg] = tensor_args[arg]
+    # for pickle
+    # def __getnewargs__(self):
+    #     args = []
+    #     for arg in args:
+    #         if arg in self.lookup_table:
+    #             arg = self.lookup_table[arg]
+    #         # elif isinstance(arg, (GLFunction, GLExpr)):
+    #         #     args.append(arg.__getnewargs__())
+    #         else:
+    #             args.append(arg)
+    #     return tuple(args)
     
     # Could be useful ref. in something else...
-    # def __getstate__(self):
+    # TODO: What was the error?
+    def __getstate__(self):
+        expr_str = str(self)
+        return expr_str
+    
     #     tensor_dict = {}
     #     expression_list = []
     #     n_ops = []
     #     stack = [self]
-    #     print("getting state")
     #     # Do a depth first traversal
     #     while stack:
     #         cur_expr = stack.pop()
@@ -438,11 +431,13 @@ class GLFunction(Function):
     #     }
     #     return state
 
-    # def __setstate__(self, state):
+    def __setstate__(self, state):
+        from geolipi.symbolic import get_cmd_mapper
+        expression = eval(state, get_cmd_mapper())
+        return expression
     #     tensor_args = state["tensor_args"]
     #     n_ops = state["n_ops"]
     #     expression_list = state["expression_list"]
-    #     print("setting state")
     #     arg_stack = []
     #     while(expression_list):
     #         cur_expr = expression_list.pop()
@@ -461,7 +456,6 @@ class GLFunction(Function):
     #                     cur_args.append(arg)
     #             arg_stack.append(cur_expr(*cur_args))
     #     new_expr = arg_stack[0]
-    #     print(new_expr)
     #     return new_expr
 
 class PrimitiveSpec(GLFunction):

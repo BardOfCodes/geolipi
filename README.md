@@ -71,9 +71,9 @@ mix_expr = gls.SourceOver(circle_expr,
 
 
 # Convert to pytorch tensors for evaluation
-mix_expr.to_tensor()
+mix_expr.tensor()
 
-output = recursive_evaluate(mix_expr.to_tensor(), sketcher_2d)
+output = recursive_evaluate(mix_expr.tensor(), sketcher_2d)
 
 image = output.reshape(res, res, 4).detach().cpu().numpy()
 
