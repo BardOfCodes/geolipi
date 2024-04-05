@@ -17,7 +17,7 @@ def get_cmd_mapper(include_torch=True):
         {x[0]: x[1] for x in inspect.getmembers(gls, inspect.isclass)}
     )
     if include_torch:
-        import torch
-        str_to_cmd_mapper['torch'] = torch
-        str_to_cmd_mapper['tensor'] = torch.tensor
+        import torch as th
+        str_to_cmd_mapper['torch'] = th
+        str_to_cmd_mapper['tensor'] = th.tensor
     return str_to_cmd_mapper

@@ -1,10 +1,10 @@
-from sympy import Symbol
+import sympy as sp
 from geolipi.symbolic.base_symbolic import GLFunction
 import torch as th
 from geolipi.symbolic import Combinator
+import geolipi.symbolic as gls
 from geolipi.symbolic.resolve import resolve_macros
 from geolipi.symbolic.types import MACRO_TYPE, MOD_TYPE, PRIM_TYPE
-from geolipi.symbolic.combinators import Difference, JoinUnion
 from .utils import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP, BASE_COLORS
 from .geonodes import create_geonode_tree
 from .materials import (
@@ -55,37 +55,39 @@ def expr_to_geonode_graph(
             # TODO: Update this to allow sym functions to be used directly.
             new_expr = resolve_macros(cur_expr, device=device)
             parser_list.append(new_expr)
-        elif isinstance(cur_expr, Combinator):
+        elif isinstance(cur_expr, gls.Combinator):
             node_seq = COMBINATOR_MAP[type(cur_expr)](node_group)
             bool_node = node_seq[0]
             # Linking:
             outer_input = link_stack.pop()
-            if type(cur_expr) == JoinUnion:
+            if type(cur_expr) == gls.JoinUnion:
                 node_output = bool_node.outputs["Geometry"]
             else:
                 node_output = bool_node.outputs["Mesh"]
             node_group.links.new(node_output, outer_input)
-            if type(cur_expr) == Difference:
+            if type(cur_expr) == gls.Difference:
                 link_stack.append(bool_node.inputs["Mesh 2"])
                 link_stack.append(bool_node.inputs["Mesh 1"])
-            elif type(cur_expr) == JoinUnion:
+            elif type(cur_expr) == gls.JoinUnion:
                 for _ in range(len(cur_expr.args)):
                     link_stack.append(bool_node.inputs[0])
+            elif type(cur_expr) == gls.Complement:
+                link_stack.append(bool_node.inputs["Mesh 2"])
             else:
                 for _ in range(len(cur_expr.args)):
                     link_stack.append(bool_node.inputs[1])
             next_to_parse = cur_expr.args[::-1]
             parser_list.extend(next_to_parse)
         elif isinstance(cur_expr, MOD_TYPE):
-            params = cur_expr.args[1]
-            if isinstance(params, Symbol):
-                params = cur_expr.lookup_table[params]
-            if isinstance(params, th.Tensor):
-                params = list(params.detach().cpu().numpy())
+
+            params = cur_expr.args[1:]
+            params = _parse_param_from_expr(cur_expr, params)
             node_func, param_name = MODIFIER_MAP[type(cur_expr)]
             node_seq = node_func(node_group)
             transform_node = node_seq[0]
-            transform_node.inputs[param_name].default_value = params
+            if isinstance(cur_expr, gls.EulerRotate3D):
+                params = ([-x for x in params[0]],)
+            transform_node.inputs[param_name].default_value = params[0]
             outer_input = link_stack.pop()
             node_output = transform_node.outputs["Geometry"]
             node_group.links.new(node_output, outer_input)
@@ -94,18 +96,9 @@ def expr_to_geonode_graph(
             parser_list.append(next_to_parse)
         elif isinstance(cur_expr, PRIM_TYPE):
             params = cur_expr.args
-            if params:
-                params = params[0]
-                if isinstance(params, Symbol):
-                    if params in cur_expr.lookup_table.keys():
-                        params = cur_expr.lookup_table[params]
-                    else:
-                        params = params.name
-            if params:
-                node_seq = PRIMITIVE_MAP[type(cur_expr)](node_group, params)
-            else:
-                node_seq = PRIMITIVE_MAP[type(cur_expr)](node_group)
-            prim_node, material_node = node_seq
+            params = _parse_param_from_expr(cur_expr, params)
+            node_seq = PRIMITIVE_MAP[type(cur_expr)](node_group, *params)
+            material_node = node_seq[1]
             if create_material:
                 # TODO: Better color management.
                 mat_name = f"Material_{mat_id}"
@@ -134,3 +127,19 @@ def expr_to_geonode_graph(
             raise ValueError(f"Unknown expression type {type(cur_expr)}")
 
     return node_group
+
+def _parse_param_from_expr(expression, params):
+    if params:
+        param_list = []
+        for ind, param in enumerate(params):
+            if param in expression.lookup_table:
+                cur_param = expression.lookup_table[param]
+            else: 
+                cur_param = param
+            if isinstance(cur_param, th.Tensor):
+                cur_param = list(params.detach().cpu().numpy())
+            if isinstance(cur_param, sp.Tuple):
+                cur_param = list(float(x) for x in cur_param)
+            param_list.append(cur_param)
+        params = param_list
+    return params

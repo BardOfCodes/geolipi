@@ -1046,9 +1046,7 @@ def sdf3d_inexact_super_quadrics(points, skew_vec, epsilon_1, epsilon_2):
     out_0 = (points[..., 0] / skew_vec[..., 0:1]) ** (2 / (epsilon_2 + EPSILON))
     out_1 = (points[..., 1] / skew_vec[..., 1:2]) ** (2 / (epsilon_2 + EPSILON))
     out_2 = (points[..., 2] / skew_vec[..., 2:3]) ** (2 / (epsilon_1 + EPSILON))
-    inside_term = (th.abs(out_0 + out_1) + EPSILON) ** (
-        epsilon_2 / (epsilon_1 + EPSILON)
-    )
+    inside_term = (th.abs(out_0 + out_1) + EPSILON) ** (epsilon_2 / (epsilon_1 + EPSILON))
     base_sdf = 1 - (th.abs(inside_term + out_2) + EPSILON) ** (-epsilon_1 / 2.0)
     return base_sdf
 

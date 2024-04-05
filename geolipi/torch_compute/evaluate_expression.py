@@ -79,7 +79,7 @@ def recursive_evaluate(
     elif isinstance(expression, MOD_TYPE):
         sub_expr = expression.args[0]
         params = expression.args[1:]
-        params = parse_tensor_from_expr(expression, params)
+        params = _parse_param_from_expr(expression, params)
         # This is a hack unclear how to deal with other types)
         if isinstance(expression, TRANSFORM_TYPE):
             if rectify_transform:
@@ -138,7 +138,7 @@ def recursive_evaluate(
         else:
             params = expression.args
 
-        params = parse_tensor_from_expr(expression, params)
+        params = _parse_param_from_expr(expression, params)
         n_dims = sketcher.n_dims
         coords = coords[..., :n_dims] / (coords[..., n_dims : n_dims + 1] + EPSILON)
 
@@ -242,7 +242,7 @@ def recursive_evaluate(
             relax_temperature=relax_temperature,
         )
         if relaxed_occupancy:
-            cur_occ = smoothen_sdf(cur_sdf, relax_temperature)
+            cur_occ = _smoothen_sdf(cur_sdf, relax_temperature)
         else:
             cur_occ = cur_sdf <= 0
         colored_canvas = COLOR_FUNCTIONS[type(expression)](cur_occ, color)
@@ -272,7 +272,7 @@ def recursive_evaluate(
         return colored_canvas
 
 
-def parse_tensor_from_expr(expression, params):
+def _parse_param_from_expr(expression, params):
     if params:
         param_list = []
         for ind, param in enumerate(params):
@@ -285,7 +285,7 @@ def parse_tensor_from_expr(expression, params):
     return params
 
 
-def smoothen_sdf(execution, temperature):
+def _smoothen_sdf(execution, temperature):
     output_tanh = th.tanh(execution * temperature)
     output_shape = th.nn.functional.sigmoid(-output_tanh * temperature)
     return output_shape
@@ -351,15 +351,7 @@ def expr_to_sdf(
             execution_pointer_index.append(len(execution_stack))
         elif isinstance(cur_expr, MOD_TYPE):
             params = cur_expr.args[1:]
-            if params:
-                param_list = []
-                for ind, param in enumerate(params):
-                    if param in cur_expr.lookup_table:
-                        cur_param = cur_expr.lookup_table[param]
-                        param_list.append(cur_param)
-                    else:
-                        param_list.append(param)
-                params = param_list
+            params = _parse_param_from_expr(cur_expr, params)
             # This is a hack unclear how to deal with other types)
             if rectify_transform:
                 if isinstance(cur_expr, (TRANSLATE_TYPE, TRANSSYM_TYPE)):
@@ -376,20 +368,12 @@ def expr_to_sdf(
             next_to_parse = cur_expr.args[0]
             parser_list.append(next_to_parse)
         elif isinstance(cur_expr, PRIM_TYPE):
+            params = cur_expr.args
+            params = _parse_param_from_expr(cur_expr, params)
             transform = transforms_stack.pop()
             if rectify_transform:
                 _ = scale_stack.pop()
             cur_coords = sketcher.get_coords(transform, points=coords)
-            params = cur_expr.args
-            if params:
-                param_list = []
-                for ind, param in enumerate(params):
-                    if param in cur_expr.lookup_table:
-                        cur_param = cur_expr.lookup_table[param]
-                        param_list.append(cur_param)
-                    else:
-                        param_list.append(param)
-                params = param_list
             execution = PRIMITIVE_MAP[type(cur_expr)](cur_coords, *params)
             execution_stack.append(execution)
         else:
@@ -463,15 +447,13 @@ def expr_to_colored_canvas(
             next_to_parse = cur_expr.args[0]
             parser_list.append(next_to_parse)
         elif isinstance(cur_expr, MOD_TYPE):
-            params = cur_expr.args[1]
-            if params in cur_expr.lookup_table:
-                params = cur_expr.lookup_table[params]
+            params = expression.args[1:]
+            params = _parse_param_from_expr(expression, params)
             if rectify_transform:
-                if isinstance(cur_expr, TRANSLATE_TYPE):
-                    scale = scale_stack[-1]
-                    params = params / scale
-                elif isinstance(cur_expr, SCALE_TYPE):
-                    scale_stack[-1] *= params
+                if isinstance(expression, (TRANSLATE_TYPE, TRANSSYM_TYPE)):
+                    params[0] = params[0] / scale_stack[-1]
+                elif isinstance(expression, SCALE_TYPE):
+                    scale_stack[-1] *= params[0]
             transform = transforms_stack.pop()
             identity_mat = sketcher.get_affine_identity()
             new_transform = MODIFIER_MAP[type(cur_expr)](identity_mat, params)
@@ -480,13 +462,12 @@ def expr_to_colored_canvas(
             next_to_parse = cur_expr.args[0]
             parser_list.append(next_to_parse)
         elif isinstance(cur_expr, PRIM_TYPE):
+            params = cur_expr.args
+            params = _parse_param_from_expr(cur_expr, params)
             transform = transforms_stack.pop()
             if rectify_transform:
                 _ = scale_stack.pop()
             cur_coords = sketcher.get_coords(transform, points=coords)
-            params = cur_expr.args
-            if params in cur_expr.lookup_table:
-                params = cur_expr.lookup_table[params]
             execution = PRIMITIVE_MAP[type(cur_expr)](cur_coords, *params)
             # At this point use color code to color the primitive
             color = color_stack.pop()
@@ -511,7 +492,6 @@ def expr_to_colored_canvas(
             colored_canvas = th.cat([color_o, a_o], dim=-1)
         elif isinstance(cur_expr, (Intersection, Difference)):
             # Technicall you can - as long as you define the operators properly.
-
             raise ValueError(f"Cannot use {type(cur_expr)} for coloring")
         else:
             raise ValueError(f"Unknown expression type {type(cur_expr)}")

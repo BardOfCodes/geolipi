@@ -1,13 +1,5 @@
 import numpy as np
-from geolipi.symbolic.combinators import Union, Intersection, Difference, JoinUnion
-from geolipi.symbolic.transforms_3d import Translate3D, Scale3D, EulerRotate3D
-from geolipi.symbolic.primitives_3d import (
-    NoParamCuboid3D,
-    NoParamCylinder3D,
-    NoParamSphere3D,
-    PreBakedPrimitive3D,
-)
-
+import geolipi.symbolic as gls
 from .geonodes import (
     create_boolean_union_node_seq,
     create_boolean_intersection_node_seq,
@@ -17,26 +9,43 @@ from .geonodes import (
     create_cuboid_node_seq,
     create_sphere_node_seq,
     create_cylinder_node_seq,
+    create_cone_node_seq,
+    create_inexact_super_quadrics_node_seq,
+    create_plane_node_seq,
+    create_inf_cylinder_node_seq,
+    create_inf_cone_node_seq,
     create_prebaked_primitive_node_seq,
+    create_boolean_complement_node_seq,
 )
 
 COMBINATOR_MAP = {
-    Union: create_boolean_union_node_seq,
-    Intersection: create_boolean_intersection_node_seq,
-    Difference: create_boolean_difference_node_seq,
-    JoinUnion: create_boolean_join_node_seq,
+    gls.Union: create_boolean_union_node_seq,
+    gls.Intersection: create_boolean_intersection_node_seq,
+    gls.Difference: create_boolean_difference_node_seq,
+    gls.JoinUnion: create_boolean_join_node_seq,
+    gls.Complement: create_boolean_complement_node_seq,
 }
 PRIMITIVE_MAP = {
-    NoParamCuboid3D: create_cuboid_node_seq,
-    NoParamSphere3D: create_sphere_node_seq,
-    NoParamCylinder3D: create_cylinder_node_seq,
-    PreBakedPrimitive3D: create_prebaked_primitive_node_seq,
+    gls.NoParamCuboid3D: create_cuboid_node_seq,
+    gls.NoParamSphere3D: create_sphere_node_seq,
+    gls.NoParamCylinder3D: create_cylinder_node_seq,
+    gls.Cuboid3D: create_cuboid_node_seq,
+    gls.Sphere3D: create_sphere_node_seq,
+    gls.Cylinder3D: create_cylinder_node_seq,
+    gls.PreBakedPrimitive3D: create_prebaked_primitive_node_seq,
+    gls.Cone3D: create_cone_node_seq,
+    # Calculated using SDFs
+    gls.InexactSuperQuadrics3D: create_inexact_super_quadrics_node_seq,
+    gls.Plane3D: create_plane_node_seq,
+    gls.InfiniteCylinder3D: create_inf_cylinder_node_seq,
+    gls.InfiniteCone3D: create_inf_cone_node_seq,
+
 }
 
 MODIFIER_MAP = {
-    Translate3D: (create_transform_node_seq, "Translation"),
-    Scale3D: (create_transform_node_seq, "Scale"),
-    EulerRotate3D: (create_transform_node_seq, "Rotation"),
+    gls.Translate3D: (create_transform_node_seq, "Translation"),
+    gls.Scale3D: (create_transform_node_seq, "Scale"),
+    gls.EulerRotate3D: (create_transform_node_seq, "Rotation"),
 }
 
 

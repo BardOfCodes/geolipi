@@ -87,6 +87,7 @@ PRIMITIVE_MAP = {
     sym_prim3d.CappedTorus3D: sdf3d_bank.sdf3d_capped_torus,
     sym_prim3d.Link3D: sdf3d_bank.sdf3d_link,
     sym_prim3d.InfiniteCylinder3D: sdf3d_bank.sdf3d_infinite_cylinder,
+    sym_prim3d.InfiniteCone3D: sdf3d_bank.sdf3d_infinite_cone,
     sym_prim3d.Cone3D: sdf3d_bank.sdf3d_cone,
     sym_prim3d.InexactCone3D: sdf3d_bank.sdf3d_inexact_cone,
     sym_prim3d.Plane3D: sdf3d_bank.sdf3d_plane,
