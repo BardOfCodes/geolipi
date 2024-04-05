@@ -19,7 +19,8 @@ def create_geonode_tree(dummy_obj, mod_name="CSG-GN", group_name="CSG-GN"):
         dummy_obj.modifiers.remove(dummy_obj.modifiers[mod_name])
     mod = dummy_obj.modifiers.new(mod_name, "NODES")
     node_group = bpy.data.node_groups.new(group_name, "GeometryNodeTree")
-    node_group.outputs.new("NodeSocketGeometry", "Geometry")
+    node_group.interface.new_socket(name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+    # node_group.outputs.new("NodeSocketGeometry", "Geometry")
     output_node = node_group.nodes.new("NodeGroupOutput")
     output_node.is_active_output = True
     output_node.select = False
