@@ -1,6 +1,6 @@
 import torch as th
 import numpy as np
-
+from .settings import Settings
 
 class Sketcher:
     """
@@ -23,6 +23,7 @@ class Sketcher:
         translate_identity (th.Tensor): An identity translate tensor.
 
     """
+
     def __init__(self, device: str = "cuda", dtype: th.dtype = th.float32,
                  resolution: int = 64, mode: str = "direct", n_dims: int = 3,
                  coord_scale: float = 1.0):
@@ -40,6 +41,10 @@ class Sketcher:
         self.coord_scale = coord_scale
         self.homogeneous_identity = th.eye(n_dims + 1, device=self.device)
         self.zero_mat = th.zeros(n_dims, n_dims, device=self.device)
+        if Settings.COORD_MODE == "bound":
+            self.create_coords = self.create_bound_coords
+        elif Settings.COORD_MODE == "centered":
+            self.create_coords = self.create_centered_coords
         self.coords = self.create_coords()
         self.scale_identity = th.ones(n_dims, dtype=self.dtype, device=self.device)
         self.translate_identity = th.zeros(n_dims, dtype=self.dtype, device=self.device)
@@ -60,14 +65,23 @@ class Sketcher:
         canvas = th.ones_like(self.coords[..., :1]).repeat(1, 4)
         return canvas
 
-    def create_coords(self):
+    def create_bound_coords(self):
         res = self.resolution
-        mesh_grid_inp = [
-            range(res),
-        ] * self.n_dims
+        mesh_grid_inp = [range(res),] * self.n_dims
         points = np.stack(np.meshgrid(*mesh_grid_inp, indexing="ij"), axis=-1)
         points = points.astype(np.float32)
         points = (points / (res - 1) - 0.5) * 2
+        points = points * self.coord_scale
+        points = th.from_numpy(points)
+        points = th.reshape(points, (-1, self.n_dims)).to(self.device)
+        return points
+    
+    def create_centered_coords(self):
+        res = self.resolution
+        mesh_grid_inp = [range(res),] * self.n_dims
+        points = np.stack(np.meshgrid(*mesh_grid_inp, indexing="ij"), axis=-1)
+        points = points.astype(np.float32)
+        points = (points / res - (res-1)/(2*res)) * 2
         points = points * self.coord_scale
         points = th.from_numpy(points)
         points = th.reshape(points, (-1, self.n_dims)).to(self.device)

@@ -1,9 +1,7 @@
 import torch as th
 import numpy as np
 from .common import EPSILON
-
-CONVENTION = ("X", "Y", "Z")
-# CONVENTION = ("Z", "Y", "X")
+from .settings import Settings
 
 
 def get_affine_translate_2D(matrix, param):
@@ -145,7 +143,7 @@ def get_affine_rotate_euler_3D(matrix, param):
         torch.Tensor: The modified affine transformation matrix.
     """
     matrices = [
-        _axis_angle_rotation_3D(c, e) for c, e in zip(CONVENTION, th.unbind(param, -1))
+        _axis_angle_rotation_3D(c, e) for c, e in zip(Settings.ROT_ORDER, th.unbind(param, -1))
     ]
     rotation_matrix = th.matmul(th.matmul(matrices[0], matrices[1]), matrices[2])
 

@@ -404,9 +404,9 @@ class GLFunction(Function):
     
     # Could be useful ref. in something else...
     # TODO: What was the error?
-    def __getstate__(self):
-        expr_str = str(self)
-        return expr_str
+    # def __getstate__(self):
+    #     expr_str = str(self)
+    #     return expr_str
     
     #     tensor_dict = {}
     #     expression_list = []
@@ -431,10 +431,10 @@ class GLFunction(Function):
     #     }
     #     return state
 
-    def __setstate__(self, state):
-        from geolipi.symbolic import get_cmd_mapper
-        expression = eval(state, get_cmd_mapper())
-        return expression
+    # def __setstate__(self, state):
+    #     from geolipi.symbolic import get_cmd_mapper
+    #     expression = eval(state, get_cmd_mapper())
+    #     return expression
     #     tensor_args = state["tensor_args"]
     #     n_ops = state["n_ops"]
     #     expression_list = state["expression_list"]
