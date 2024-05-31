@@ -36,6 +36,7 @@ def recursive_evaluate(
     tracked_scale: th.Tensor = None,
     relaxed_occupancy: bool = False,
     relax_temperature: float = 0.0,
+    existing_canvas: th.Tensor = None,
 ):
     """
     Recursively evaluates a GeoLIPI expression to generate a signed distance field (SDF) or a color canvas.
@@ -75,6 +76,8 @@ def recursive_evaluate(
             tracked_scale=tracked_scale,
             relaxed_occupancy=relaxed_occupancy,
             relax_temperature=relax_temperature,
+            existing_canvas=existing_canvas,
+
         )
     elif isinstance(expression, MOD_TYPE):
         sub_expr = expression.args[0]
@@ -100,6 +103,7 @@ def recursive_evaluate(
                 tracked_scale=tracked_scale,
                 relaxed_occupancy=relaxed_occupancy,
                 relax_temperature=relax_temperature,
+                existing_canvas=existing_canvas,
             )
         elif isinstance(expression, POSITIONALMOD_TYPE):
             # instantiate positions and send that as input with affine set to None
@@ -114,6 +118,7 @@ def recursive_evaluate(
                 tracked_scale=tracked_scale,
                 relaxed_occupancy=relaxed_occupancy,
                 relax_temperature=relax_temperature,
+                existing_canvas=existing_canvas,
             )
         elif isinstance(expression, SDFMOD_TYPE):
             # calculate sdf then create change before returning.
@@ -127,6 +132,7 @@ def recursive_evaluate(
                 tracked_scale=tracked_scale,
                 relaxed_occupancy=relaxed_occupancy,
                 relax_temperature=relax_temperature,
+                existing_canvas=existing_canvas,
             )
             updated_sdf = MODIFIER_MAP[type(expression)](sdf_estimate, *params)
             return updated_sdf
@@ -195,6 +201,7 @@ def recursive_evaluate(
                 tracked_scale=tracked_scale.clone(),
                 relaxed_occupancy=relaxed_occupancy,
                 relax_temperature=relax_temperature,
+                existing_canvas=existing_canvas,
             )
             sdf_list.append(cur_sdf)
         channel_count = sdf_list[0].shape[-1]
@@ -217,9 +224,12 @@ def recursive_evaluate(
                 tracked_scale=tracked_scale.clone(),
                 relaxed_occupancy=relaxed_occupancy,
                 relax_temperature=relax_temperature,
+                existing_canvas=existing_canvas,
             )
             output_seq.append(canvas)
         output_canvas = COLOR_FUNCTIONS[type(expression)](*output_seq)
+        if existing_canvas is not None:
+            output_canvas = source_over_seq(existing_canvas, output_canvas)
         return output_canvas
 
     elif isinstance(expression, APPLY_COLOR_TYPE):
@@ -240,6 +250,7 @@ def recursive_evaluate(
             tracked_scale=tracked_scale,
             relaxed_occupancy=relaxed_occupancy,
             relax_temperature=relax_temperature,
+            existing_canvas=existing_canvas,
         )
         if relaxed_occupancy:
             cur_occ = _smoothen_sdf(cur_sdf, relax_temperature)
@@ -267,6 +278,7 @@ def recursive_evaluate(
             tracked_scale=tracked_scale,
             relaxed_occupancy=relaxed_occupancy,
             relax_temperature=relax_temperature,
+            existing_canvas=existing_canvas,
         )
         colored_canvas = COLOR_FUNCTIONS[type(expression)](colored_canvas, color)
         return colored_canvas
@@ -404,6 +416,7 @@ def expr_to_colored_canvas(
     relaxed_occupancy=False,
     relax_temperature=0.0,
     coords=None,
+    canvas=None,
 ):
     """
     TODO: This function is to be tested.
@@ -415,13 +428,16 @@ def expr_to_colored_canvas(
         scale_stack = [sketcher.get_scale_identity()]
     parser_list = [expression]
     color_stack = [Symbol("gray")]
-    colored_canvas = sketcher.get_color_canvas()
+    if canvas is None:
+        colored_canvas = sketcher.get_color_canvas()
+    else:
+        colored_canvas = canvas
     while parser_list:
         cur_expr = parser_list.pop()
         if isinstance(cur_expr, MACRO_TYPE):
             new_expr = resolve_macros(cur_expr, device=sketcher.device)
             parser_list.append(new_expr)
-        elif isinstance(cur_expr, Union):
+        elif isinstance(cur_expr, COMBINATOR_TYPE):
             n_args = len(cur_expr.args)
             # chain extensions
             transform = transforms_stack.pop()
@@ -490,9 +506,6 @@ def expr_to_colored_canvas(
             a_o = alpha_a + alpha_b * (1 - alpha_a)
             color_o = (color_a * alpha_a + color_b * alpha_b * (1 - alpha_a)) / a_o
             colored_canvas = th.cat([color_o, a_o], dim=-1)
-        elif isinstance(cur_expr, (Intersection, Difference)):
-            # Technicall you can - as long as you define the operators properly.
-            raise ValueError(f"Cannot use {type(cur_expr)} for coloring")
         else:
             raise ValueError(f"Unknown expression type {type(cur_expr)}")
 

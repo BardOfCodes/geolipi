@@ -53,6 +53,12 @@ class Shear2D(Transform2D):
     Read evaluator specific documentation for more.
     """
 
+class Affine2D(Transform2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.transforms.get_affine_matrix_2D
+    Read evaluator specific documentation for more.
+    """
 
 class Distort2D(PositionalTransform2D):
     """

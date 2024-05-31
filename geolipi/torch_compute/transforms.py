@@ -4,6 +4,10 @@ from .common import EPSILON
 from .settings import Settings
 
 
+def get_affine_matrix_2D(matrix, params):
+    # matrix = matrix @ params
+    return params
+
 def get_affine_translate_2D(matrix, param):
     """
     Applies a 2D translation to the given affine transformation matrix.

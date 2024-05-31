@@ -171,18 +171,19 @@ def set_render_settings(
             tree.links.remove(link)
 
     bpy.context.scene.cycles.samples = 512  # 32
-    bpy.context.scene.render.use_freestyle = True
-    bpy.context.scene.render.line_thickness = line_thickness  # 0.25
-    bpy.context.scene.render.resolution_x = resolution
-    bpy.context.scene.render.resolution_y = resolution
-    freestyle_settings = bpy.context.scene.view_layers["ViewLayer"].freestyle_settings
-    lineset = freestyle_settings.linesets.active
-    lineset.select_silhouette = True
-    lineset.select_crease = True
-    lineset.select_border = True
-    lineset.select_material_boundary = True
-    lineset.select_external_contour = True
-    lineset.select_edge_mark = True
+    if line_thickness > 0:
+        bpy.context.scene.render.use_freestyle = True
+        bpy.context.scene.render.line_thickness = line_thickness  # 0.25
+        bpy.context.scene.render.resolution_x = resolution
+        bpy.context.scene.render.resolution_y = resolution
+        freestyle_settings = bpy.context.scene.view_layers["ViewLayer"].freestyle_settings
+        lineset = freestyle_settings.linesets.active
+        lineset.select_silhouette = True
+        lineset.select_crease = True
+        lineset.select_border = True
+        lineset.select_material_boundary = True
+        lineset.select_external_contour = True
+        lineset.select_edge_mark = True
 
 
 def render_with_rotation(xy_size, number_frames, save_loc):

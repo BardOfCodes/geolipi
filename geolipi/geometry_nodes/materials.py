@@ -111,7 +111,7 @@ def create_material_tree(material_name, color):
 
 
 def create_edge_material_tree(material_name, mesh_color, edge_thickness=0.001, 
-                              edge_color=(0, 0, 0), 
+                              edge_color=(0.0, 0.0, 0.0), 
                               ao_strength=1.0):
     """
     Creates a material node tree with edge highlighting and ambient occlusion.
@@ -137,7 +137,7 @@ def create_edge_material_tree(material_name, mesh_color, edge_thickness=0.001,
     tree = mat.node_tree
     # set principled BSDF
     tree.nodes["Principled BSDF"].inputs['Roughness'].default_value = 0.7
-    tree.nodes["Principled BSDF"].inputs['Sheen Tint'].default_value = 0
+    tree.nodes["Principled BSDF"].inputs['Sheen Tint'].default_value = [0, 0, 0, 1]
     # add Ambient Occlusion
     tree.nodes.new('ShaderNodeAmbientOcclusion')
     tree.nodes.new('ShaderNodeGamma')

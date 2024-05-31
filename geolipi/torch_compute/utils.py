@@ -140,6 +140,7 @@ MODIFIER_MAP = {
     sym_t2d.EulerRotate2D: transform_bank.get_affine_rotate_2D,
     sym_t2d.Scale2D: transform_bank.get_affine_scale_2D,
     sym_t2d.Shear2D: transform_bank.get_affine_shear_2D,
+    sym_t2d.Affine2D: transform_bank.get_affine_matrix_2D,
     sym_t2d.Distort2D: transform_bank.position_distort,
     sym_t2d.ReflectCoords2D: transform_bank.get_affine_reflection_2D,
     sym_t2d.Dilate2D: sdf_op_bank.sdf_dilate,
