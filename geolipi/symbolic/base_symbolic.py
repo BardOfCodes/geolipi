@@ -32,9 +32,12 @@ def magic_method_decorator(cls):
         def method(self, other):
             base_method = getattr(Expr, magic)
 
-            if isinstance(other, (GLExpr, GLFunction)):
+            if isinstance(other, GLExpr):
                 merged_lookup_table = {**self.lookup_table, **other.lookup_table}
                 return GLExpr(base_method(self.expr, other.expr), merged_lookup_table)
+            if isinstance(other, GLFunction):
+                merged_lookup_table = {**self.lookup_table, **other.lookup_table}
+                return GLExpr(base_method(self.expr, other), merged_lookup_table)
             else:
                 return GLExpr(base_method(self.expr, other), self.lookup_table)
 
@@ -86,6 +89,7 @@ class GLExpr:
     def __init__(self, expr: Expr, lookup_table: Dict = None):
         self.expr = expr
         self.lookup_table = lookup_table or {}
+        self.func = expr.func
 
     # Implement other arithmetic operations like __sub__ similarly
     @property
@@ -103,7 +107,46 @@ class GLExpr:
     # TODO: Implement this.
     def to(self):
         raise NotImplementedError
+    
+    def tensor(self):
+        eval_args = []
+        merged_lookup_table = {}
+        for arg in self.args:
+            if isinstance(arg, (GLExpr, GLFunction)):
+                eval_arg = arg.tensor()
+                merged_lookup_table.update(eval_arg.lookup_table)
+            else:
+                eval_arg = arg
+            eval_args.append(eval_arg)
+        new_expr = self.func(*eval_args)
+        gl_expr = GLExpr(new_expr, merged_lookup_table)
+        return gl_expr
 
+    def _inject_tensor_list(self, tensor_list, cur_ind=0):
+        resolved_args = []
+        for sub_expr in self.args:
+            if isinstance(sub_expr, (GLExpr, GLFunction)):
+                arg, cur_ind = sub_expr._inject_tensor_list(tensor_list, cur_ind)
+            elif isinstance(sub_expr, Symbol):
+                if sub_expr in self.lookup_table.keys():
+                    arg = tensor_list[cur_ind]
+                    cur_ind += 1
+                else:
+                    arg = sub_expr
+            else:
+                raise ValueError(f"Cannot convert {sub_expr} to Sympy.")
+            resolved_args.append(arg)
+
+        new_expr = type(self)(*resolved_args)
+        return new_expr, cur_ind
+
+    def inject_tensor_list(self, tensor_list):
+        """
+        Injects a list of tensors into the expression, using tensor occurence order to match the tensors.
+        Used for Parameter optimizing without converting form.
+        """
+        new_expr, _ = self._inject_tensor_list(tensor_list)
+        return new_expr
 
 # Helper function to convert a tensor to a GLExpr
 
@@ -302,7 +345,7 @@ class GLFunction(Function):
     def tensor(self, dtype=th.float32, device="cuda"):
         resolved_args = []
         for sub_expr in self.args:
-            if isinstance(sub_expr, GLFunction):
+            if isinstance(sub_expr, (GLExpr, GLFunction)):
                 arg = sub_expr.tensor()
             elif isinstance(sub_expr, Symbol):
                 if sub_expr in self.lookup_table.keys():
@@ -342,7 +385,7 @@ class GLFunction(Function):
     def _inject_tensor_list(self, tensor_list, cur_ind=0):
         resolved_args = []
         for sub_expr in self.args:
-            if isinstance(sub_expr, GLFunction):
+            if isinstance(sub_expr, (GLExpr, GLFunction)):
                 arg, cur_ind = sub_expr._inject_tensor_list(tensor_list, cur_ind)
             elif isinstance(sub_expr, Symbol):
                 if sub_expr in self.lookup_table.keys():

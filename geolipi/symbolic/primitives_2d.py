@@ -432,3 +432,32 @@ class NullExpression2D(Primitive2D):
     - torch_compute.primitives_2d.sdf_null_op
     Read evaluator specific documentation for more.
     """
+
+class TileUV2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_tile_primitive
+    Read evaluator specific documentation for more.
+    """
+
+class SinRepeatX2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_sin_x
+    Read evaluator specific documentation for more.
+    """
+
+class SinRepeatY2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_sin_y
+    Read evaluator specific documentation for more.
+    """ 
+    
+class SinOriginY2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_sin_y
+    Read evaluator specific documentation for more.
+    """ 
+    

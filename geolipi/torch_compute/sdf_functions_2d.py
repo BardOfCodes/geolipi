@@ -474,6 +474,7 @@ def sdf2d_star_5(points, r, rf):
     sdf = th.norm(points - ba * h[..., :, None], dim=-1) * th.sign(
         points[..., 1] * ba[..., :, 0] - points[..., 0] * ba[..., :, 1]
     )
+    sdf = sdf[0, ...]
     return sdf
 
 
@@ -1405,3 +1406,67 @@ def sdf2d_no_param_triangle(points):
     points[..., 0] = points[..., 0] - th.clamp(points[..., 0], -2 * r, 0)
     sdf = -th.norm(points, dim=-1) * th.sign(points[..., 1])
     return sdf
+
+def sdf2d_tile_uv(points, tile, height=None, width=None):
+    """
+    Splat the Tile over the points. 
+    
+    Parameters:
+        points (Tensor): Input points to evaluate the SDF, shape [batch, num_points, 2].
+        tile (Tensor): The tile to splat, shape [Batch, height, width, n_channel].
+    """
+    # using torch.nn.functional.grid_sample
+    # rearrange points in B,H,W,2 format
+    if len(points.shape) == 2:
+        points = points.unsqueeze(0)
+    if len(tile.shape) == 3:
+        tile = tile.unsqueeze(0)
+    ps = points.shape
+    bs = ps[0]
+    if height is None:
+        height = np.sqrt(ps[1]).astype(int)
+        width = height
+    # Doesn't handle the case where one is given    
+    cur_points = points.reshape(bs, height, width, 2)
+    cur_tile = tile.permute(0, 3, 1, 2)
+    output = th.nn.functional.grid_sample(cur_tile, cur_points, align_corners=True)
+    
+    return output
+
+def sdf2d_sin_x(points, freq, phase_shift):
+    """
+    Computes the SDF for a sin wave in 2D.
+    
+    Parameters:
+        points (Tensor): Input points to evaluate the SDF, shape [batch, num_points, 2].
+        freq (Tensor): Frequency of the sin wave, shape [batch, 1].
+        phase_shift (Tensor): Phase shift of the sin wave, shape [batch, 1].
+    """
+    base_sdf = th.sin(2 * np.pi * freq * points[..., 0] + phase_shift)
+    return base_sdf
+
+def sdf2d_sin_y(points, freq, phase_shift):
+    """
+    Computes the SDF for a sin wave in 2D.
+    
+    Parameters:
+        points (Tensor): Input points to evaluate the SDF, shape [batch, num_points, 2].
+        freq (Tensor): Frequency of the sin wave, shape [batch, 1].
+        phase_shift (Tensor): Phase shift of the sin wave, shape [batch, 1].
+    """
+    base_sdf = th.sin(2 * np.pi * freq * points[..., 1] + phase_shift)
+    return base_sdf
+
+def sdf2d_sinwave_y(points, freq, phase_shift, scale):
+    """
+    Computes the SDF for a sin wave in 2D.
+    
+    Parameters:
+        points (Tensor): Input points to evaluate the SDF, shape [batch, num_points, 2].
+        freq (Tensor): Frequency of the sin wave, shape [batch, 1].
+        phase_shift (Tensor): Phase shift of the sin wave, shape [batch, 1].
+    """
+    
+    target = (1 +  th.sin(2 * np.pi * freq * points[..., 1] + phase_shift)) * scale
+    base_sdf = th.abs(points[..., 0]) - target 
+    return base_sdf

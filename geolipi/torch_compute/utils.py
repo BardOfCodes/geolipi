@@ -77,6 +77,12 @@ PRIMITIVE_MAP = {
     sym_prim2d.NoParamCircle2D: sdf2d_bank.sdf2d_no_param_circle,
     sym_prim2d.NoParamTriangle2D: sdf2d_bank.sdf2d_no_param_triangle,
     sym_prim2d.NullExpression2D: sdf_op_bank.sdf_null_op,
+    # Tile
+    sym_prim2d.TileUV2D: sdf2d_bank.sdf2d_tile_uv,
+    # SingleDim
+    sym_prim2d.SinRepeatX2D: sdf2d_bank.sdf2d_sin_x,
+    sym_prim2d.SinRepeatY2D: sdf2d_bank.sdf2d_sin_y,
+    sym_prim2d.SinOriginY2D: sdf2d_bank.sdf2d_sinwave_y,
     # 3D
     sym_prim3d.Sphere3D: sdf3d_bank.sdf3d_sphere,
     sym_prim3d.Box3D: sdf3d_bank.sdf3d_box,
