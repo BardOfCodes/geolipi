@@ -146,6 +146,15 @@ class RegularHexagon2D(Primitive2D):
     """
 
 
+class RegularOctagon2D(Primitive2D):
+
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_regular_octagon
+    Read evaluator specific documentation for more.
+    """
+
+
 class Hexagram2D(Primitive2D):
 
     """
@@ -440,6 +449,9 @@ class TileUV2D(Primitive2D):
     Read evaluator specific documentation for more.
     """
 
+### THese are not really SDFS
+
+
 class SinRepeatX2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -454,10 +466,70 @@ class SinRepeatY2D(Primitive2D):
     Read evaluator specific documentation for more.
     """ 
     
-class SinOriginY2D(Primitive2D):
+class SinAlongAxisY2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
     - torch_compute.primitives_2d.sdf2d_sin_y
     Read evaluator specific documentation for more.
     """ 
     
+class SinDiagonal2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_sin_diagonal
+    Read evaluator specific documentation for more.
+    """ 
+
+class SinDiagonalFlip2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_flip_sin_diagonal
+    Read evaluator specific documentation for more.
+    """
+
+class SinRadial2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_sin_radial
+    Read evaluator specific documentation for more.
+    """
+class SquiggleX2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_squiggle
+    Read evaluator specific documentation for more.
+    """
+
+class SquiggleY2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_squiggle
+    Read evaluator specific documentation for more.
+    """
+class SquiggleDiagonal2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_squiggle_diagonal
+    Read evaluator specific documentation for more.
+    """
+
+class SquiggleDiagonalFlip2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_flip_squiggle_diagonal
+    Read evaluator specific documentation for more.
+    """
+
+class SquiggleRadial2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_squiggle_radial
+    Read evaluator specific documentation for more.
+    """
+    
+class SquiggleDistortion2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_squiggle_distortion
+    Read evaluator specific documentation for more.
+    """
