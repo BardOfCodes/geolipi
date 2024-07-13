@@ -261,13 +261,15 @@ def recursive_evaluate(
 
     elif isinstance(expression, COLOR_MOD):
         color_expr = expression.args[0]
-        color = expression.args[1]
+        colors = expression.args[1:]
         # Get the sdf_expr:
-        if not color in expression.lookup_table:
-            color = COLOR_MAP[color.name].to(sketcher.device)
-        else:
-            color = expression.lookup_table[color]
-
+        eval_colors = []
+        for color in colors:
+            if not color in expression.lookup_table:
+                color = COLOR_MAP[color.name].to(sketcher.device)
+            else:
+                color = expression.lookup_table[color]
+            eval_colors.append(color)
         colored_canvas = recursive_evaluate(
             color_expr,
             sketcher,
@@ -280,7 +282,7 @@ def recursive_evaluate(
             relax_temperature=relax_temperature,
             existing_canvas=existing_canvas,
         )
-        colored_canvas = COLOR_FUNCTIONS[type(expression)](colored_canvas, color)
+        colored_canvas = COLOR_FUNCTIONS[type(expression)](colored_canvas, *eval_colors)
         return colored_canvas
 
 

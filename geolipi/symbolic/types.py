@@ -105,6 +105,6 @@ HIGERPRIM_TYPE = HigherOrderPrimitives3D
 NULL_EXPR_TYPE = type_union[NullExpression2D, NullExpression3D]
 
 # COLOR_TYPE = type_union[ColorModifier2D, ColorModifier3D]
-COLOR_MOD = type_union[ModifyColor2D, ModifyOpacity2D]
+COLOR_MOD = type_union[ModifyColor2D, ModifyOpacity2D, ModifyColorTritone2D]
 APPLY_COLOR_TYPE = ApplyColor2D
 SVG_COMBINATORS = SVGCombinator

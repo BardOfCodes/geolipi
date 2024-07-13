@@ -93,7 +93,6 @@ class ApplyColor2D(ColorModifier2D):
     Read evaluator specific documentation for more.
     """
 
-
 class ModifyOpacity2D(ColorModifier2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -109,6 +108,10 @@ class ModifyColor2D(ColorModifier2D):
     Read evaluator specific documentation for more.
     """
 
+class ModifyColorTritone2D(ColorModifier2D):
+    """
+    This is used to recolor tiles.
+    """
 
 class SourceOverSequence(SVGCombinator):
     """

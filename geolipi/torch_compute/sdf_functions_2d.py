@@ -1415,7 +1415,7 @@ def sdf2d_no_param_triangle(points):
 ### Functions useful for 2D pattern creation.
 # Function Documentation TBD
 
-def nonsdf2d_tile_uv(points, tile, height=None, width=None):
+def nonsdf2d_tile_uv(points, tile, height=None, width=None, mode="bicubic"):
     """
     Splat the Tile over the points. 
     
@@ -1439,7 +1439,7 @@ def nonsdf2d_tile_uv(points, tile, height=None, width=None):
     # Doesn't handle the case where one is given    
     cur_points = points.reshape(bs, height, width, 2)
     cur_tile = tile.permute(0, 3, 1, 2)
-    output = th.nn.functional.grid_sample(cur_tile, cur_points, align_corners=True)
+    output = th.nn.functional.grid_sample(cur_tile, cur_points, align_corners=True, mode=mode)
     output = output.permute(0, 2, 3, 1)
     output = output.reshape(bs, ps[1], -1)
     if squeeze_out:
@@ -1511,4 +1511,3 @@ def nonsdf2d_sin_along_axis_y(points, freq, phase_shift, scale):
     target = (1 +  th.sin(2 * np.pi * freq * points[..., 1] + phase_shift)) * scale
     base_sdf = th.abs(points[..., 0]) - target 
     return base_sdf
-

@@ -254,3 +254,33 @@ def modify_color(color_canvas, new_color):
     )
     color_canvas[..., :3] = color_canvas[..., :3] / result_alpha
     return color_canvas
+
+
+def modify_color_tritone(points, mid_color, black=None, white=None, mid_point = 0.5):
+    mid_color = mid_color[..., :3]
+    n = mid_color.shape[-1]
+    if black is None:
+        black = th.zeros_like(points[..., :n])
+    else:
+        black = black[..., :n]
+    if white is None:
+        white = th.ones_like(points[..., :n])
+    else:
+        white = white[..., :n]
+
+    R, G, B, A = th.chunk(points, 4, dim=-1)
+    # L = (R + G+ B) / 3# 
+    L = R * 299/1000 + G * 587/1000 + B * 114/1000
+    L = th.clamp(L, 0, 1)
+    # Now using L we must give each a ratio factor
+    factor_a = (L - mid_point) / (1 - mid_point)
+    factor_a = th.clamp(factor_a, 0, 1)
+    color_a = mid_color + (white - mid_color) * (factor_a)
+    factor_b = (L / mid_point)
+    factor_b = th.clamp(factor_b, 0, 1)
+    color_b = black + (mid_color - black) * (factor_b)
+    color = th.where(L >= mid_point, color_a, color_b)
+    if n == 3:
+        color = th.cat([color, A], dim=-1)
+
+    return color

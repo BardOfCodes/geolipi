@@ -107,7 +107,8 @@ class GLExpr:
     # TODO: Implement this.
     def to(self):
         raise NotImplementedError
-    
+    def is_zero(self):
+        return False
     def tensor(self):
         eval_args = []
         merged_lookup_table = {}
@@ -115,6 +116,15 @@ class GLExpr:
             if isinstance(arg, (GLExpr, GLFunction)):
                 eval_arg = arg.tensor()
                 merged_lookup_table.update(eval_arg.lookup_table)
+            elif isinstance(arg, (sympy.core.operations.AssocOp, sympy.core.power.Pow)):
+                evaluated_args = []
+                for under_arg in arg.args:
+                    if isinstance(under_arg, (GLExpr, GLFunction)):
+                        evaluated_args.append(under_arg.tensor())
+                    else:
+                        evaluated_args.append(under_arg)
+                op = arg.__class__
+                eval_arg = op(*evaluated_args)
             else:
                 eval_arg = arg
             eval_args.append(eval_arg)
@@ -352,6 +362,15 @@ class GLFunction(Function):
                     arg = self.lookup_table[sub_expr].to(dtype=dtype, device=device)
                 else:
                     arg = sub_expr
+            elif isinstance(sub_expr, (sympy.core.operations.AssocOp, sympy.core.power.Pow)):
+                evaluated_args = []
+                for under_arg in sub_expr.args:
+                    if isinstance(under_arg, (GLExpr, GLFunction)):
+                        evaluated_args.append(under_arg.tensor())
+                    else:
+                        evaluated_args.append(under_arg)
+                op = sub_expr.__class__
+                arg = op(*evaluated_args)
             elif isinstance(sub_expr, (SympyTuple, SympyFloat)):
                 arg = th.tensor(sub_expr, dtype=dtype, device=device)
             elif isinstance(sub_expr, SympyInteger):
