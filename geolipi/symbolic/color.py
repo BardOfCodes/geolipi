@@ -119,3 +119,8 @@ class SourceOverSequence(SVGCombinator):
     - torch_compute.color_functions.source_over_seq
     Read evaluator specific documentation for more.
     """
+
+class AlphaMask2D(SVGCombinator):
+    """
+    Gather the alpha mask from a SVG eval output.
+    """

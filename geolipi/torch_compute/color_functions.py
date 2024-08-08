@@ -284,3 +284,6 @@ def modify_color_tritone(points, mid_color, black=None, white=None, mid_point = 
         color = th.cat([color, A], dim=-1)
 
     return color
+
+def alpha_mask(points):
+    return 0.5 - points[..., -1]

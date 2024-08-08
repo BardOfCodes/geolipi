@@ -221,4 +221,5 @@ COLOR_FUNCTIONS = {
     sym_color.ModifyColor2D: color_func_bank.modify_color,
     sym_color.SourceOverSequence: color_func_bank.source_over_seq,
     sym_color.ModifyColorTritone2D: color_func_bank.modify_color_tritone,
+    sym_color.AlphaMask2D: color_func_bank.alpha_mask,
 }
