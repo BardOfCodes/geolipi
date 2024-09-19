@@ -533,3 +533,10 @@ class SquiggleDistortion2D(Primitive2D):
     - torch_compute.primitives_2d.sdf2d_squiggle_distortion
     Read evaluator specific documentation for more.
     """
+
+class InstantiatedPrim2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_instantiated_primitive
+    Read evaluator specific documentation for more.
+    """

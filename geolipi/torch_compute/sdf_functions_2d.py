@@ -1511,3 +1511,6 @@ def nonsdf2d_sin_along_axis_y(points, freq, phase_shift, scale):
     target = (1 +  th.sin(2 * np.pi * freq * points[..., 1] + phase_shift)) * scale
     base_sdf = th.abs(points[..., 0]) - target 
     return base_sdf
+
+def nonsdf2d_instantiated_prim(points, instance, height=None, width=None, mode="bicubic"):
+    return instance
