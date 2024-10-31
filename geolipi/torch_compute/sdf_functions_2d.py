@@ -1068,7 +1068,7 @@ def sdf2d_tunnel(points, wh):
     return sdf
 
 
-def sdf2d_stairs(p, wh, n):
+def sdf2d_stairs(points, wh, n):
     """
     Computes the SDF for a 2D staircase.
 
@@ -1080,6 +1080,7 @@ def sdf2d_stairs(p, wh, n):
     Returns:
         Tensor: The SDF values for the staircase.
     """
+    p = points
     if len(p.shape) == 2:
         p = p.unsqueeze(0)
     ba = wh * n
@@ -1444,7 +1445,6 @@ def nonsdf2d_tile_uv(points, tile, height=None, width=None, mode="bicubic"):
     output = output.reshape(bs, ps[1], -1)
     if squeeze_out:
         output = output.squeeze(0)
-    print('here', output.shape)
     return output
 
 def nonsdf2d_sin_x(points, freq, phase_shift):

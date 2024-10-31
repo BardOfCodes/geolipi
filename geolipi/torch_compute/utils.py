@@ -16,6 +16,7 @@ import geolipi.torch_compute.sdf_functions_3d as sdf3d_bank
 import geolipi.torch_compute.transforms as transform_bank
 import geolipi.torch_compute.sdf_functions_higher as higher_sdf_bank
 import geolipi.torch_compute.color_functions as color_func_bank
+import geolipi.torch_compute.colorspace_functions as colorspace_bank
 
 COMBINATOR_MAP = {
     sym_comb.Union: sdf_op_bank.sdf_union,
@@ -222,6 +223,13 @@ COLOR_FUNCTIONS = {
     sym_color.ModifyOpacity2D: color_func_bank.modify_opacity,
     sym_color.ModifyColor2D: color_func_bank.modify_color,
     sym_color.SourceOverSequence: color_func_bank.source_over_seq,
-    sym_color.ModifyColorTritone2D: color_func_bank.modify_color_tritone,
+    sym_color.ModifyColorTritone2D: color_func_bank.depreciated_modify_color_tritone,
     sym_color.AlphaMask2D: color_func_bank.alpha_mask,
+    sym_color.RGB2HSL: colorspace_bank.rgb2hsl_torch,
+    sym_color.RGB2HSV: colorspace_bank.rgb2hsv_torch,
+    sym_color.HSV2RGB: colorspace_bank.hsv2rgb_torch,
+    sym_color.HSL2RGB: colorspace_bank.hsl2rgb_torch,
+    sym_color.HueShift: colorspace_bank.hue_shift_torch,
+    # COLOR SDF
+    sym_color.AlphaToSDF2D: color_func_bank.unopt_alpha_to_sdf,
 }

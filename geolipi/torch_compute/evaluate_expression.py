@@ -17,6 +17,7 @@ from geolipi.symbolic.types import (
     COLOR_MOD,
     APPLY_COLOR_TYPE,
     SVG_COMBINATORS,
+    UNOPT_ALPHA
 )
 from .sketcher import Sketcher
 from .utils import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP, COLOR_FUNCTIONS
@@ -284,6 +285,26 @@ def recursive_evaluate(
         )
         colored_canvas = COLOR_FUNCTIONS[type(expression)](colored_canvas, *eval_colors)
         return colored_canvas
+    elif isinstance(expression, UNOPT_ALPHA):
+
+        output_seq = []
+        expr = expression.args[0]
+        params = expression.args[1:]
+        params = _parse_param_from_expr(expression, params)
+        canvas = recursive_evaluate(
+            expr,
+            sketcher,
+            secondary_sketcher=secondary_sketcher,
+            initialize=False,
+            rectify_transform=rectify_transform,
+            coords=coords.clone(),
+            tracked_scale=tracked_scale.clone(),
+            relaxed_occupancy=relaxed_occupancy,
+            relax_temperature=relax_temperature,
+            existing_canvas=existing_canvas,
+        )
+        output_canvas = COLOR_FUNCTIONS[type(expression)](canvas, *params)
+        return output_canvas
 
 
 def _parse_param_from_expr(expression, params):

@@ -124,3 +124,48 @@ class AlphaMask2D(SVGCombinator):
     """
     Gather the alpha mask from a SVG eval output.
     """
+
+
+
+class AlphaToSDF2D(GLFunction):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.color_functions.alpha_to_sdf
+    Read evaluator specific documentation for more.
+    """
+
+class RGB2HSL(AlphaToSDF2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.color_functions.rgb2hsl
+    Read evaluator specific documentation for more.
+    """
+
+class RGB2HSV(AlphaToSDF2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.color_functions.rgb2hsv
+    Read evaluator specific documentation for more.
+    """
+
+class HSV2RGB(AlphaToSDF2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.color_functions.hsv2rgb
+    Read evaluator specific documentation for more.
+    """
+
+class HSL2RGB(AlphaToSDF2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.color_functions.hsl2rgb
+    Read evaluator specific documentation for more.
+    """
+
+
+class HueShift(AlphaToSDF2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.color_functions.change_hue
+    Read evaluator specific documentation for more.
+    """

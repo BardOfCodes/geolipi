@@ -2,7 +2,9 @@ import torch as th
 
 # Color fetch
 from .common import EPSILON
-
+from .settings import Settings
+import skfmm
+import numpy as np
 
 # Color boolean.
 def destination_in(source, destination):
@@ -16,7 +18,7 @@ def destination_in(source, destination):
         Tensor: The result of applying the destination-in composite operation.
     """
     premult_s, premult_d = get_premultiplied_form(source, destination)
-    alpha_s = premult_s[..., 3:4]
+    alpha_s = premult_s[..., -1:]
     result = premult_d * alpha_s
     output = get_unmultiplied_form(result)
     return output
@@ -33,7 +35,7 @@ def destination_out(source, destination):
         Tensor: The result of applying the destination-out composite operation.
     """
     premult_s, premult_d = get_premultiplied_form(source, destination)
-    alpha_s = premult_s[..., 3:4]
+    alpha_s = premult_s[..., -1:]
     result = premult_d * (1 - alpha_s)
     output = get_unmultiplied_form(result)
     return output
@@ -50,7 +52,7 @@ def destination_over(source, destination):
         Tensor: The result of applying the destination-over composite operation.
     """
     premult_s, premult_d = get_premultiplied_form(source, destination)
-    alpha_d = premult_d[..., 3:4]
+    alpha_d = premult_d[..., -1:]
     result = premult_s * (1 - alpha_d) + premult_d
     output = get_unmultiplied_form(result)
     return output
@@ -67,8 +69,8 @@ def destination_atop(source, destination):
         Tensor: The result of applying the destination-atop composite operation.
     """
     premult_s, premult_d = get_premultiplied_form(source, destination)
-    alpha_s = premult_s[..., 3:4]
-    alpha_d = premult_d[..., 3:4]
+    alpha_s = premult_s[..., -1:]
+    alpha_d = premult_d[..., -1:]
     result = premult_s * (1 - alpha_d) + premult_d * alpha_s
     output = get_unmultiplied_form(result)
     return output
@@ -85,8 +87,8 @@ def svg_xor(source, destination):
         Tensor: The result of applying the SVG XOR composite operation.
     """
     premult_s, premult_d = get_premultiplied_form(source, destination)
-    alpha_s = premult_s[..., 3:4]
-    alpha_d = premult_d[..., 3:4]
+    alpha_s = premult_s[..., -1:]
+    alpha_d = premult_d[..., -1:]
     result = premult_s * (1 - alpha_d) + premult_d * (1 - alpha_s)
     output = get_unmultiplied_form(result)
     return output
@@ -102,10 +104,11 @@ def get_unmultiplied_form(result):
     Returns:
         Tensor: Unmultiplied color tensor.
     """
-    alpha_r = result[..., 3:4]
+    alpha_r = result[..., -1:]
     alpha_r = th.clamp(alpha_r, EPSILON, 1)
-    color_r = result[..., :3] / (alpha_r + EPSILON)
-    color_r = th.clamp(color_r, 0, 1)
+    color_r = result[..., :-1] / (alpha_r + EPSILON)
+    if Settings.COLOR_CLAMP:
+        color_r = th.clamp(color_r, 0, 1)
     output = th.cat([color_r, alpha_r], dim=-1)
     return output
 
@@ -120,10 +123,10 @@ def get_premultiplied_form(source, destination):
     Returns:
         Tuple[Tensor, Tensor]: Tensors in premultiplied form.
     """
-    alpha_s = source[..., 3:4]
-    color_s = source[..., :3]
-    alpha_d = destination[..., 3:4]
-    color_d = destination[..., :3]
+    alpha_s = source[..., -1:]
+    color_s = source[..., :-1]
+    alpha_d = destination[..., -1:]
+    color_d = destination[..., :-1]
     premult_s = color_s * alpha_s
     premult_s = th.cat([premult_s, alpha_s], dim=-1)
     premult_d = color_d * alpha_d
@@ -212,8 +215,8 @@ def apply_color(occupancy, color):
         Tensor: A colored canvas tensor.
     """
     occ_expand = occupancy[..., None].float()
-    alpha_a = occ_expand * color[..., 3:4]
-    color_a = occ_expand * color[..., :3]
+    alpha_a = occ_expand * color[..., -1:]
+    color_a = occ_expand * color[..., :-1]
     # color_b = (1 - occ_expand) * 1.0
     # color_a = color_a + color_b
     canvas = th.cat([color_a, alpha_a], dim=-1)
@@ -246,18 +249,18 @@ def modify_color(color_canvas, new_color):
     Returns:
         Tensor: A modified color canvas tensor.
     """
-    old_alpha = color_canvas[..., 3:4]
-    new_alpha = new_color[..., 3:4]
+    old_alpha = color_canvas[..., -1:]
+    new_alpha = new_color[..., -1:]
     result_alpha = new_alpha + old_alpha * (1 - new_alpha)
-    color_canvas[..., :3] = new_color[..., :3] * new_alpha + color_canvas[..., :3] * (
+    color_canvas[..., :-1] = new_color[..., :-1] * new_alpha + color_canvas[..., :-1] * (
         1 - new_alpha
     )
-    color_canvas[..., :3] = color_canvas[..., :3] / result_alpha
+    color_canvas[..., :-1] = color_canvas[..., :-1] / result_alpha
     return color_canvas
 
 
-def modify_color_tritone(points, mid_color, black=None, white=None, mid_point = 0.5):
-    mid_color = mid_color[..., :3]
+def depreciated_modify_color_tritone(points, mid_color, black=None, white=None, mid_point = 0.5):
+    mid_color = mid_color[..., :-1]
     n = mid_color.shape[-1]
     if black is None:
         black = th.zeros_like(points[..., :n])
@@ -286,4 +289,36 @@ def modify_color_tritone(points, mid_color, black=None, white=None, mid_point = 
     return color
 
 def alpha_mask(points):
-    return 0.5 - points[..., -1]
+    mask = 0.1 - points[..., -1:]
+    return mask
+
+def unopt_alpha_to_sdf(points, dx, canvas_shape=None):
+    shape = points.shape
+    if not len(shape) == 3:
+        # its P
+        # convert to 1, P, C
+        points = points.unsqueeze(0)
+    if isinstance(dx, th.Tensor):
+        dx = dx.item()
+    B, P, C = points.shape
+    if canvas_shape is None:
+        n = np.sqrt(P).astype(int)
+        canvas_shape = (n, n)
+    outputs = []
+    
+    for i in range(B):
+        cur_inp = points[i] # P C
+        cur_inp = cur_inp.reshape(canvas_shape[0], canvas_shape[1], -1)
+        cur_inp = cur_inp.cpu().numpy()
+        distances = skfmm.distance(cur_inp[..., 0], dx=dx)
+        distances = th.from_numpy(distances.reshape(-1, 1)).to(points.device).to(points.dtype)
+        outputs.append(distances)
+    outputs = th.stack(outputs, dim=0)
+    if B == 1:
+        outputs = outputs.squeeze(0).squeeze(-1)
+    return outputs
+
+# To HSL
+
+# Rotate HSL
+# TO RGB

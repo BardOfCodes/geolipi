@@ -108,3 +108,4 @@ NULL_EXPR_TYPE = type_union[NullExpression2D, NullExpression3D]
 COLOR_MOD = type_union[ModifyColor2D, ModifyOpacity2D, ModifyColorTritone2D]
 APPLY_COLOR_TYPE = ApplyColor2D
 SVG_COMBINATORS = SVGCombinator
+UNOPT_ALPHA = AlphaToSDF2D
