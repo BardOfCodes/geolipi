@@ -356,7 +356,7 @@ class GLFunction(Function):
         resolved_args = []
         for sub_expr in self.args:
             if isinstance(sub_expr, (GLExpr, GLFunction)):
-                arg = sub_expr.tensor()
+                arg = sub_expr.tensor(dtype=dtype, device=device)
             elif isinstance(sub_expr, Symbol):
                 if sub_expr in self.lookup_table.keys():
                     arg = self.lookup_table[sub_expr].to(dtype=dtype, device=device)
