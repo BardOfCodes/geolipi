@@ -19,7 +19,7 @@ from geolipi.symbolic.resolve import resolve_macros
 from .sketcher import Sketcher
 from .utils import MODIFIER_MAP
 from .common import RECTIFY_TRANSFORM
-from .utils import INVERTED_MAP, NORMAL_MAP, ONLY_SIMPLIFY_RULES, ALL_RULES
+from .utils import INVERTED_MAP, NORMAL_MAP, ONLY_SIMPLIFY_RULES, ALL_RULES, ONLY_SIMPLIFY_RULES_CNF, ALL_RULES_CNF
 
 # Don't resolve when expression is crazy big.
 MAX_EXPR_SIZE = 500
@@ -246,7 +246,7 @@ def expr_to_graph(expression):
             cur_id = graph.add_node(node)
             parser_list.extend(cur_expr.args[::-1])
             parent_ids.extend([cur_id for x in range(len(cur_expr.args))])
-        elif isinstance(cur_expr, PrimitiveSpec):
+        elif isinstance(cur_expr, (PrimitiveSpec, PRIM_TYPE)):
             node = dict(type=type(cur_expr), expr=cur_expr)
             cur_id = graph.add_node(node)
         if not parent_id is None:
@@ -275,7 +275,7 @@ def graph_to_expr(graph):
         cur_id = parser_list.pop()
         cur_node = graph[cur_id]
         c_type = cur_node["type"]
-        if c_type == PrimitiveSpec:
+        if issubclass(c_type, (PrimitiveSpec, PRIM_TYPE)):
             prim_stack.append(cur_node["expr"])
         elif issubclass(c_type, Combinator):
             operator_stack.append(c_type)
@@ -410,6 +410,115 @@ def resolve_rule(graph, resolve_rule):
 
     return graph
 
+
+#############################################################################
+def expr_to_cnf(expression, max_expr_size=MAX_EXPR_SIZE):
+    """
+    Converts an expression to its Conjunctive Normal Form (CNF) using graph transformation rules.
+
+    Parameters:
+        expression: The expression to convert.
+        max_expr_size (int): The maximum allowed size of the expression during conversion.
+
+    Returns:
+        A sympy expression in CNF.
+    """
+    graph = expr_to_graph(expression)
+
+    while True:
+        rule_match = get_rule_match_cnf(graph, only_simplify=True)
+        if rule_match is None:
+            rule_match = get_rule_match_cnf(graph, only_simplify=False)
+            if rule_match is None:
+                break
+            else:
+                graph = resolve_rule_cnf(graph, rule_match)
+        else:
+            graph = resolve_rule_cnf(graph, rule_match)
+
+        if graph.num_nodes() > max_expr_size:
+            return expression
+
+    expression = graph_to_expr(graph)
+    return expression
+
+
+def get_rule_match_cnf(graph, only_simplify=False):
+    """
+    Identifies a rule match for CNF conversion.
+
+    Parameters:
+        graph: The graph representation of the expression.
+        only_simplify (bool): If True, only simplification rules are applied.
+
+    Returns:
+        A match if a rule can be applied, else None.
+    """
+    rule_set = ONLY_SIMPLIFY_RULES_CNF if only_simplify else ALL_RULES_CNF
+    node_ids = [0]
+
+    while node_ids:
+        cur_id = node_ids.pop()
+        cur_node = graph[cur_id]
+        c_type = cur_node["type"]
+
+        if issubclass(c_type, Combinator):
+            children = list(graph.successor_indices(cur_id))
+            node_ids.extend(children[::-1])
+
+            for child_id in children:
+                child_node = graph[child_id]
+                child_type = child_node["type"]
+                rel_sig = (c_type, child_type)
+
+                if rel_sig in rule_set:
+                    return (cur_id, child_id, rel_sig)
+
+    return None
+
+
+def resolve_rule_cnf(graph, rule):
+    """
+    Applies CNF transformation rules to the graph.
+
+    Parameters:
+        graph: The graph representing the expression.
+        rule: The matched rule to apply.
+
+    Returns:
+        The updated graph after applying the rule.
+    """
+    node_a_id, node_b_id, match_type = rule
+    node_a = graph[node_a_id]
+
+    if match_type in ONLY_SIMPLIFY_RULES_CNF:
+        # Merge nested Unions/Intersections
+        for child_id in graph.successor_indices(node_b_id):
+            graph.add_edge(node_a_id, child_id, None)
+        graph.remove_edge(node_a_id, node_b_id)
+
+    elif match_type == (Union, Intersection):
+        # Distribute Union over Intersection
+        node_a["type"] = Intersection
+        children_a = list(graph.successor_indices(node_a_id))
+        children_a_not_b = [ind for ind in children_a if ind != node_b_id]
+        children_b = list(graph.successor_indices(node_b_id))
+
+        # Remove current edges
+        for child_id in children_a:
+            graph.remove_edge(node_a_id, child_id)
+
+        # Apply distribution
+        for child_id in children_b:
+            new_node = dict(type=Union)
+            new_id = graph.add_node(new_node)
+            graph.add_edge(new_id, child_id, None)
+            for not_b_child_id in children_a_not_b:
+                graph.add_edge(new_id, not_b_child_id, None)
+            graph.add_edge(node_a_id, new_id, None)
+
+    return graph
+#############################################################################
 
 def create_compiled_expr(
     expression,

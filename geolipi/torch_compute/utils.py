@@ -200,7 +200,17 @@ ALL_RULES = set(
         (sym_comb.Intersection, sym_comb.Union),
     ]
 )
+# CNF-specific rules
+ONLY_SIMPLIFY_RULES_CNF = set([
+    (sym_comb.Intersection, sym_comb.Intersection),
+    (sym_comb.Union, sym_comb.Union)
+])
 
+ALL_RULES_CNF = set([
+    (sym_comb.Intersection, sym_comb.Intersection),
+    (sym_comb.Union, sym_comb.Union),
+    (sym_comb.Union, sym_comb.Intersection),  # Key difference: Distribute Union over Intersection
+])
 
 # use XKCD colors: https://xkcd.com/color/rgb.txt
 color_file = open(os.path.dirname(__file__) + "/xkcd_rgb.txt", "r").readlines()
