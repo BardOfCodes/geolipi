@@ -20,7 +20,7 @@ from .color import *
 
 PARAM_TYPE = type_union[np.ndarray, th.Tensor, SympyTuple, Tuple]
 # Combinators:
-COMBINATOR_TYPE = Combinator
+COMBINATOR_TYPE = type_union[Combinator]
 BASE_COMBINATORS = type_union[
     Union, Intersection, Difference, SwitchedDifference, Complement,
 ]

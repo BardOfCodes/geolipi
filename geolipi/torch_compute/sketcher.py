@@ -49,6 +49,35 @@ class Sketcher:
         self.scale_identity = th.ones(n_dims, dtype=self.dtype, device=self.device)
         self.translate_identity = th.zeros(n_dims, dtype=self.dtype, device=self.device)
 
+    def adapt_coords(self, scale, origin=None):
+        coords = self.create_coords()
+        
+        if isinstance(scale, (int, float)):
+            coords = coords * scale
+        elif isinstance(scale, (tuple, list)):
+            for i in range(self.n_dims):
+                coords[:, i] = coords[:, i] * scale[i]
+        else:
+            raise ValueError("Invalid scale value.")
+        
+        if not origin is None:
+            if isinstance(origin, (int, float)):
+                coords = coords + origin
+            elif isinstance(origin, (tuple, list)):
+                for i in range(self.n_dims):
+                    coords[:, i] = coords[:, i] + origin[i]
+            else:
+                raise ValueError("Invalid scale value.")
+            
+        self.coords = coords
+    def adapt_coords_from_bounds(self, min_xy, max_xy):
+        scale = tuple((max_xy[i] - min_xy[i]) / 2.0 for i in range(self.n_dims))
+        origin = tuple((max_xy[i] + min_xy[i]) / 2.0 for i in range(self.n_dims))
+        self.adapt_coords(scale=scale, origin=origin)
+        
+    def reset_coords(self):
+        self.adapt_coords((1.0, 1.0), (0.0, 0.0))
+        
     def get_scale_identity(self):
         """Return an identity scale matrix."""
         return self.scale_identity.clone().detach()
@@ -65,6 +94,7 @@ class Sketcher:
         canvas = th.ones_like(self.coords[..., :1]).repeat(1, 4)
         return canvas
 
+    
     def create_bound_coords(self):
         res = self.resolution
         mesh_grid_inp = [range(res),] * self.n_dims

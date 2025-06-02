@@ -247,7 +247,11 @@ class GLFunction(Function):
                 str_args.append(arg.pretty_print(tabs=tabs + 1, tab_str=tab_str))
             else:
                 if isinstance(arg, SympyTuple):
-                    item = [f"{x:.3f}" for x in arg]
+                    # Can be a tuple of tuple But can't be an empty tuple
+                    if isinstance(arg[0], SympyTuple):
+                        item = [f"({', '.join([f'{y:.3f}' for y in x])})" for x in arg]
+                    else:
+                        item = [f"{x:.3f}" for x in arg]
                     item = ", ".join(item)
                     str_args.append(f"({item})")
                 else:
@@ -340,7 +344,7 @@ class GLFunction(Function):
                     arg = self.lookup_table[sub_expr].cpu().numpy().tolist()
                     if not isinstance(arg, list):
                         arg = [arg, ]
-                    arg = tuple(arg)
+                    arg = to_nested_tuple(arg)
                 else:
                     arg = sub_expr
             elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
@@ -526,3 +530,12 @@ class PrimitiveSpec(GLFunction):
     @classmethod
     def eval(cls, prim_type: type, shift: int):
         return None
+
+
+def to_nested_tuple(obj):
+    """Recursively convert a nested list (or scalar) into nested tuples."""
+    if isinstance(obj, list):
+        return tuple(to_nested_tuple(x) for x in obj)
+    else:
+        # If it's not a list, it's typically a scalar (int/float)
+        return obj

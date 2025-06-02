@@ -184,11 +184,14 @@ INVERTED_MAP = {
     sym_comb.Union: sym_comb.Intersection,
     sym_comb.Intersection: sym_comb.Union,
     sym_comb.Difference: sym_comb.Union,
+    sym_comb.Complement: sym_comb.Complement,
+    
 }
 NORMAL_MAP = {
     sym_comb.Union: sym_comb.Union,
     sym_comb.Intersection: sym_comb.Intersection,
     sym_comb.Difference: sym_comb.Intersection,
+    sym_comb.Complement: sym_comb.Complement,
 }
 ONLY_SIMPLIFY_RULES = set(
     [(sym_comb.Intersection, sym_comb.Intersection), (sym_comb.Union, sym_comb.Union)]
