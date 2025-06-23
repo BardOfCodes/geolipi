@@ -3,7 +3,7 @@ from typing import List
 import torch as th
 from geolipi.symbolic.base_symbolic import PrimitiveSpec
 from geolipi.symbolic.types import COMBINATOR_TYPE
-from .utils import PRIMITIVE_MAP, COMBINATOR_MAP
+from .maps import PRIMITIVE_MAP, COMBINATOR_MAP
 
 
 def create_evaluation_batches(compiled_expr_list: List[object], convert_to_cuda=True):

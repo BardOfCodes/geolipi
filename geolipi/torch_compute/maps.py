@@ -80,6 +80,7 @@ PRIMITIVE_MAP = {
     sym_prim2d.NoParamTriangle2D: sdf2d_bank.sdf2d_no_param_triangle,
     sym_prim2d.NullExpression2D: sdf_op_bank.sdf_null_op,
     sym_prim2d.InstantiatedPrim2D: sdf2d_bank.nonsdf2d_instantiated_prim,
+    # These should be shifted to the other repositories - based on declarations.
     sym_prim2d.PolyLine2D: sdf2d_bank.sdf2d_polyline,
     # Tile
     sym_prim2d.TileUV2D: sdf2d_bank.nonsdf2d_tile_uv,
@@ -179,6 +180,40 @@ MODIFIER_MAP = {
     sym_t3d.Onion3D: sdf_op_bank.sdf_onion,
 }
 
+# use XKCD colors: https://xkcd.com/color/rgb.txt
+color_file = open(os.path.dirname(__file__) + "/xkcd_rgb.txt", "r").readlines()
+color_names = [x.strip().split("\t")[0].strip() for x in color_file[1:]]
+color_hexes = [x.strip().split("\t")[1].strip() for x in color_file[1:]]
+color_val = [th.tensor([matplotlib.colors.to_rgba(h)]) for h in color_hexes]
+COLOR_MAP = dict(zip(color_names, color_val))
+
+COLOR_FUNCTIONS = {
+    sym_color.DestinationAtop: color_func_bank.destination_atop,
+    sym_color.DestinationIn: color_func_bank.destination_in,
+    sym_color.DestinationOut: color_func_bank.destination_out,
+    sym_color.DestinationOver: color_func_bank.destination_over,
+    sym_color.SourceIn: color_func_bank.source_in,
+    sym_color.SourceOut: color_func_bank.source_out,
+    sym_color.SourceOver: color_func_bank.source_over,
+    sym_color.SourceAtop: color_func_bank.source_atop,
+    sym_color.SVGXOR: color_func_bank.svg_xor,
+    sym_color.SourceOverSequence: color_func_bank.source_over_seq,
+    sym_color.ApplyColor2D: color_func_bank.apply_color,
+    # These also go into Splitweave.
+    sym_color.ModifyOpacity2D: color_func_bank.modify_opacity,
+    sym_color.ModifyColor2D: color_func_bank.modify_color,
+    sym_color.ModifyColorTritone2D: color_func_bank.depreciated_modify_color_tritone,
+    sym_color.AlphaMask2D: color_func_bank.alpha_mask,
+    sym_color.RGB2HSL: colorspace_bank.rgb2hsl_torch,
+    sym_color.RGB2HSV: colorspace_bank.rgb2hsv_torch,
+    sym_color.HSV2RGB: colorspace_bank.hsv2rgb_torch,
+    sym_color.HSL2RGB: colorspace_bank.hsl2rgb_torch,
+    sym_color.HueShift: colorspace_bank.hue_shift_torch,
+    # COLOR SDF
+    sym_color.AlphaToSDF2D: color_func_bank.unopt_alpha_to_sdf,
+}
+
+
 # Used during compilation:
 INVERTED_MAP = {
     sym_comb.Union: sym_comb.Intersection,
@@ -214,35 +249,3 @@ ALL_RULES_CNF = set([
     (sym_comb.Union, sym_comb.Union),
     (sym_comb.Union, sym_comb.Intersection),  # Key difference: Distribute Union over Intersection
 ])
-
-# use XKCD colors: https://xkcd.com/color/rgb.txt
-color_file = open(os.path.dirname(__file__) + "/xkcd_rgb.txt", "r").readlines()
-color_names = [x.strip().split("\t")[0].strip() for x in color_file[1:]]
-color_hexes = [x.strip().split("\t")[1].strip() for x in color_file[1:]]
-color_val = [th.tensor([matplotlib.colors.to_rgba(h)]) for h in color_hexes]
-COLOR_MAP = dict(zip(color_names, color_val))
-
-COLOR_FUNCTIONS = {
-    sym_color.DestinationAtop: color_func_bank.destination_atop,
-    sym_color.DestinationIn: color_func_bank.destination_in,
-    sym_color.DestinationOut: color_func_bank.destination_out,
-    sym_color.DestinationOver: color_func_bank.destination_over,
-    sym_color.SourceIn: color_func_bank.source_in,
-    sym_color.SourceOut: color_func_bank.source_out,
-    sym_color.SourceOver: color_func_bank.source_over,
-    sym_color.SourceAtop: color_func_bank.source_atop,
-    sym_color.SVGXOR: color_func_bank.svg_xor,
-    sym_color.ApplyColor2D: color_func_bank.apply_color,
-    sym_color.ModifyOpacity2D: color_func_bank.modify_opacity,
-    sym_color.ModifyColor2D: color_func_bank.modify_color,
-    sym_color.SourceOverSequence: color_func_bank.source_over_seq,
-    sym_color.ModifyColorTritone2D: color_func_bank.depreciated_modify_color_tritone,
-    sym_color.AlphaMask2D: color_func_bank.alpha_mask,
-    sym_color.RGB2HSL: colorspace_bank.rgb2hsl_torch,
-    sym_color.RGB2HSV: colorspace_bank.rgb2hsv_torch,
-    sym_color.HSV2RGB: colorspace_bank.hsv2rgb_torch,
-    sym_color.HSL2RGB: colorspace_bank.hsl2rgb_torch,
-    sym_color.HueShift: colorspace_bank.hue_shift_torch,
-    # COLOR SDF
-    sym_color.AlphaToSDF2D: color_func_bank.unopt_alpha_to_sdf,
-}

@@ -2,6 +2,23 @@
 
 ![banner](assets/banner_3.png)
 
+## Update: June 22
+
+GOAL Refactor and make it more usable with ASMBLR.
+
+1. Refactor Recursive Evaluate.
+    Question: Do we need Existing Canvas? (just give the canvas as a Tile UV or something)
+  
+2. Keep only 2D and 3D SDF functions.
+    Question - what about Color? Keep it as well.
+
+3. Simple usecase:
+    Create tiny packaged shaders. Quick shader to visualize shape in Jupyternotebook?
+
+4. Link to the other libraries: ParSEL, SplitWeave, MXG, & [redacted].
+
+---
+
 GeoLIPI is a Language for modelling 2D/3D geometric objects. This is to be treated as a meta-language, from which visual programming languages can be derived. Some of the languages/visual programs that can be executed in this framework are:
 
 1. CSG 3D Variants
@@ -29,7 +46,6 @@ Mainly, GeoLIPI attempts to embed a generic visual language in python, making it
 3) Parameter Optimization of arbitrary visual programs (All operations allow differentiable optimization of its parameters). See `notebooks/parameter_optimization.ipynb`.
 4) [TBD] Help with searching programs for a desired execution (refer to our recent [paper](https://bardofcodes.github.io/coref/)).
 5) Batched PyTorch execution code for all the shader toy 2D and 3D primitives described by Inigo Quilez. See `notebooks/torch_sdf2d_example.ipynb` and `notebooks/torch_sdf3d_example.ipynb`.
-
 
 ## Installation
 
@@ -97,7 +113,7 @@ Here is an example of optimizing such expressions. Check out other examples in `
 
 ## Future TODOs
 
-1) REVL (Read-Eval-Visualize-Loop) using DearPyGui.
+1) REVL (Read-Eval-Visualize-Loop) using ASMBLR.
 2) Add DiffVG executor (for correct diff Opt of SVG)
 3) Add SDS optimization example -> Connecting it to natural language directly.
 4) Add differentiable CSG operation and draw operations (probability over types).
@@ -111,7 +127,7 @@ Here is an example of optimizing such expressions. Check out other examples in `
 
 3) What to do about numerical precision? Also SDFs are almost often not exact (after boolean operations or scaling etc.)
 
-4) Aliasing - If we want beautiful output images, we need to do something about aliasing.
+4) Aliasing - If we want beautiful output images, we need to do something about aliasing. This is supported in the SplitWeave repository.
 
 5) Which symbols should have 2D/3D explicit and which ones not? The code can be made more uniform in general.
 

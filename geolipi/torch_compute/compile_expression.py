@@ -17,9 +17,9 @@ from geolipi.symbolic.base_symbolic import PrimitiveSpec
 from geolipi.symbolic.resolve import resolve_macros
 
 from .sketcher import Sketcher
-from .utils import MODIFIER_MAP
+from .maps import MODIFIER_MAP
 from .common import RECTIFY_TRANSFORM
-from .utils import INVERTED_MAP, NORMAL_MAP, ONLY_SIMPLIFY_RULES, ALL_RULES, ONLY_SIMPLIFY_RULES_CNF, ALL_RULES_CNF
+from .maps import INVERTED_MAP, NORMAL_MAP, ONLY_SIMPLIFY_RULES, ALL_RULES, ONLY_SIMPLIFY_RULES_CNF, ALL_RULES_CNF
 
 # Don't resolve when expression is crazy big.
 MAX_EXPR_SIZE = 500
