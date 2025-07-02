@@ -1,5 +1,6 @@
 
 from .base import GLFunction
+from .registry import register_symbol
 
 class Combinator(GLFunction):
     """
@@ -7,6 +8,7 @@ class Combinator(GLFunction):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class Union(Combinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -15,6 +17,7 @@ class Union(Combinator):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class JoinUnion(Union):
     """
     This class is specifically for Blender evaluator. In torch_compute, it is the same as Union.
@@ -24,6 +27,7 @@ class JoinUnion(Union):
     Read Blender evaluator specific documentation for more.
     """
 
+@register_symbol
 class Intersection(Combinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -32,6 +36,7 @@ class Intersection(Combinator):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class Complement(Combinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -39,6 +44,7 @@ class Complement(Combinator):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class Difference(Combinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -47,6 +53,7 @@ class Difference(Combinator):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class SwitchedDifference(Combinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -54,6 +61,7 @@ class SwitchedDifference(Combinator):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class SmoothUnion(Combinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -61,6 +69,7 @@ class SmoothUnion(Combinator):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class SmoothIntersection(Combinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -68,6 +77,7 @@ class SmoothIntersection(Combinator):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class SmoothDifference(Combinator):
     """
     This class is mapped to the following evaluator function(s):

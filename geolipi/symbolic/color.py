@@ -1,5 +1,5 @@
 from .base import GLFunction
-
+from .registry import register_symbol
 
 class SVGCombinator(GLFunction):
     """
@@ -7,6 +7,7 @@ class SVGCombinator(GLFunction):
     """
 
 
+@register_symbol
 class DestinationIn(SVGCombinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -15,6 +16,7 @@ class DestinationIn(SVGCombinator):
     """
 
 
+@register_symbol
 class DestinationOut(SVGCombinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -23,6 +25,7 @@ class DestinationOut(SVGCombinator):
     """
 
 
+@register_symbol
 class DestinationOver(SVGCombinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -31,6 +34,7 @@ class DestinationOver(SVGCombinator):
     """
 
 
+@register_symbol
 class DestinationAtop(SVGCombinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -39,6 +43,7 @@ class DestinationAtop(SVGCombinator):
     """
 
 
+@register_symbol
 class SourceIn(SVGCombinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -47,6 +52,7 @@ class SourceIn(SVGCombinator):
     """
 
 
+@register_symbol
 class SourceOut(SVGCombinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -55,6 +61,7 @@ class SourceOut(SVGCombinator):
     """
 
 
+@register_symbol
 class SourceOver(SVGCombinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -63,6 +70,7 @@ class SourceOver(SVGCombinator):
     """
 
 
+@register_symbol
 class SourceAtop(SVGCombinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -71,6 +79,7 @@ class SourceAtop(SVGCombinator):
     """
 
 
+@register_symbol
 class SVGXOR(SVGCombinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -86,6 +95,7 @@ class ColorModifier2D(GLFunction):
     """
 
 
+@register_symbol
 class ApplyColor2D(ColorModifier2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -93,6 +103,7 @@ class ApplyColor2D(ColorModifier2D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class ModifyOpacity2D(ColorModifier2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -101,6 +112,7 @@ class ModifyOpacity2D(ColorModifier2D):
     """
 
 
+@register_symbol
 class ModifyColor2D(ColorModifier2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -108,11 +120,13 @@ class ModifyColor2D(ColorModifier2D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class ModifyColorTritone2D(ColorModifier2D):
     """
     This is used to recolor tiles.
     """
 
+@register_symbol
 class SourceOverSequence(SVGCombinator):
     """
     This class is mapped to the following evaluator function(s):
@@ -120,6 +134,7 @@ class SourceOverSequence(SVGCombinator):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class AlphaMask2D(SVGCombinator):
     """
     Gather the alpha mask from a SVG eval output.
@@ -127,6 +142,7 @@ class AlphaMask2D(SVGCombinator):
 
 
 
+@register_symbol
 class AlphaToSDF2D(GLFunction):
     """
     This class is mapped to the following evaluator function(s):
@@ -134,6 +150,7 @@ class AlphaToSDF2D(GLFunction):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class RGB2HSL(AlphaToSDF2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -141,6 +158,7 @@ class RGB2HSL(AlphaToSDF2D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class RGB2HSV(AlphaToSDF2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -148,6 +166,7 @@ class RGB2HSV(AlphaToSDF2D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class HSV2RGB(AlphaToSDF2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -155,6 +174,7 @@ class HSV2RGB(AlphaToSDF2D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class HSL2RGB(AlphaToSDF2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -163,6 +183,7 @@ class HSL2RGB(AlphaToSDF2D):
     """
 
 
+@register_symbol
 class HueShift(AlphaToSDF2D):
     """
     This class is mapped to the following evaluator function(s):

@@ -2,14 +2,16 @@ import torch as th
 from sympy import Tuple as SympyTuple
 from .base import GLExpr, GLFunction
 from .primitives_higher import LinearExtrude3D, QuadraticBezierExtrude3D
+from .registry import register_symbol
 
-
+@register_symbol
 class Point3D(GLFunction):
     """
     Class for defining 3D points. Used for attachment operators.
     """
 
 
+@register_symbol
 class PointRef(GLFunction):
     """
     This function is used to create reference to parameterized attachment points.

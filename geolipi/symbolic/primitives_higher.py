@@ -1,10 +1,10 @@
 from .base import GLFunction
-
+from .registry import register_symbol
 
 class HigherOrderPrimitives3D(GLFunction):
     """Functions for declaring higher order Primitives."""
 
-
+@register_symbol
 class Revolution3D(HigherOrderPrimitives3D):
 
     """
@@ -14,6 +14,7 @@ class Revolution3D(HigherOrderPrimitives3D):
     """
 
 
+@register_symbol
 class CurvePrimitive3D(HigherOrderPrimitives3D):
 
     """
@@ -21,6 +22,7 @@ class CurvePrimitive3D(HigherOrderPrimitives3D):
     """
 
 
+@register_symbol
 class SimpleExtrusion3D(CurvePrimitive3D):
 
     """
@@ -30,6 +32,7 @@ class SimpleExtrusion3D(CurvePrimitive3D):
     """
 
 
+@register_symbol
 class LinearExtrude3D(CurvePrimitive3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -38,6 +41,7 @@ class LinearExtrude3D(CurvePrimitive3D):
     """
 
 
+@register_symbol
 class QuadraticBezierExtrude3D(CurvePrimitive3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -46,6 +50,7 @@ class QuadraticBezierExtrude3D(CurvePrimitive3D):
     """
 
 
+@register_symbol
 class PolyQuadBezierExtrude3D(CurvePrimitive3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -54,6 +59,7 @@ class PolyQuadBezierExtrude3D(CurvePrimitive3D):
     """
 
 
+@register_symbol
 class CubicBezierExtrude3D(CurvePrimitive3D):
     """
     # Ref: https://www.shadertoy.com/view/4sKyzW
@@ -71,7 +77,7 @@ class Primitive1D(GLFunction):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class LinearCurve1D(Primitive1D):
     """
     This class is mapped to the following evaluator function(s):
@@ -79,7 +85,7 @@ class LinearCurve1D(Primitive1D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class QuadraticCurve1D(Primitive1D):
     """
     This class is mapped to the following evaluator function(s):
@@ -87,7 +93,7 @@ class QuadraticCurve1D(Primitive1D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class PolyStraightLineCurve1D(Primitive1D):
     """
     This class is mapped to the following evaluator function(s):

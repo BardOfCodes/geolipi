@@ -1,5 +1,5 @@
 from .base import GLFunction
-
+from .registry import register_symbol
 
 class Modifier3D(GLFunction):
     """Base Class for all 3D modifiers."""
@@ -20,7 +20,7 @@ class Macro3D(Modifier3D):
 class SDFModifier3D(Modifier3D):
     """Base Class for all 3D SDF modifiers."""
 
-
+@register_symbol
 class Translate3D(Transform3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -28,7 +28,7 @@ class Translate3D(Transform3D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class EulerRotate3D(Transform3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -36,6 +36,7 @@ class EulerRotate3D(Transform3D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class AxisAngleRotate3D(Transform3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -43,6 +44,7 @@ class AxisAngleRotate3D(Transform3D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class RotateMatrix3D(Transform3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -50,6 +52,7 @@ class RotateMatrix3D(Transform3D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class Scale3D(Transform3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -57,7 +60,7 @@ class Scale3D(Transform3D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class QuaternionRotate3D(Transform3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -65,7 +68,7 @@ class QuaternionRotate3D(Transform3D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class Rotate5D(Transform3D):
     """
     # For Continuous optimization of rotation
@@ -76,7 +79,7 @@ class Rotate5D(Transform3D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class Rotate6D(Transform3D):
     """
     # For Continuous optimization of rotation
@@ -87,7 +90,7 @@ class Rotate6D(Transform3D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class Rotate9D(Transform3D):
     """
     # For Continuous optimization of rotation
@@ -98,7 +101,7 @@ class Rotate9D(Transform3D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class Shear3D(Transform3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -106,7 +109,7 @@ class Shear3D(Transform3D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class Distort3D(PositionalTransform3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -114,7 +117,7 @@ class Distort3D(PositionalTransform3D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class Twist3D(PositionalTransform3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -122,7 +125,7 @@ class Twist3D(PositionalTransform3D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class Bend3D(PositionalTransform3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -130,7 +133,7 @@ class Bend3D(PositionalTransform3D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class ReflectCoords3D(Transform3D):
     """
     Simply reflects the coordinates about the origin, w.r.t. the normal vector specified by param.
@@ -139,78 +142,78 @@ class ReflectCoords3D(Transform3D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class Reflect3D(Macro3D):
     """
     Performs union of canvas and its reflection about the origin,
     with the reflection plane's normal vector specified by param.
     """
 
-
+@register_symbol
 class ReflectX3D(Reflect3D):
     """Macro for reflecting about X axis."""
 
-
+@register_symbol
 class ReflectY3D(ReflectX3D):
     """Macro for reflecting about Y axis."""
 
-
+@register_symbol
 class ReflectZ3D(ReflectY3D):
     """Macro for reflecting about Z axis."""
 
-
+@register_symbol
 class AxialReflect3D(Reflect3D):
     """Macro for reflecting about a specified axis."""
 
-
+@register_symbol
 class TranslationSymmetry3D(Macro3D):
     """Performs union of canvas and its translation by param."""
 
-
+@register_symbol
 class AxialTranslationSymmetry3D(TranslationSymmetry3D):
     """Performs union of canvas and its translation by param along a specified axis."""
 
-
+@register_symbol
 class TranslationSymmetryX3D(TranslationSymmetry3D):
     """Performs union of canvas and its translation by param along X axis."""
 
-
+@register_symbol
 class TranslationSymmetryY3D(TranslationSymmetryX3D):
     """Performs union of canvas and its translation by param along Y axis."""
 
-
+@register_symbol
 class TranslationSymmetryZ3D(TranslationSymmetryY3D):
     """Performs union of canvas and its translation by param along Z axis."""
 
-
+@register_symbol
 class RotationSymmetry3D(Macro3D):
     """Performs union of canvas and its rotation by param."""
 
-
+@register_symbol
 class AxialRotationSymmetry3D(RotationSymmetry3D):
     """Performs union of canvas and its rotation by param around a specified axis."""
 
-
+@register_symbol
 class RotationSymmetryX3D(RotationSymmetry3D):
     """Performs union of canvas and its rotation by param around X axis."""
 
-
+@register_symbol
 class RotationSymmetryY3D(RotationSymmetryX3D):
     """Performs union of canvas and its rotation by param around Y axis."""
 
-
+@register_symbol
 class RotationSymmetryZ3D(RotationSymmetryY3D):
     """Performs union of canvas and its rotation by param around Z axis."""
 
-
+@register_symbol
 class ScaleSymmetry3D(Macro3D):
     """Performs union of canvas and its scaling by param."""
 
-
+@register_symbol
 class AxialScaleSymmetry3D(ScaleSymmetry3D):
     """Performs union of canvas and its scaling by param along a specified axis."""
 
-
+@register_symbol
 class Dilate3D(SDFModifier3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -218,7 +221,7 @@ class Dilate3D(SDFModifier3D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class Erode3D(SDFModifier3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -226,7 +229,7 @@ class Erode3D(SDFModifier3D):
     Read evaluator specific documentation for more.
     """
 
-
+@register_symbol
 class Onion3D(SDFModifier3D):
     """
     This class is mapped to the following evaluator function(s):

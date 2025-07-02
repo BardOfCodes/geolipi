@@ -1,6 +1,7 @@
 from .base import GLExpr, GLFunction
 from sympy import Tuple as SympyTuple
 import sympy as sp
+from .registry import register_symbol
 
 class Primitive3D(GLFunction):
     """Functions for declaring 3D primitives."""
@@ -34,7 +35,7 @@ class Primitive3D(GLFunction):
             final = f"{self.func.__name__}()"
         return final
 
-
+@register_symbol
 class Sphere3D(Primitive3D):
     """
     This class is mapped to the following evaluator function(s):
@@ -43,6 +44,7 @@ class Sphere3D(Primitive3D):
     """
 
 
+@register_symbol
 class Box3D(Primitive3D):
 
     """
@@ -52,6 +54,7 @@ class Box3D(Primitive3D):
     """
 
 
+@register_symbol
 class Cuboid3D(Box3D):
 
     """
@@ -61,6 +64,7 @@ class Cuboid3D(Box3D):
     """
 
 
+@register_symbol
 class RoundedBox3D(Primitive3D):
 
     """
@@ -70,6 +74,7 @@ class RoundedBox3D(Primitive3D):
     """
 
 
+@register_symbol
 class BoxFrame3D(Primitive3D):
 
     """
@@ -79,6 +84,7 @@ class BoxFrame3D(Primitive3D):
     """
 
 
+@register_symbol
 class Torus3D(Primitive3D):
 
     """
@@ -88,6 +94,7 @@ class Torus3D(Primitive3D):
     """
 
 
+@register_symbol
 class CappedTorus3D(Primitive3D):
 
     """
@@ -97,6 +104,7 @@ class CappedTorus3D(Primitive3D):
     """
 
 
+@register_symbol
 class Link3D(Primitive3D):
 
     """
@@ -106,6 +114,7 @@ class Link3D(Primitive3D):
     """
 
 
+@register_symbol
 class InfiniteCylinder3D(Primitive3D):
 
     """
@@ -115,6 +124,7 @@ class InfiniteCylinder3D(Primitive3D):
     """
 
 
+@register_symbol
 class Cone3D(Primitive3D):
 
     """
@@ -124,6 +134,7 @@ class Cone3D(Primitive3D):
     """
 
 
+@register_symbol
 class InexactCone3D(Primitive3D):
 
     """
@@ -133,6 +144,7 @@ class InexactCone3D(Primitive3D):
     """
 
 
+@register_symbol
 class InfiniteCone3D(Primitive3D):
 
     """
@@ -143,6 +155,7 @@ class InfiniteCone3D(Primitive3D):
     """
 
 
+@register_symbol
 class Plane3D(Primitive3D):
 
     """
@@ -152,6 +165,7 @@ class Plane3D(Primitive3D):
     """
 
 
+@register_symbol
 class HexPrism3D(Primitive3D):
 
     """
@@ -161,6 +175,7 @@ class HexPrism3D(Primitive3D):
     """
 
 
+@register_symbol
 class TriPrism3D(Primitive3D):
 
     """
@@ -170,6 +185,7 @@ class TriPrism3D(Primitive3D):
     """
 
 
+@register_symbol
 class Capsule3D(Primitive3D):
 
     """
@@ -179,6 +195,7 @@ class Capsule3D(Primitive3D):
     """
 
 
+@register_symbol
 class VerticalCapsule3D(Primitive3D):
 
     """
@@ -188,6 +205,7 @@ class VerticalCapsule3D(Primitive3D):
     """
 
 
+@register_symbol
 class VerticalCappedCylinder3D(Primitive3D):
 
     """
@@ -197,6 +215,7 @@ class VerticalCappedCylinder3D(Primitive3D):
     """
 
 
+@register_symbol
 class CappedCylinder3D(Primitive3D):
 
     """
@@ -206,6 +225,7 @@ class CappedCylinder3D(Primitive3D):
     """
 
 
+@register_symbol
 class Cylinder3D(CappedCylinder3D):
 
     """
@@ -215,6 +235,7 @@ class Cylinder3D(CappedCylinder3D):
     """
 
 
+@register_symbol
 class ArbitraryCappedCylinder3D(Primitive3D):
 
     """
@@ -224,6 +245,7 @@ class ArbitraryCappedCylinder3D(Primitive3D):
     """
 
 
+@register_symbol
 class RoundedCylinder3D(Primitive3D):
 
     """
@@ -233,6 +255,7 @@ class RoundedCylinder3D(Primitive3D):
     """
 
 
+@register_symbol
 class CappedCone3D(Primitive3D):
 
     """
@@ -242,6 +265,7 @@ class CappedCone3D(Primitive3D):
     """
 
 
+@register_symbol
 class ArbitraryCappedCone(Primitive3D):
 
     """
@@ -251,6 +275,7 @@ class ArbitraryCappedCone(Primitive3D):
     """
 
 
+@register_symbol
 class SolidAngle3D(Primitive3D):
 
     """
@@ -260,6 +285,7 @@ class SolidAngle3D(Primitive3D):
     """
 
 
+@register_symbol
 class CutSphere3D(Primitive3D):
 
     """
@@ -269,6 +295,7 @@ class CutSphere3D(Primitive3D):
     """
 
 
+@register_symbol
 class CutHollowSphere(Primitive3D):
 
     """
@@ -278,6 +305,7 @@ class CutHollowSphere(Primitive3D):
     """
 
 
+@register_symbol
 class DeathStar3D(Primitive3D):
 
     """
@@ -287,6 +315,7 @@ class DeathStar3D(Primitive3D):
     """
 
 
+@register_symbol
 class RoundCone3D(Primitive3D):
 
     """
@@ -296,6 +325,7 @@ class RoundCone3D(Primitive3D):
     """
 
 
+@register_symbol
 class ArbitraryRoundCone3D(Primitive3D):
 
     """
@@ -305,6 +335,7 @@ class ArbitraryRoundCone3D(Primitive3D):
     """
 
 
+@register_symbol
 class InexactEllipsoid3D(Primitive3D):
 
     """
@@ -314,6 +345,7 @@ class InexactEllipsoid3D(Primitive3D):
     """
 
 
+@register_symbol
 class RevolvedVesica3D(Primitive3D):
 
     """
@@ -323,6 +355,7 @@ class RevolvedVesica3D(Primitive3D):
     """
 
 
+@register_symbol
 class Rhombus3D(Primitive3D):
 
     """
@@ -332,6 +365,7 @@ class Rhombus3D(Primitive3D):
     """
 
 
+@register_symbol
 class Octahedron3D(Primitive3D):
 
     """
@@ -341,6 +375,7 @@ class Octahedron3D(Primitive3D):
     """
 
 
+@register_symbol
 class InexactOctahedron3D(Primitive3D):
 
     """
@@ -350,6 +385,7 @@ class InexactOctahedron3D(Primitive3D):
     """
 
 
+@register_symbol
 class Pyramid3D(Primitive3D):
 
     """
@@ -359,6 +395,7 @@ class Pyramid3D(Primitive3D):
     """
 
 
+@register_symbol
 class Triangle3D(Primitive3D):
 
     """
@@ -368,6 +405,7 @@ class Triangle3D(Primitive3D):
     """
 
 
+@register_symbol
 class Quadrilateral3D(Primitive3D):
 
     """
@@ -377,6 +415,7 @@ class Quadrilateral3D(Primitive3D):
     """
 
 
+@register_symbol
 class NoParamCuboid3D(Primitive3D):
 
     """
@@ -387,6 +426,7 @@ class NoParamCuboid3D(Primitive3D):
     """
 
 
+@register_symbol
 class NoParamSphere3D(Primitive3D):
 
     """
@@ -397,6 +437,7 @@ class NoParamSphere3D(Primitive3D):
     """
 
 
+@register_symbol
 class NoParamCylinder3D(Primitive3D):
 
     """
@@ -407,6 +448,7 @@ class NoParamCylinder3D(Primitive3D):
     """
 
 
+@register_symbol
 class InexactSuperQuadrics3D(Primitive3D):
 
     """
@@ -416,6 +458,7 @@ class InexactSuperQuadrics3D(Primitive3D):
     """
 
 
+@register_symbol
 class InexactAnisotropicGaussian3D(Primitive3D):
 
     """
@@ -425,6 +468,7 @@ class InexactAnisotropicGaussian3D(Primitive3D):
     """
 
 
+@register_symbol
 class PreBakedPrimitive3D(Primitive3D):
 
     """
@@ -434,6 +478,7 @@ class PreBakedPrimitive3D(Primitive3D):
     """
 
 
+@register_symbol
 class NullExpression3D(Primitive3D):
 
     """

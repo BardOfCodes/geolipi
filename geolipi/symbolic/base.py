@@ -19,6 +19,7 @@ from sympy.core.operations import AssocOp
 
 SYMPY_TYPES = (SympyTuple, SympyInteger, SympyFloat, SympyBoolean, SympyFC)
 SYMPY_ARG_TYPES = (Symbol, SympyTuple, SympyInteger, SympyFloat, SympyBoolean)
+from .registry import SYMBOL_REGISTRY
 
 # Shared magic methods to be supported by both GLExpr and GLFunction
 MAGIC_METHODS = [
@@ -382,11 +383,11 @@ class GLBase:
     def __str__(self, order="INFIX", with_lookup=True,*args, **kwargs):
         raise NotImplementedError
 
-    def __getstate__(self):
+    def state(self):
         tensor_lookup = {}
         for arg in self.args:
             if isinstance(arg, GLBase):
-                arg_state = arg.__getstate__()
+                arg_state = arg.state()
                 arg_lookup = arg_state["symbol_tensor_map"]
                 tensor_lookup.update(arg_lookup)
             elif isinstance(arg, sp.Symbol):
@@ -399,20 +400,23 @@ class GLBase:
         }
         return state
         
-    def __setstate__(self, state):
+    @classmethod
+    def from_state(cls, state):
         expr_str = state["expr_str"]
         tensor_lookup = state["symbol_tensor_map"]
 
         # Step 1: evaluate the symbolic expression (we assume all classes/functions are available)
-        expr = eval(expr_str, globals())
+        global_dict = {'sp': sp, 'th': th, 'torch': th}
+        global_dict.update(SYMBOL_REGISTRY)
+        expr = eval(expr_str, global_dict)
 
         # Step 2: recursively inject tensors wherever the symbol appears
         def inject(expr):
             if isinstance(expr, GLFunction):
                 new_args = []
                 for arg in expr.args:
-                    if isinstance(arg, sp.Symbol) and str(arg) in tensor_lookup:
-                        new_args.append(tensor_lookup[str(arg)])
+                    if isinstance(arg, sp.Symbol) and arg in tensor_lookup:
+                        new_args.append(tensor_lookup[arg])
                     elif isinstance(arg, GLBase):
                         new_args.append(inject(arg))
                     else:
@@ -440,8 +444,7 @@ class GLBase:
 
         rebuilt_expr = inject(expr)
 
-        # Step 3: overwrite this instance with rebuilt one
-        self.__dict__.update(rebuilt_expr.__dict__)
+        return rebuilt_expr
 
     @classmethod
     def _should_evalf(cls, arg):
@@ -540,7 +543,10 @@ class GLFunction(Function, GLBase):
             if isinstance(arg, GLBase):
                 str_args.append(arg.__str__(order=order, with_lookup=with_lookup))  # type: ignore
             else:
-                str_args.append(str(arg))
+                if isinstance(arg, sp.Symbol):
+                    str_args.append(f"'{arg.name}'")
+                else:
+                    str_args.append(str(arg))
         return f"{self.func.__name__}({', '.join(str_args)})"
 
 

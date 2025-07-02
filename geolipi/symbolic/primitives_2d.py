@@ -1,6 +1,7 @@
 from .base import GLExpr, GLFunction
 import sympy as sp
 from sympy import Tuple as SympyTuple
+from .registry import register_symbol
 
 class Primitive2D(GLFunction):
     """Functions for declaring 2D primitives."""
@@ -35,6 +36,7 @@ class Primitive2D(GLFunction):
         return final
 
 
+@register_symbol
 class Circle2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -43,6 +45,7 @@ class Circle2D(Primitive2D):
     """
 
 
+@register_symbol
 class RoundedBox2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -51,6 +54,7 @@ class RoundedBox2D(Primitive2D):
     """
 
 
+@register_symbol
 class Box2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -59,6 +63,7 @@ class Box2D(Primitive2D):
     """
 
 
+@register_symbol
 class Rectangle2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -67,6 +72,7 @@ class Rectangle2D(Primitive2D):
     """
 
 
+@register_symbol
 class OrientedBox2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -75,6 +81,7 @@ class OrientedBox2D(Primitive2D):
     """
 
 
+@register_symbol
 class Rhombus2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -83,6 +90,7 @@ class Rhombus2D(Primitive2D):
     """
 
 
+@register_symbol
 class Trapezoid2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -91,6 +99,7 @@ class Trapezoid2D(Primitive2D):
     """
 
 
+@register_symbol
 class Parallelogram2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -99,6 +108,7 @@ class Parallelogram2D(Primitive2D):
     """
 
 
+@register_symbol
 class EquilateralTriangle2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -107,6 +117,7 @@ class EquilateralTriangle2D(Primitive2D):
     """
 
 
+@register_symbol
 class IsoscelesTriangle2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -115,6 +126,7 @@ class IsoscelesTriangle2D(Primitive2D):
     """
 
 
+@register_symbol
 class Triangle2D(Primitive2D):
 
     """
@@ -124,6 +136,7 @@ class Triangle2D(Primitive2D):
     """
 
 
+@register_symbol
 class UnevenCapsule2D(Primitive2D):
 
     """
@@ -133,6 +146,7 @@ class UnevenCapsule2D(Primitive2D):
     """
 
 
+@register_symbol
 class RegularPentagon2D(Primitive2D):
 
     """
@@ -142,6 +156,7 @@ class RegularPentagon2D(Primitive2D):
     """
 
 
+@register_symbol
 class RegularHexagon2D(Primitive2D):
 
     """
@@ -151,6 +166,7 @@ class RegularHexagon2D(Primitive2D):
     """
 
 
+@register_symbol
 class RegularOctagon2D(Primitive2D):
 
     """
@@ -160,6 +176,7 @@ class RegularOctagon2D(Primitive2D):
     """
 
 
+@register_symbol
 class Hexagram2D(Primitive2D):
 
     """
@@ -169,6 +186,7 @@ class Hexagram2D(Primitive2D):
     """
 
 
+@register_symbol
 class Star2D(Primitive2D):
 
     """
@@ -178,6 +196,7 @@ class Star2D(Primitive2D):
     """
 
 
+@register_symbol
 class RegularStar2D(Primitive2D):
 
     """
@@ -187,6 +206,7 @@ class RegularStar2D(Primitive2D):
     """
 
 
+@register_symbol
 class Pie2D(Primitive2D):
 
     """
@@ -196,6 +216,7 @@ class Pie2D(Primitive2D):
     """
 
 
+@register_symbol
 class CutDisk2D(Primitive2D):
 
     """
@@ -205,6 +226,7 @@ class CutDisk2D(Primitive2D):
     """
 
 
+@register_symbol
 class Arc2D(Primitive2D):
 
     """
@@ -214,6 +236,7 @@ class Arc2D(Primitive2D):
     """
 
 
+@register_symbol
 class HorseShoe2D(Primitive2D):
 
     """
@@ -223,6 +246,7 @@ class HorseShoe2D(Primitive2D):
     """
 
 
+@register_symbol
 class Vesica2D(Primitive2D):
 
     """
@@ -232,6 +256,7 @@ class Vesica2D(Primitive2D):
     """
 
 
+@register_symbol
 class OrientedVesica2D(Primitive2D):
 
     """
@@ -241,6 +266,7 @@ class OrientedVesica2D(Primitive2D):
     """
 
 
+@register_symbol
 class Moon2D(Primitive2D):
 
     """
@@ -250,6 +276,7 @@ class Moon2D(Primitive2D):
     """
 
 
+@register_symbol
 class RoundedCross2D(Primitive2D):
 
     """
@@ -259,6 +286,7 @@ class RoundedCross2D(Primitive2D):
     """
 
 
+@register_symbol
 class Egg2D(Primitive2D):
 
     """
@@ -268,6 +296,7 @@ class Egg2D(Primitive2D):
     """
 
 
+@register_symbol
 class Heart2D(Primitive2D):
 
     """
@@ -277,6 +306,7 @@ class Heart2D(Primitive2D):
     """
 
 
+@register_symbol
 class Cross2D(Primitive2D):
 
     """
@@ -286,6 +316,7 @@ class Cross2D(Primitive2D):
     """
 
 
+@register_symbol
 class RoundedX2D(Primitive2D):
 
     """
@@ -295,6 +326,7 @@ class RoundedX2D(Primitive2D):
     """
 
 
+@register_symbol
 class Polygon2D(Primitive2D):
 
     """
@@ -304,6 +336,7 @@ class Polygon2D(Primitive2D):
     """
 
 
+@register_symbol
 class Ellipse2D(Primitive2D):
 
     """
@@ -313,6 +346,7 @@ class Ellipse2D(Primitive2D):
     """
 
 
+@register_symbol
 class Parabola2D(Primitive2D):
 
     """
@@ -322,6 +356,7 @@ class Parabola2D(Primitive2D):
     """
 
 
+@register_symbol
 class ParabolaSegment2D(Primitive2D):
 
     """
@@ -331,6 +366,7 @@ class ParabolaSegment2D(Primitive2D):
     """
 
 
+@register_symbol
 class BlobbyCross2D(Primitive2D):
 
     """
@@ -340,6 +376,7 @@ class BlobbyCross2D(Primitive2D):
     """
 
 
+@register_symbol
 class Tunnel2D(Primitive2D):
 
     """
@@ -349,6 +386,7 @@ class Tunnel2D(Primitive2D):
     """
 
 
+@register_symbol
 class Stairs2D(Primitive2D):
 
     """
@@ -358,6 +396,7 @@ class Stairs2D(Primitive2D):
     """
 
 
+@register_symbol
 class QuadraticCircle2D(Primitive2D):
 
     """
@@ -367,6 +406,7 @@ class QuadraticCircle2D(Primitive2D):
     """
 
 
+@register_symbol
 class CoolS2D(Primitive2D):
 
     """
@@ -376,6 +416,7 @@ class CoolS2D(Primitive2D):
     """
 
 
+@register_symbol
 class CircleWave2D(Primitive2D):
 
     """
@@ -385,6 +426,7 @@ class CircleWave2D(Primitive2D):
     """
 
 
+@register_symbol
 class Hyperbola2D(Primitive2D):
 
     """
@@ -394,6 +436,7 @@ class Hyperbola2D(Primitive2D):
     """
 
 
+@register_symbol
 class QuadraticBezierCurve2D(Primitive2D):
 
     """
@@ -403,6 +446,7 @@ class QuadraticBezierCurve2D(Primitive2D):
     """
 
 
+@register_symbol
 class Segment2D(Primitive2D):
 
     """
@@ -412,6 +456,7 @@ class Segment2D(Primitive2D):
     """
 
 
+@register_symbol
 class NoParamRectangle2D(Primitive2D):
 
     """
@@ -421,6 +466,7 @@ class NoParamRectangle2D(Primitive2D):
     """
 
 
+@register_symbol
 class NoParamCircle2D(Primitive2D):
 
     """
@@ -430,6 +476,7 @@ class NoParamCircle2D(Primitive2D):
     """
 
 
+@register_symbol
 class NoParamTriangle2D(Primitive2D):
 
     """
@@ -439,6 +486,7 @@ class NoParamTriangle2D(Primitive2D):
     """
 
 
+@register_symbol
 class NullExpression2D(Primitive2D):
 
     """
@@ -447,6 +495,7 @@ class NullExpression2D(Primitive2D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class TileUV2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -457,6 +506,7 @@ class TileUV2D(Primitive2D):
 ### THese are not really SDFS
 
 
+@register_symbol
 class SinRepeatX2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -464,6 +514,7 @@ class SinRepeatX2D(Primitive2D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class SinRepeatY2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -471,6 +522,7 @@ class SinRepeatY2D(Primitive2D):
     Read evaluator specific documentation for more.
     """ 
     
+@register_symbol
 class SinAlongAxisY2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -478,6 +530,7 @@ class SinAlongAxisY2D(Primitive2D):
     Read evaluator specific documentation for more.
     """ 
     
+@register_symbol
 class SinDiagonal2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -485,6 +538,7 @@ class SinDiagonal2D(Primitive2D):
     Read evaluator specific documentation for more.
     """ 
 
+@register_symbol
 class SinDiagonalFlip2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -492,12 +546,15 @@ class SinDiagonalFlip2D(Primitive2D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class SinRadial2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
     - torch_compute.primitives_2d.sdf2d_sin_radial
     Read evaluator specific documentation for more.
     """
+
+@register_symbol
 class SquiggleX2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -505,12 +562,15 @@ class SquiggleX2D(Primitive2D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class SquiggleY2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
     - torch_compute.primitives_2d.sdf2d_squiggle
     Read evaluator specific documentation for more.
     """
+
+@register_symbol
 class SquiggleDiagonal2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -518,6 +578,7 @@ class SquiggleDiagonal2D(Primitive2D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class SquiggleDiagonalFlip2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -525,6 +586,7 @@ class SquiggleDiagonalFlip2D(Primitive2D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class SquiggleRadial2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -532,6 +594,7 @@ class SquiggleRadial2D(Primitive2D):
     Read evaluator specific documentation for more.
     """
     
+@register_symbol
 class SquiggleDistortion2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -539,6 +602,7 @@ class SquiggleDistortion2D(Primitive2D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class InstantiatedPrim2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -546,6 +610,7 @@ class InstantiatedPrim2D(Primitive2D):
     Read evaluator specific documentation for more.
     """
 
+@register_symbol
 class PolyLine2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
