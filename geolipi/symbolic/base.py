@@ -19,71 +19,59 @@ from sympy.core.operations import AssocOp
 SYMPY_TYPES = (SympyTuple, SympyInteger, SympyFloat, SympyBoolean, SympyFC)
 SYMPY_ARG_TYPES = (Symbol, SympyTuple, SympyInteger, SympyFloat, SympyBoolean)
 
-
-def magic_method_decorator(cls):
-    magic_methods = [
-        "__add__",
-        "__sub__",
-        "__mul__",
-        "__truediv__",
-        "__pow__",
-    ]  # extend this list as needed
-
-    def make_magic_method(magic):
-        def method(self, other):
-            base_method = getattr(Expr, magic)
-
-            if isinstance(other, GLExpr):
-                merged_lookup_table = {**self.lookup_table, **other.lookup_table}
-                return GLExpr(base_method(self.expr, other.expr), merged_lookup_table)
-            if isinstance(other, GLFunction):
-                merged_lookup_table = {**self.lookup_table, **other.lookup_table}
-                return GLExpr(base_method(self.expr, other), merged_lookup_table)
-            else:
-                return GLExpr(base_method(self.expr, other), self.lookup_table)
-
-        return method
-
-    for magic in magic_methods:
-        setattr(cls, magic, make_magic_method(magic))
-
-    return cls
+# Shared magic methods to be supported by both GLExpr and GLFunction
+MAGIC_METHODS = [
+    "__add__",
+    "__sub__",
+    "__mul__",
+    "__truediv__",
+    "__pow__",
+    "__radd__",
+    "__rsub__",
+    "__rmul__",
+    "__rtruediv__",
+    "__rpow__",
+]
 
 
-def magic_method_decorator_for_function(cls):
-    magic_methods = [
-        "__add__",
-        "__sub__",
-        "__mul__",
-        "__truediv__",
-        "__pow__",
-    ]  # extend this list as needed
+def magic_method_decorator(base_class=Expr):
+    """
+    Decorates a class with binary magic methods for symbolic combination.
+    Works for both GLExpr and GLFunction.
 
-    def make_magic_method(magic):
-        base_method = getattr(Function, magic)
+    Args:
+        base_class: The symbolic class whose methods to use (Expr or Function).
+    """
+    def decorator(cls):
+        def make_magic_method(magic):
+            base_method = getattr(base_class, magic)
 
-        def method(self, other):
-            if isinstance(other, GLExpr):
-                new_expr = base_method(self, other.expr)
-                merged_lookup_table = {**self.lookup_table, **other.lookup_table}
-                return GLExpr(new_expr, merged_lookup_table)
-            elif isinstance(other, GLFunction):
-                new_expr = base_method(self, other)
-                merged_lookup_table = {**self.lookup_table, **other.lookup_table}
-                return GLExpr(new_expr, merged_lookup_table)
-            else:
-                new_expr = base_method(self, other)
-                return GLExpr(new_expr, self.lookup_table)
+            def method(self, other):
+                if isinstance(other, GLExpr):
+                    expr_other = other.expr
+                    lookup_other = other.lookup_table
+                elif isinstance(other, GLFunction):
+                    expr_other = other
+                    lookup_other = other.lookup_table
+                else:
+                    expr_other = other
+                    lookup_other = {}
 
-        return method
+                merged_lookup = {**self.lookup_table, **lookup_other}
+                new_expr = base_method(getattr(self, "expr", self), expr_other)
+                return GLExpr(new_expr, merged_lookup)
 
-    for magic in magic_methods:
-        setattr(cls, magic, make_magic_method(magic))
+            return method
 
-    return cls
+        for magic in MAGIC_METHODS:
+            setattr(cls, magic, make_magic_method(magic))
+
+        return cls
+    
+    return decorator
 
 
-@magic_method_decorator
+@magic_method_decorator(base_class=Expr)
 class GLExpr:
     __sympy__ = True  # To avoid sympifying the expression which raises errors.
 
@@ -262,7 +250,7 @@ class GLExpr:
 
 
 
-@magic_method_decorator_for_function
+@magic_method_decorator(base_class=Function)
 class GLFunction(Function):
     """
     GLFunction is a class that extends the functionality of a symbolic function, allowing it to work
