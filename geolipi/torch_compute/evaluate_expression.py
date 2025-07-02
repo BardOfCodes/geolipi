@@ -39,7 +39,7 @@ from .sympy_to_torch import SYMPY_TO_TORCH, TEXT_TO_SYMPY
 
 def recursive_evaluate(expression: SUPERSET_TYPE, sketcher: Sketcher, 
              secondary_sketcher: Optional[Sketcher] = None, coords: Optional[th.Tensor] = None, 
-             *args, **kwargs) -> th.Tensor | NotImplementedError:
+             *args, **kwargs) -> th.Tensor:
     if coords is None:
         coords = sketcher.get_homogenous_coords()
     else:
@@ -79,15 +79,15 @@ def recursive_evaluate(expression: SUPERSET_TYPE, sketcher: Sketcher,
 @singledispatch
 def rec_eval(expression: SUPERSET_TYPE, sketcher: Sketcher,
              secondary_sketcher: Optional[Sketcher] = None, coords: Optional[th.Tensor] = None,
-             *args, **kwargs) -> th.Tensor | NotImplementedError:
-    return NotImplementedError(
+             *args, **kwargs) -> th.Tensor:
+    raise NotImplementedError(
         f"Expression type {type(expression)} is not supported for recursive evaluation."
     )
 
 @rec_eval.register
 def eval_macro(expression: MACRO_TYPE, sketcher: Sketcher,
                secondary_sketcher: Optional[Sketcher] = None, coords: Optional[th.Tensor] = None,
-               *args, **kwargs) -> th.Tensor | NotImplementedError:
+               *args, **kwargs) -> th.Tensor:
     """
     Evaluates a GeoLIPI macro expression by resolving it to a concrete expression.
     """
@@ -98,7 +98,7 @@ def eval_macro(expression: MACRO_TYPE, sketcher: Sketcher,
 @rec_eval.register(MOD_TYPE)
 def eval_mod(expression: MOD_TYPE, sketcher: Sketcher, 
              secondary_sketcher: Optional[Sketcher] = None, coords: Optional[th.Tensor] = None,
-             *args, **kwargs) -> th.Tensor | NotImplementedError:
+             *args, **kwargs) -> th.Tensor:
     sub_expr = expression.args[0]
     params = expression.args[1:]
     params = _parse_param_from_expr(expression, params, sketcher)
@@ -126,7 +126,7 @@ def eval_mod(expression: MOD_TYPE, sketcher: Sketcher,
 @rec_eval.register
 def eval_prim(expression: PRIM_TYPE, sketcher: Sketcher,
               secondary_sketcher: Optional[Sketcher] = None, coords: th.Tensor = None,
-              *args, **kwargs) -> th.Tensor | NotImplementedError:
+              *args, **kwargs) -> th.Tensor:
     
     if isinstance(expression, HIGERPRIM_TYPE):
         params = expression.args[1:]
@@ -169,7 +169,7 @@ def eval_prim(expression: PRIM_TYPE, sketcher: Sketcher,
 @rec_eval.register
 def eval_comb(expression: COMBINATOR_TYPE, sketcher: Sketcher,
               secondary_sketcher: Optional[Sketcher] = None, coords: th.Tensor = None,
-              *args, **kwargs) -> th.Tensor | NotImplementedError:
+              *args, **kwargs) -> th.Tensor:
     
     tree_branches, param_list = [], []
     for arg in expression.args:
@@ -189,7 +189,7 @@ def eval_comb(expression: COMBINATOR_TYPE, sketcher: Sketcher,
 @rec_eval.register
 def eval_svg_comb(expression: SVG_COMBINATORS, sketcher: Sketcher,
                   secondary_sketcher: Optional[Sketcher] = None, coords: th.Tensor = None,
-                  *args, **kwargs) -> th.Tensor | NotImplementedError:
+                  *args, **kwargs) -> th.Tensor:
 
     output_seq = []
     for expr in expression.args:
@@ -234,7 +234,7 @@ def _smoothen_sdf(execution, temperature):
 @rec_eval.register
 def eval_color_mod(expression: COLOR_MOD, sketcher: Sketcher,
                    secondary_sketcher: Optional[Sketcher] = None, coords: th.Tensor = None,
-                   *args, **kwargs) -> th.Tensor | NotImplementedError:
+                   *args, **kwargs) -> th.Tensor:
     color_expr = expression.args[0]
     colors = expression.args[1:]
     # Get the sdf_expr:
@@ -254,7 +254,7 @@ def eval_color_mod(expression: COLOR_MOD, sketcher: Sketcher,
 @rec_eval.register
 def eval_unopt_alpha(expression: UNOPT_ALPHA, sketcher: Sketcher,
                      secondary_sketcher: Optional[Sketcher] = None, coords: th.Tensor = None,
-                     *args, **kwargs) -> th.Tensor | NotImplementedError:
+                     *args, **kwargs) -> th.Tensor:
     output_seq = []
     expr = expression.args[0]
     params = expression.args[1:]
@@ -268,7 +268,7 @@ def eval_unopt_alpha(expression: UNOPT_ALPHA, sketcher: Sketcher,
 @rec_eval.register
 def eval_gl_expr(expression: EXPR_TYPE, sketcher: Sketcher,
                  secondary_sketcher: Optional[Sketcher] = None, coords: Optional[th.Tensor] = None,
-                 *args, **kwargs) -> th.Tensor | NotImplementedError:
+                 *args, **kwargs) -> th.Tensor:
     
         evaluated_args = []
         # print("expr args", expr.args)
@@ -290,14 +290,14 @@ def eval_gl_expr(expression: EXPR_TYPE, sketcher: Sketcher,
 @rec_eval.register
 def eval_gl_param(expression: gls.Param, sketcher: Sketcher,
                  secondary_sketcher: Optional[Sketcher] = None, coords: Optional[th.Tensor] = None,
-                 *args, **kwargs) -> th.Tensor | NotImplementedError:
+                 *args, **kwargs) -> th.Tensor:
     assert isinstance(expression.args[0], sp.Symbol), "Argument must be a symbol"
     return expression.lookup_table[expression.args[0]]
 
 @rec_eval.register
 def eval_gl_op(expression: gls.Operator, sketcher: Sketcher,
                secondary_sketcher: Optional[Sketcher] = None, coords: Optional[th.Tensor] = None,
-               *args, **kwargs) -> None | th.Tensor | NotImplementedError:
+               *args, **kwargs) -> th.Tensor:
     if isinstance(expression, (gls.UnaryOperator, gls.BinaryOperator)):
         outputs = []
         args = expression.args[:-1]
@@ -305,19 +305,18 @@ def eval_gl_op(expression: gls.Operator, sketcher: Sketcher,
             eval = rec_eval(arg, sketcher, secondary_sketcher, coords, *args, **kwargs)
             outputs.append(eval)
         op_arg = expression.args[-1]
-        assert isinstance(op_arg, str), "Operator argument must be a string"
-        op = SYMPY_TO_TORCH[TEXT_TO_SYMPY[op_arg]]
+        assert isinstance(op_arg, sp.Symbol), "Operator argument must be a string"
+        op = SYMPY_TO_TORCH[TEXT_TO_SYMPY[op_arg.name]]
         output = op(*outputs)
         return output
     elif isinstance(expression, gls.VectorOperator):
-        return NotImplementedError(f"Vector Operator {expression} not implemented")
+        raise NotImplementedError(f"Vector Operator {expression} not implemented")
 
 @rec_eval.register
 def eval_gl_var(expression: gls.Variable, sketcher: Sketcher,
                 secondary_sketcher: Optional[Sketcher] = None, coords: Optional[th.Tensor] = None,
-                *args, **kwargs) -> th.Tensor | NotImplementedError:
-    return NotImplementedError(f"Variable {expression} not supported in GeoLIPI. It is supported in derivatives")
-
+                *args, **kwargs) -> th.Tensor:
+    raise NotImplementedError(f"Variable {expression} not supported in GeoLIPI. It is supported in derivatives")
 # Need to ad eval ops for Ops. 
 
 # So as to have gs.Param + have OPs on top. 

@@ -165,6 +165,25 @@ class GLExpr:
         gl_expr = GLExpr(new_expr, merged_lookup_table)
         return gl_expr
 
+    def gather_tensor_list(self, type_annotate=False):
+        """
+        Gathers a list of tensors present in the expression.
+        Used for Parameter optimizing without converting form.
+        """
+        tensors = []
+        for ind, sub_expr in enumerate(self.args):
+            if isinstance(sub_expr, GLFunction):
+                tensors += sub_expr.gather_tensor_list(type_annotate=type_annotate)
+            elif isinstance(sub_expr, Symbol):
+                if sub_expr in self.lookup_table.keys():
+                    if type_annotate:
+                        tensors.append(
+                            (self.lookup_table[sub_expr], self.__class__, ind)
+                        )
+                    else:
+                        tensors.append(self.lookup_table[sub_expr])
+        return tensors
+
     def _inject_tensor_list(self, tensor_list, cur_ind=0):
         resolved_args = []
         for sub_expr in self.args:
