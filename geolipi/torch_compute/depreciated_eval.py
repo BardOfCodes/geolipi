@@ -1,5 +1,5 @@
 from sympy import Symbol
-from geolipi.symbolic.base_symbolic import GLExpr, GLFunction
+from geolipi.symbolic.base import GLExpr, GLFunction
 import torch as th
 from geolipi.symbolic.resolve import resolve_macros
 from geolipi.symbolic.types import (
@@ -21,7 +21,7 @@ from geolipi.symbolic.types import (
 )
 from .sketcher import Sketcher
 from .maps import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP, COLOR_FUNCTIONS
-from .common import EPSILON, RECTIFY_TRANSFORM
+from .common import EPSILON
 from .maps import COLOR_MAP
 from geolipi.symbolic import Union, Intersection, Difference, Revolution3D
 from .color_functions import source_over_seq
@@ -32,7 +32,7 @@ def recursive_evaluate(
     sketcher: Sketcher,
     secondary_sketcher: Sketcher = None,
     initialize: bool = True,
-    rectify_transform: bool = RECTIFY_TRANSFORM,
+    rectify_transform: bool = False,
     coords: th.Tensor = None,
     tracked_scale: th.Tensor = None,
     relaxed_occupancy: bool = False,
@@ -330,7 +330,7 @@ def expr_to_sdf(
     expression: GLFunction,
     sketcher: Sketcher,
     secondary_sketcher: Sketcher = None,
-    rectify_transform: bool = RECTIFY_TRANSFORM,
+    rectify_transform: bool = False,
     coords: th.Tensor = None,
 ):
     """
@@ -341,7 +341,7 @@ def expr_to_sdf(
     Parameters:
         expression (GLExpr): The GLExpr expression to be converted to an SDF.
         sketcher (Sketcher): The primary sketcher object used for generating SDFs.
-        rectify_transform (bool): Flag to apply rectified transformations. Defaults to RECTIFY_TRANSFORM.
+        rectify_transform (bool): Flag to apply rectified transformations. Defaults to False.
         secondary_sketcher (Sketcher, optional): Secondary sketcher - Never used.
         coords (Tensor, optional): Custom coordinates to use for the SDF generation.
 
@@ -435,7 +435,7 @@ def expr_to_sdf(
 def expr_to_colored_canvas(
     expression: GLExpr,
     sketcher: Sketcher,
-    rectify_transform=RECTIFY_TRANSFORM,
+    rectify_transform=False,
     relaxed_occupancy=False,
     relax_temperature=0.0,
     coords=None,

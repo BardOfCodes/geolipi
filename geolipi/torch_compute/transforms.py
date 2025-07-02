@@ -209,6 +209,46 @@ def _axis_angle_rotation_3D(axis: str, angle: th.Tensor) -> th.Tensor:
     return th.stack(R_flat, -1).reshape(angle.shape + (3, 3))
 
 
+def axis_angle_to_rotation_matrix(axis_angle: th.Tensor) -> th.Tensor:
+    """
+    Convert an axis-angle vector (..., 3) to a rotation matrix (..., 3, 3)
+    using the Rodrigues' rotation formula.
+    """
+    theta = th.linalg.norm(axis_angle, dim=-1, keepdim=True).clamp(min=1e-8)  # (..., 1)
+    axis = axis_angle / theta  # normalized axis (..., 3)
+
+    x, y, z = axis.unbind(-1)  # each (...,)
+    zero = th.zeros_like(x)
+    K = th.stack([
+        zero, -z,    y,
+         z,  zero,  -x,
+        -y,   x,   zero
+    ], dim=-1).reshape(axis.shape[:-1] + (3, 3))  # (..., 3, 3)
+
+    I = th.eye(3, device=axis.device, dtype=axis.dtype).expand(K.shape)
+    sin = th.sin(theta)[..., None]
+    cos = th.cos(theta)[..., None]
+
+    R = I + sin * K + (1 - cos) * (K @ K)  # Rodrigues' formula
+
+    return R
+    
+def get_affine_rotate_axis_angle_3D(matrix, param):
+    """
+    Applies a 3D rotation to the given affine transformation matrix using axis-angle representation.
+    """
+    rotation_matrix = axis_angle_to_rotation_matrix(param)
+    matrix[:3, :3] = rotation_matrix
+    return matrix
+
+def get_affine_rotate_matrix_3D(matrix, param):
+    """
+    Applies a 3D rotation to the given affine transformation matrix using a rotation matrix.
+    """
+    matrix[:3, :3] = param
+    return matrix
+
+    
 def position_distort(positions, k):
     """
     Applies a random distortion to the given positions.

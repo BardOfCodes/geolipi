@@ -169,6 +169,8 @@ MODIFIER_MAP = {
     # 3D
     sym_t3d.Translate3D: transform_bank.get_affine_translate_3D,
     sym_t3d.EulerRotate3D: transform_bank.get_affine_rotate_euler_3D,
+    sym_t3d.AxisAngleRotate3D: transform_bank.get_affine_rotate_axis_angle_3D,
+    sym_t3d.RotateMatrix3D: transform_bank.get_affine_rotate_matrix_3D,
     sym_t3d.Scale3D: transform_bank.get_affine_scale_3D,
     sym_t3d.Shear3D: transform_bank.get_affine_shear_3D,
     sym_t3d.Distort3D: transform_bank.position_distort,

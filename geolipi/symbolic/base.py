@@ -1,8 +1,7 @@
-
-import sympy
 import inspect
+import sympy as sp
 import torch as th
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 from sympy.core.basic import Basic
 from sympy import (
     Function,
@@ -11,9 +10,11 @@ from sympy import (
     Tuple as SympyTuple,
     Integer as SympyInteger,
     Float as SympyFloat,
+    Pow,
 )
 from sympy.logic.boolalg import Boolean as SympyBoolean
 from sympy import FunctionClass as SympyFC
+from sympy.core.operations import AssocOp
 
 SYMPY_TYPES = (SympyTuple, SympyInteger, SympyFloat, SympyBoolean, SympyFC)
 SYMPY_ARG_TYPES = (Symbol, SympyTuple, SympyInteger, SympyFloat, SympyBoolean)
@@ -86,12 +87,11 @@ def magic_method_decorator_for_function(cls):
 class GLExpr:
     __sympy__ = True  # To avoid sympifying the expression which raises errors.
 
-    def __init__(self, expr: Expr, lookup_table: Dict = None):
+    def __init__(self, expr: Expr, lookup_table: Dict[sp.Symbol, th.Tensor] | None = None):
         self.expr = expr
         self.lookup_table = lookup_table or {}
         self.func = expr.func
 
-    # Implement other arithmetic operations like __sub__ similarly
     @property
     def args(self):
         return self.expr.args
@@ -101,10 +101,43 @@ class GLExpr:
         expr_str = self.expr.__str__() + "\n" + self.lookup_table.__str__()
         return expr_str
 
-    def __repr__(self):
-        return self.__str__()
+    def pretty_print(self, tabs=0, tab_str="\t"):
+        """
+        Returns a formatted string representation of the function and its arguments for pretty
+        printing.
+        """
+        args = self.args
+        n_tabs = tab_str * tabs
+        replaced_args = [self.lookup_table.get(arg, arg) if isinstance(
+            arg, Symbol) else arg for arg in args]
+        str_args = []
+        for arg in replaced_args:
+            if isinstance(arg, (GLExpr, GLFunction)):
+                str_args.append(
+                    arg.pretty_print(tabs=tabs + 1, tab_str=tab_str))
+            else:
+                if isinstance(arg, SympyTuple):
+                    # Can be a tuple of tuple But can't be an empty tuple
+                    if arg and isinstance(arg[0], SympyTuple):  # type: ignore
+                        item = [
+                            f"({', '.join([f'{y:.3f}' for y in x])})" for x in arg]
+                    elif arg:
+                        item = [f"{x:.3f}" for x in arg]
+                    else:
+                        item = []
+                    item = ", ".join(item)
+                    str_args.append(f"({item})")
+                else:
+                    str_args.append(str(arg))
+        if str_args:
+            n_tabs_1 = tab_str * (tabs + 1)
+            str_args = f",\n{n_tabs_1}".join(str_args)
+            str_args = f"\n{n_tabs_1}" + str_args
+            final = f"{self.func.__name__}({str_args})"
+        else:
+            final = f"{self.func.__name__}()"
+        return final
 
-    # TODO: Implement this.
     def to(self):
         raise NotImplementedError
     def is_zero(self):
@@ -116,7 +149,7 @@ class GLExpr:
             if isinstance(arg, (GLExpr, GLFunction)):
                 eval_arg = arg.tensor()
                 merged_lookup_table.update(eval_arg.lookup_table)
-            elif isinstance(arg, (sympy.core.operations.AssocOp, sympy.core.power.Pow)):
+            elif isinstance(arg, (AssocOp, Pow)):
                 evaluated_args = []
                 for under_arg in arg.args:
                     if isinstance(under_arg, (GLExpr, GLFunction)):
@@ -144,7 +177,7 @@ class GLExpr:
                 else:
                     arg = sub_expr
             else:
-                raise ValueError(f"Cannot convert {sub_expr} to Sympy.")
+                raise ValueError(f"Cannot convert {sub_expr} to sp.")
             resolved_args.append(arg)
 
         new_expr = type(self)(*resolved_args)
@@ -158,13 +191,56 @@ class GLExpr:
         new_expr, _ = self._inject_tensor_list(tensor_list)
         return new_expr
 
-# Helper function to convert a tensor to a GLExpr
+    @staticmethod
+    def _custom_srepr(expr, symbol_tensor_map=None, packages=None):
+        if symbol_tensor_map is None:
+            symbol_tensor_map = {}
+        if packages is None:
+            packages = set()
+        if isinstance(expr, GLFunction):
+            module = expr.__class__.__module__
+            package = module.split('.')[-2] if '.' in module else module
+            packages.add(package)
+            class_name = expr.__class__.__name__
+            args_repr = [GLExpr._custom_srepr(arg, symbol_tensor_map, packages) for arg in expr.args]
+            return f"{package}.{class_name}({', '.join(args_repr)})"
+        elif isinstance(expr, GLExpr):
+            return GLExpr._custom_srepr(expr.expr, symbol_tensor_map, packages)
+        elif isinstance(expr, th.Tensor):
+            symbol = sp.Symbol(f"tensor_{id(expr)}")
+            symbol_tensor_map[str(symbol)] = expr
+            return str(symbol)
+        elif isinstance(expr, Symbol):
+            return str(expr)
+        elif isinstance(expr, (tuple, list)):
+            return f"({', '.join(GLExpr._custom_srepr(x, symbol_tensor_map, packages) for x in expr)})"
+        else:
+            return repr(expr)
 
+    def __getstate__(self):
+        symbol_tensor_map = {}
+        packages = set()
+        expr_str = self._custom_srepr(self, symbol_tensor_map, packages)
+        return {
+            "expr_str": expr_str,
+            "symbol_tensor_map": symbol_tensor_map,
+            "packages": list(packages),
+        }
 
-def GLSymbol(tensor: th.Tensor) -> GLExpr:
-    symbol = sympy.Symbol(f"tensor_{id(tensor)}")
-    lookup_table = {symbol: tensor}
-    return GLExpr(symbol, lookup_table)
+    def __setstate__(self, state):
+        expr_str = state["expr_str"]
+        symbol_tensor_map = state["symbol_tensor_map"]
+        packages = state.get("packages", [])
+        namespace = {}
+        for pkg in packages:
+            try:
+                namespace[pkg] = __import__(pkg)
+            except ImportError:
+                pass  # Optionally, raise or warn here
+        namespace.update(symbol_tensor_map)
+        expr = eval(expr_str, namespace)
+        self.__dict__.update(expr.__dict__)
+
 
 
 @magic_method_decorator_for_function
@@ -175,6 +251,8 @@ class GLFunction(Function):
     symbolic computation (using Sympy) and tensor computation, enabling operations that combine these
     two domains.
     """
+
+    lookup_table: Dict[sp.Symbol, th.Tensor]
 
     def __new__(cls, *args, **kwargs):
         """
@@ -189,13 +267,14 @@ class GLFunction(Function):
                 # merged_lookup_table.update(arg.lookup_table)
                 new_args.append(arg)
             elif isinstance(arg, th.Tensor):
-                symbol = sympy.Symbol(cls._generate_symbol_name(arg))
+                symbol = sp.Symbol(cls._generate_symbol_name(arg))
                 new_args.append(symbol)
                 merged_lookup_table[symbol] = arg
             else:
                 new_args.append(arg)
 
         instance = super(GLFunction, cls).__new__(cls, *new_args, **kwargs)
+        assert isinstance(instance, GLFunction), "Instance must be a GLFunction"
         instance.lookup_table = merged_lookup_table
         # if not hasattr(instance, "lookup_table"):
         #     instance.lookup_table = merged_lookup_table
@@ -213,7 +292,7 @@ class GLFunction(Function):
             # only "doit if not in symbolic form"
             terms = []
             for cur_term in self.args:
-                if cur_term in self.lookup_table:
+                if isinstance(cur_term, Symbol) and cur_term in self.lookup_table:
                     terms.append(self.lookup_table[cur_term])
                 else:
                     if isinstance(cur_term, Basic):
@@ -240,7 +319,8 @@ class GLFunction(Function):
         """
         args = self.args
         n_tabs = tab_str * tabs
-        replaced_args = [self.lookup_table.get(arg, arg) for arg in args]
+        replaced_args = [self.lookup_table.get(arg, arg) if isinstance(
+            arg, Symbol) else arg for arg in args]
         str_args = []
         for arg in replaced_args:
             if isinstance(arg, (GLExpr, GLFunction)):
@@ -248,10 +328,12 @@ class GLFunction(Function):
             else:
                 if isinstance(arg, SympyTuple):
                     # Can be a tuple of tuple But can't be an empty tuple
-                    if isinstance(arg[0], SympyTuple):
+                    if arg and isinstance(arg[0], SympyTuple):
                         item = [f"({', '.join([f'{y:.3f}' for y in x])})" for x in arg]
-                    else:
+                    elif arg:
                         item = [f"{x:.3f}" for x in arg]
+                    else:
+                        item = []
                     item = ", ".join(item)
                     str_args.append(f"({item})")
                 else:
@@ -267,7 +349,8 @@ class GLFunction(Function):
 
     def __str__(self):
         args = self.args
-        replaced_args = [self.lookup_table.get(arg, arg) for arg in args]
+        replaced_args = [self.lookup_table.get(arg, arg) if isinstance(
+            arg, Symbol) else arg for arg in args]
         return f"{self.func.__name__}({', '.join(map(str, replaced_args))})"
 
     @property
@@ -327,7 +410,7 @@ class GLFunction(Function):
             elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
                 arg = sub_expr
             else:
-                raise ValueError(f"Cannot convert {sub_expr} to Sympy.")
+                raise ValueError(f"Cannot convert {sub_expr} to sp.")
             resolved_args.append(arg)
 
         new_expr = type(self)(*resolved_args)
@@ -341,7 +424,7 @@ class GLFunction(Function):
                 arg = sub_expr.sympy()
             elif isinstance(sub_expr, Symbol):
                 if sub_expr in self.lookup_table.keys():
-                    arg = self.lookup_table[sub_expr].cpu().numpy().tolist()
+                    arg = self.lookup_table[sub_expr].detach().cpu().numpy().tolist()
                     if not isinstance(arg, list):
                         arg = [arg, ]
                     arg = to_nested_tuple(arg)
@@ -350,7 +433,7 @@ class GLFunction(Function):
             elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
                 arg = sub_expr
             else:
-                raise ValueError(f"Cannot convert {sub_expr} to Sympy.")
+                raise ValueError(f"Cannot convert {sub_expr} to sp.")
             resolved_args.append(arg)
 
         new_expr = type(self)(*resolved_args)
@@ -366,7 +449,7 @@ class GLFunction(Function):
                     arg = self.lookup_table[sub_expr].to(dtype=dtype, device=device)
                 else:
                     arg = sub_expr
-            elif isinstance(sub_expr, (sympy.core.operations.AssocOp, sympy.core.power.Pow)):
+            elif isinstance(sub_expr, (AssocOp, Pow)):
                 evaluated_args = []
                 for under_arg in sub_expr.args:
                     if isinstance(under_arg, (GLExpr, GLFunction)):
@@ -380,7 +463,7 @@ class GLFunction(Function):
             elif isinstance(sub_expr, SympyInteger):
                 arg = th.tensor(sub_expr, dtype=th.int64, device=device)
             else:
-                raise ValueError(f"Cannot convert {sub_expr} to Sympy.")
+                raise ValueError(f"Cannot convert {sub_expr} to sp.")
             resolved_args.append(arg)
 
         new_expr = type(self)(*resolved_args)
@@ -417,7 +500,7 @@ class GLFunction(Function):
                 else:
                     arg = sub_expr
             else:
-                raise ValueError(f"Cannot convert {sub_expr} to Sympy.")
+                raise ValueError(f"Cannot convert {sub_expr} to sp.")
             resolved_args.append(arg)
 
         new_expr = type(self)(*resolved_args)
@@ -436,14 +519,15 @@ class GLFunction(Function):
         """
         TODO: To be used for type checking.
         """
-        if cls._signature_1(cls, *args, **kwargs):
+        if cls._signature_1(*args, **kwargs):
             return None
         else:
             class_sig = inspect.signature(cls._signature_1)
             error_message = f"Invalid arguments for the function. Here is the function signature: {str(class_sig)}"
             raise TypeError(error_message)
 
-    def _signature_1(self, *args, **kwargs):
+    @classmethod
+    def _signature_1(cls, *args, **kwargs):
         # TODO: Find if type checking can be done cheaply.
         return True
 
@@ -456,73 +540,34 @@ class GLFunction(Function):
                 length += 0
         return length
 
-    # for pickle
-    # def __getnewargs__(self):
-    #     args = []
-    #     for arg in args:
-    #         if arg in self.lookup_table:
-    #             arg = self.lookup_table[arg]
-    #         # elif isinstance(arg, (GLFunction, GLExpr)):
-    #         #     args.append(arg.__getnewargs__())
-    #         else:
-    #             args.append(arg)
-    #     return tuple(args)
-    
-    # Could be useful ref. in something else...
-    # TODO: What was the error?
-    # def __getstate__(self):
-    #     expr_str = str(self)
-    #     return expr_str
-    
-    #     tensor_dict = {}
-    #     expression_list = []
-    #     n_ops = []
-    #     stack = [self]
-    #     # Do a depth first traversal
-    #     while stack:
-    #         cur_expr = stack.pop()
-    #         if isinstance(cur_expr, GLFunction):
-    #             cur_token = cur_expr.func
-    #             n_ops.append(len(cur_expr.args))
-    #             expression_list.append(cur_token)
-    #             stack.extend(cur_expr.args[::-1])
-    #             tensor_dict.update(cur_expr.lookup_table)
-    #         else:
-    #             expression_list.append(cur_expr)
-                
-    #     state = {
-    #         "tensor_args": tensor_dict,
-    #         "n_ops": n_ops,
-    #         "expression_list": expression_list,
-    #     }
-    #     return state
+    @staticmethod
+    def _custom_srepr(expr, symbol_tensor_map=None, packages=None):
+        return GLExpr._custom_srepr(expr, symbol_tensor_map, packages)
 
-    # def __setstate__(self, state):
-    #     from geolipi.symbolic import get_cmd_mapper
-    #     expression = eval(state, get_cmd_mapper())
-    #     return expression
-    #     tensor_args = state["tensor_args"]
-    #     n_ops = state["n_ops"]
-    #     expression_list = state["expression_list"]
-    #     arg_stack = []
-    #     while(expression_list):
-    #         cur_expr = expression_list.pop()
-    #         if isinstance(cur_expr, SYMPY_ARG_TYPES):
-    #             arg_stack.append(cur_expr)
-    #         else:
-    #             # Need this if condition or not?
-    #             # if issubclass(cur_expr, GLFunction):
-    #             n_op = n_ops.pop()
-    #             cur_args = []
-    #             for _ in range(n_op):
-    #                 arg = arg_stack.pop()
-    #                 if arg in tensor_args:
-    #                     cur_args.append(tensor_args[arg])
-    #                 else:
-    #                     cur_args.append(arg)
-    #             arg_stack.append(cur_expr(*cur_args))
-    #     new_expr = arg_stack[0]
-    #     return new_expr
+    def __getstate__(self):
+        symbol_tensor_map = {}
+        packages = set()
+        expr_str = self._custom_srepr(self, symbol_tensor_map, packages)
+        return {
+            "expr_str": expr_str,
+            "symbol_tensor_map": symbol_tensor_map,
+            "packages": list(packages),
+        }
+
+    def __setstate__(self, state):
+        expr_str = state["expr_str"]
+        symbol_tensor_map = state["symbol_tensor_map"]
+        packages = state.get("packages", [])
+        namespace = {}
+        for pkg in packages:
+            try:
+                namespace[pkg] = __import__(pkg)
+            except ImportError:
+                pass  # Optionally, raise or warn here
+        namespace.update(symbol_tensor_map)
+        expr = eval(expr_str, namespace)
+        self.__dict__.update(expr.__dict__)
+
 
 class PrimitiveSpec(GLFunction):
     """Base Class nodes (or expression) in the compiled expressions."""
@@ -539,3 +584,4 @@ def to_nested_tuple(obj):
     else:
         # If it's not a list, it's typically a scalar (int/float)
         return obj
+

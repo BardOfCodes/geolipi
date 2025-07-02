@@ -5,7 +5,7 @@ from .transforms_2d import *
 from .transforms_3d import *
 from .primitives_higher import *
 from .color import *
-
+from .variables import *
 import inspect
 
 

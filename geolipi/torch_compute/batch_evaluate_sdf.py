@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import List
 import torch as th
-from geolipi.symbolic.base_symbolic import PrimitiveSpec
+from geolipi.symbolic.base import PrimitiveSpec
 from geolipi.symbolic.types import COMBINATOR_TYPE
 from .maps import PRIMITIVE_MAP, COMBINATOR_MAP
 

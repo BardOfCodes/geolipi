@@ -1,6 +1,6 @@
 import torch as th
 from sympy import Tuple as SympyTuple
-from .base_symbolic import GLExpr, GLFunction
+from .base import GLExpr, GLFunction
 from .primitives_higher import LinearExtrude3D, QuadraticBezierExtrude3D
 
 

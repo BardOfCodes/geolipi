@@ -1,5 +1,5 @@
 import sympy as sp
-from geolipi.symbolic.base_symbolic import GLFunction
+from geolipi.symbolic.base import GLFunction
 import torch as th
 from geolipi.symbolic import Combinator
 import geolipi.symbolic as gls

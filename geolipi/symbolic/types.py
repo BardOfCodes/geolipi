@@ -1,14 +1,14 @@
-from .base_symbolic import GLExpr, GLFunction
 
 
 import re
 import numpy as np
+import sympy as sp
 import torch as th
 from typing import Union as type_union, Tuple
 from sympy import Function, Expr
 from sympy import Symbol, Tuple as SympyTuple, Integer as SympyInteger
 
-from .base_symbolic import GLExpr, GLFunction
+from .base import GLExpr, GLFunction
 from .combinators import *
 from .primitives_higher import *
 from .primitives_2d import *
@@ -109,3 +109,7 @@ COLOR_MOD = type_union[ColorModifier2D, ModifyColor2D, ModifyOpacity2D, ModifyCo
 APPLY_COLOR_TYPE = ApplyColor2D
 SVG_COMBINATORS = SVGCombinator
 UNOPT_ALPHA = AlphaToSDF2D
+
+EXPR_TYPE = type_union[GLExpr, sp.core.operations.AssocOp, sp.core.power.Pow]
+
+SUPERSET_TYPE  = type_union[EXPR_TYPE, GLFunction] 

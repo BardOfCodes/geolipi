@@ -1,5 +1,5 @@
 
-from .base_symbolic import GLFunction
+from .base import GLFunction
 
 class Combinator(GLFunction):
     """

@@ -4,7 +4,7 @@ import torch as th
 import rustworkx as rx
 
 from geolipi.symbolic import Combinator, Difference, Intersection, Union
-from geolipi.symbolic.base_symbolic import GLExpr
+from geolipi.symbolic.base import GLExpr
 from geolipi.symbolic.types import (
     MACRO_TYPE,
     MOD_TYPE,
@@ -13,12 +13,11 @@ from geolipi.symbolic.types import (
     PRIM_TYPE,
     TRANSSYM_TYPE,
 )
-from geolipi.symbolic.base_symbolic import PrimitiveSpec
+from geolipi.symbolic.base import PrimitiveSpec
 from geolipi.symbolic.resolve import resolve_macros
 
 from .sketcher import Sketcher
 from .maps import MODIFIER_MAP
-from .common import RECTIFY_TRANSFORM
 from .maps import INVERTED_MAP, NORMAL_MAP, ONLY_SIMPLIFY_RULES, ALL_RULES, ONLY_SIMPLIFY_RULES_CNF, ALL_RULES_CNF
 
 # Don't resolve when expression is crazy big.
@@ -45,7 +44,7 @@ def expr_prim_count(expression: GLExpr):
 
 
 def compile_expr(
-    expression: GLExpr, sketcher: Sketcher = None, rectify_transform=RECTIFY_TRANSFORM
+    expression: GLExpr, sketcher: Sketcher = None, rectify_transform=False
 ):
     """
     Compiles a GL expression into a format suitable for batch evaluation, gathering transformations,
@@ -60,7 +59,7 @@ def compile_expr(
         sketcher (Sketcher, optional): The sketcher object used for affine transformations.
             Defaults to None.
         rectify_transform (bool, optional): Flag to determine if transformations should be rectified.
-            Defaults to RECTIFY_TRANSFORM.
+            Defaults to False.
 
     Returns:
         tuple: A tuple containing the compiled expression, primitive transformations, primitive
@@ -525,7 +524,7 @@ def create_compiled_expr(
     sketcher,
     resolve_to_dnf=False,
     convert_to_cpu=True,
-    rectify_transform=RECTIFY_TRANSFORM,
+    rectify_transform=False,
 ):
     """
     Compiles an expression and optionally converts it to Disjunctive Normal Form (DNF) and to CPU.

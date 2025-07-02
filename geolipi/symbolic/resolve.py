@@ -1,7 +1,6 @@
 import torch as th
 from typing import Union as type_union, Tuple
-from .base_symbolic import GLExpr, GLFunction
-from .base_symbolic import GLExpr, GLFunction
+from .base import GLExpr, GLFunction
 from sympy import Symbol, Tuple as SympyTuple, Integer as SympyInteger
 from .types import (
     ALL_REFLECTS,
@@ -107,7 +106,7 @@ SYM_OP_MAP = {
 # TODO: Fix the issue of tensor missing.
 
 
-def resolve_macros(expr: GLFunction, device):
+def resolve_macros(expr: GLFunction, device) -> GLFunction:
     """Extends macros in GeoLIPI."""
     resolved_args = []
     for sub_expr in expr.args:

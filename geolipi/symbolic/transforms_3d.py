@@ -1,4 +1,4 @@
-from .base_symbolic import GLFunction
+from .base import GLFunction
 
 
 class Modifier3D(GLFunction):
@@ -36,6 +36,19 @@ class EulerRotate3D(Transform3D):
     Read evaluator specific documentation for more.
     """
 
+class AxisAngleRotate3D(Transform3D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.transforms.get_affine_rotate_axis_angle_3D
+    Read evaluator specific documentation for more.
+    """
+
+class RotateMatrix3D(Transform3D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.transforms.get_affine_rotate_matrix_3D
+    Read evaluator specific documentation for more.
+    """
 
 class Scale3D(Transform3D):
     """

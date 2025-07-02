@@ -1,6 +1,6 @@
-from .base_symbolic import GLExpr, GLFunction
+from .base import GLExpr, GLFunction
+import sympy as sp
 from sympy import Tuple as SympyTuple
-
 
 class Primitive2D(GLFunction):
     """Functions for declaring 2D primitives."""
@@ -8,7 +8,12 @@ class Primitive2D(GLFunction):
     def pretty_print(self, tabs=0, tab_str="\t"):
         args = self.args
         n_tabs = tab_str * tabs
-        replaced_args = [self.lookup_table.get(arg, arg) for arg in args]
+        replaced_args = []
+        for arg in args:
+            if isinstance(arg, sp.Symbol):
+                replaced_args.append(self.lookup_table.get(arg, arg))
+            else:
+                replaced_args.append(arg)
         str_args = []
         for arg in replaced_args:
             if isinstance(arg, (GLExpr, GLFunction)):

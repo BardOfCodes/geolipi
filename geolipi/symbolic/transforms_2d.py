@@ -1,4 +1,4 @@
-from .base_symbolic import GLFunction
+from .base import GLFunction
 
 
 class Modifier2D(GLFunction):

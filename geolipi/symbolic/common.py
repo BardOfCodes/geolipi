@@ -2,7 +2,7 @@ import numpy as np
 import torch as th
 from typing import Union as type_union, Tuple
 from sympy import Symbol, Tuple as SympyTuple, Expr
-from .base_symbolic import GLExpr, GLFunction
+from .base import GLExpr, GLFunction
 
 param_type_1D = type_union[float, Expr, GLExpr, th.Tensor]
 param_type_2D = type_union[Tuple, SympyTuple, np.ndarray, th.Tensor, Expr, GLExpr]
