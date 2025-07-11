@@ -175,3 +175,9 @@ def sdf_null_op(points):
         torch.Tensor: A tensor of zeros with a shape matching the first dimension of the input points.
     """
     return th.zeros_like(points[..., 0]) + EPSILON
+
+def sdf_xor(sdf_a, sdf_b):
+    """
+    Computes the XOR of two SDFs.
+    """
+    return th.maximum(th.minimum(sdf_a, sdf_b), -th.maximum(sdf_a, sdf_b))

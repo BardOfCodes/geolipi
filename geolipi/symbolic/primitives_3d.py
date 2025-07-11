@@ -467,6 +467,13 @@ class InexactAnisotropicGaussian3D(Primitive3D):
     Read evaluator specific documentation for more.
     """
 
+class NeoPrimitive3D(Primitive3D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_3d.sdf3d_neo_primitive
+    Read evaluator specific documentation for more.
+    """
+
 
 @register_symbol
 class PreBakedPrimitive3D(Primitive3D):

@@ -6,6 +6,7 @@ from .transforms_3d import *
 from .primitives_higher import *
 from .color import *
 from .variables import *
+from .base import GLBase, GLExpr, GLFunction, PrimitiveSpec
 import inspect
 
 

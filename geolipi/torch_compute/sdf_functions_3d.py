@@ -100,6 +100,7 @@ def sdf3d_torus(points, t):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the torus surface.
     """
+    points = points[..., [0, 2, 1]]
     q_x = th.norm(points[..., :2], dim=-1) - t[..., None, 0]
     q = th.stack([q_x, points[..., 2]], dim=-1)
     base_sdf = th.norm(q, dim=-1) - t[..., None, 1]
@@ -162,6 +163,7 @@ def sdf3d_infinite_cylinder(points, c):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the infinite cylinder surface.
     """
+    points = points[..., [0, 2, 1]]
     base_sdf = th.norm(points[..., :2] - c[..., None, :2], dim=-1) - c[..., 2:3]
     return base_sdf
 
@@ -178,6 +180,8 @@ def sdf3d_cone(points, angle, h):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the cone surface.
     """
+    # make the points x z,y
+    points = points[..., [0, 2, 1]]
     c = th.stack([th.cos(angle), th.sin(angle)], dim=-1)
     c = th.where(c == 0, EPSILON, c)
     q = h[..., None, :] * th.stack(
@@ -213,6 +217,7 @@ def sdf3d_inexact_cone(points, angle, h):
     Returns:
         torch.Tensor: A tensor containing the approximate signed distances of each point to the cone surface.
     """
+    points = points[..., [0, 2, 1]]
     c = th.stack([th.cos(angle), th.sin(angle)], dim=-1)
     q = th.norm(points[..., :2], dim=-1)
     base_sdf = th.maximum(
@@ -232,6 +237,7 @@ def sdf3d_infinite_cone(points, angle):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the infinite cone surface.
     """
+    points = points[..., [0, 2, 1]]
     c = th.stack([th.cos(angle), th.sin(angle)], dim=-1)
     q = th.norm(points[..., :2], dim=-1)
     q = th.stack([q, points[..., 2]], dim=-1)
@@ -368,6 +374,7 @@ def sdf3d_vertical_capped_cylinder(points, h, r):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the capped cylinder surface.
     """
+    points = points[..., [0, 2, 1]]
     d = th.abs(
         th.stack([th.norm(points[..., :2], dim=-1), points[..., 2]], dim=-1)
     ) - th.stack([r, h], dim=-1)
@@ -389,6 +396,7 @@ def sdf3d_capped_cylinder(points, h, r):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the capped cylinder surface.
     """
+    points = points[..., [0, 2, 1]]
     d = th.abs(
         th.stack([th.norm(points[..., :2], dim=-1), points[..., 2]], dim=-1)
     ) - th.stack([r, h], dim=-1)
@@ -411,6 +419,7 @@ def sdf3d_arbitrary_capped_cylinder(points, a, b, r):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the arbitrarily oriented capped cylinder surface.
     """
+    points = points[..., [0, 2, 1]]
     ba = b - a
     ba = ba[..., None, :]
     pa = points - a[..., None, :]
@@ -441,6 +450,7 @@ def sdf3d_rounded_cylinder(points, ra, rb, h):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the rounded cylinder surface.
     """
+    points = points[..., [0, 2, 1]]
     d_x = th.norm(points[..., :2], dim=-1) - 2.0 * ra + rb
     d_y = th.abs(points[..., 2]) - h
     d = th.stack([d_x, d_y], dim=-1)
@@ -465,6 +475,7 @@ def sdf3d_capped_cone(points, r1, r2, h):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the capped cone surface.
     """
+    points = points[..., [0, 2, 1]]
     q = th.stack([th.norm(points[..., :2], dim=-1), points[..., 2]], dim=-1)
     k1 = th.stack([r2, h], dim=-1)
     k2 = th.stack([r2 - r1, 2 * h], dim=-1)
@@ -505,6 +516,7 @@ def sdf3d_arbitrary_capped_cone(points, a, b, ra, rb):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the arbitrarily oriented capped cone surface.
     """
+    points = points[..., [0, 2, 1]]
     ra = ra[..., None, :]
     rb = rb[..., None, :]
     rba = rb - ra
@@ -539,6 +551,7 @@ def sdf3d_solid_angle(points, angle, ra):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the solid angle surface.
     """
+    points = points[..., [0, 2, 1]]
     c = th.stack([th.cos(angle), th.sin(angle)], dim=-1)
     q = th.stack([th.norm(points[..., :2], dim=-1), points[..., 2]], dim=-1)
     l = th.norm(q, dim=-1) - ra
@@ -566,6 +579,7 @@ def sdf3d_cut_sphere(points, r, h):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the cut sphere surface.
     """
+    points = points[..., [0, 2, 1]]
     w = th.sqrt(th.clamp(r * r - h * h, min=EPSILON))
     q = th.stack([th.norm(points[..., :2], dim=-1), points[..., 2]], dim=-1)
     term_1 = (h - r) * q[..., 0] * q[..., 0] + w * w * (h + r - 2.0 * q[..., 1])
@@ -594,6 +608,7 @@ def sdf3d_cut_hollow_sphere(points, r, h, t):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the cut hollow sphere surface.
     """
+    points = points[..., [0, 2, 1]]
     w = th.sqrt(th.clamp(r * r - h * h, min=EPSILON))
     q = th.stack([th.norm(points[..., :2], dim=-1), points[..., 2]], dim=-1)
     term_1 = th.norm(q - th.stack([w, h], dim=-1), dim=-1)
@@ -641,6 +656,7 @@ def sdf3d_round_cone(points, r1, r2, h):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the round cone surface.
     """
+    points = points[..., [0, 2, 1]]
     h = th.where(h == 0, EPSILON, h)
     b = (r1 - r2) / h
     a = th.sqrt(th.clamp(1.0 - b * b, min=EPSILON))
@@ -766,6 +782,7 @@ def sdf3d_rhombus(points, la, lb, h, ra):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the rhombus surface.
     """
+    points = points[..., [0, 2, 1]]
     p = th.abs(points)
     b = th.stack([la, lb], dim=-1)
     f = th.clamp(
@@ -775,8 +792,8 @@ def sdf3d_rhombus(points, la, lb, h, ra):
     sign_term = th.sign(
         p[..., 0] * b[..., 1] + p[..., 1] * b[..., 0] - b[..., 0] * b[..., 1]
     )
-    q_1 = th.norm(p[..., :2] - 0.5 * b * f_factor, dim=-1) * sign_term - ra
-    q_2 = p[..., 2] - h
+    # q_1 = th.norm(p[..., :2] - 0.5 * b * f_factor, dim=-1) * sign_term - ra
+    # q_2 = p[..., 2] - h
     q = th.stack(
         [
             th.norm(p[..., :2] - 0.5 * b * f_factor, dim=-1) * sign_term - ra,
@@ -848,6 +865,7 @@ def sdf3d_pyramid(points, h):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the pyramid surface.
     """
+    points = points[..., [0, 2, 1]]
     m2 = h * h + 0.25
     abs_points = th.abs(points[..., :2])
     cond = abs_points[..., 1:2] > abs_points[..., 0:1]
@@ -1019,6 +1037,7 @@ def sdf3d_no_param_cylinder(points):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the cylinder surface.
     """
+    points = points[..., [0, 2, 1]]
     r = 0.5
     h = 0.5
     xy_vec = th.norm(points[..., :2], dim=-1) - r

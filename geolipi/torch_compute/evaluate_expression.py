@@ -95,7 +95,7 @@ def eval_macro(expression: MACRO_TYPE, sketcher: Sketcher,
     return rec_eval(resolved_expr, sketcher, secondary_sketcher, coords, 
                     *args, **kwargs)
 
-@rec_eval.register(MOD_TYPE)
+@rec_eval.register
 def eval_mod(expression: MOD_TYPE, sketcher: Sketcher, 
              secondary_sketcher: Optional[Sketcher] = None, coords: Optional[th.Tensor] = None,
              *args, **kwargs) -> th.Tensor:
@@ -331,6 +331,8 @@ def _parse_param_from_expr(expression, params, sketcher: Sketcher):
                 param_list.append(cur_param)
             elif isinstance(param, SUPERSET_TYPE):
                 param_list.append(rec_eval(param, sketcher))
+            elif isinstance(param, (sp.Float, sp.Integer)):
+                param_list.append(float(param))
             else:
                 param_list.append(param)
         params = param_list

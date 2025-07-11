@@ -84,3 +84,11 @@ class SmoothDifference(Combinator):
     - torch_compute.sdf_operators.sdf_smooth_difference
     Read evaluator specific documentation for more.
     """
+
+@register_symbol
+class XOR(Combinator):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.sdf_operators.sdf_xor
+    Read evaluator specific documentation for more.
+    """

@@ -28,6 +28,7 @@ COMBINATOR_MAP = {
     sym_comb.SmoothUnion: sdf_op_bank.sdf_smooth_union,
     sym_comb.SmoothIntersection: sdf_op_bank.sdf_smooth_intersection,
     sym_comb.SmoothDifference: sdf_op_bank.sdf_smooth_difference,
+    sym_comb.XOR: sdf_op_bank.sdf_xor,
 }
 
 PRIMITIVE_MAP = {

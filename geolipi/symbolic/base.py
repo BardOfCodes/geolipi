@@ -1,8 +1,9 @@
 import inspect
 import sympy as sp
 import torch as th
+import _pickle as cPickle
 from abc import abstractmethod
-from typing import Dict, Tuple, Union, Any, List
+from typing import Dict, Tuple, Any, List
 from sympy.core.basic import Basic
 from sympy import (
     Function,
@@ -111,7 +112,7 @@ class GLBase:
                 tensors += new_tensors
             elif isinstance(sub_expr, Symbol):
                 if sub_expr in self.lookup_table.keys():
-                    if not isinstance(sub_expr, selected_classes):
+                    if not isinstance(self, selected_classes):
                         continue
                     if type_annotate:
                         tensors.append(
@@ -131,11 +132,11 @@ class GLBase:
                 arg, cur_ind = sub_expr._inject_tensor_list(tensor_list, cur_ind)
             elif isinstance(sub_expr, Symbol):
                 if sub_expr in self.lookup_table.keys():
-                    cur_ind += 1
                     if cur_ind in valid_inds:
                         arg = tensor_list[valid_inds.index(cur_ind)][0]
                     else:
                         arg = sub_expr
+                    cur_ind += 1
                 else:
                     arg = sub_expr
             else:
@@ -446,6 +447,19 @@ class GLBase:
 
         return rebuilt_expr
 
+    def save_state(self, filename: str):
+        # SAVE SAVE - Convert to cpu tensors
+        self.to("cpu")
+        state = self.state()
+        with open(filename, "wb") as f:
+            cPickle.dump(state, f)
+
+    @classmethod
+    def load_state(cls, filename: str):
+        with open(filename, "rb") as f:
+            state = cPickle.load(f)
+        return cls.from_state(state)
+
     @classmethod
     def _should_evalf(cls, arg):
         return -1
@@ -480,7 +494,6 @@ class GLExpr(GLBase):
         return self.expr.args
 
     def __str__(self, order="INFIX", with_lookup: bool = True):
-        print(f"__str__ called for GLExpr")
         arg_exprs = []
         for arg in self.args:
             if isinstance(arg, GLBase):
