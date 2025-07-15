@@ -1,558 +1,406 @@
-from collections import defaultdict
-import numpy as np
-import torch as th
-import rustworkx as rx
 
-from geolipi.symbolic import Combinator, Difference, Intersection, Union
-from geolipi.symbolic.base import GLExpr
+from sqlite3 import paramstyle
+import sys
+import sympy as sp
+import ast
+import torch as th
+from typing import Optional, Union, Callable, Any, TypeVar, List, Tuple, Dict
+from collections import defaultdict
+
+if sys.version_info >= (3, 11):
+    from functools import singledispatch
+else:
+    from .patched_functools import singledispatch
+
+from geolipi.symbolic.base import GLExpr, GLFunction, GLBase
+import geolipi.symbolic as gls
+from geolipi.symbolic.resolve import resolve_macros
+from geolipi.symbolic import Revolution3D
 from geolipi.symbolic.types import (
     MACRO_TYPE,
     MOD_TYPE,
-    TRANSLATE_TYPE,
-    SCALE_TYPE,
     PRIM_TYPE,
-    TRANSSYM_TYPE,
+    COMBINATOR_TYPE,
+    TRANSFORM_TYPE,
+    POSITIONALMOD_TYPE,
+    SDFMOD_TYPE,
+    HIGERPRIM_TYPE,
+    COLOR_MOD,
+    APPLY_COLOR_TYPE,
+    SVG_COMBINATORS,
+    UNOPT_ALPHA,
+    EXPR_TYPE,
+    SUPERSET_TYPE
 )
-from geolipi.symbolic.base import PrimitiveSpec
-from geolipi.symbolic.resolve import resolve_macros
-
 from .sketcher import Sketcher
-from .maps import MODIFIER_MAP
-from .maps import INVERTED_MAP, NORMAL_MAP, ONLY_SIMPLIFY_RULES, ALL_RULES, ONLY_SIMPLIFY_RULES_CNF, ALL_RULES_CNF
+from .maps import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP, COLOR_FUNCTIONS, COLOR_MAP
+from .common import EPSILON
+from .sympy_to_torch import SYMPY_TO_TORCH, TEXT_TO_SYMPY
+from .evaluate_expression import _parse_param_from_expr
+from .unroll_expression import _process_params, LocalContext
+"""
+Unroll the expression into a list of codelines. 
+inline_params: bool -> else we store the params as var_x - but that is useless. 
+"""
 
-# Don't resolve when expression is crazy big.
-MAX_EXPR_SIZE = 500
+class CompiledLocalContext(LocalContext):
+    def __init__(self):
+        self.transform_stack = ["transform_0"]
+        self.coords_stack = ["coords_0"]
+        self.res_stack = []
+        self.var_count = 0
+        self.transform_count = 0
+        self.coords_count = 0
+        self.res_count = 0
+        self.prim_dict = {}
+        self.dependencies = dict()
+        self.transform_codelines = []
+        self.prim_codelines = []
+        self.codelines = []
 
 
-def expr_prim_count(expression: GLExpr):
-    """Get the number of primitives of each kind in the expression."""
-    prim_count_dict = defaultdict(int)
-    parser_list = [expression]
-    while parser_list:
-        cur_expr = parser_list.pop()
-        if isinstance(cur_expr, Combinator):
-            next_to_parse = cur_expr.args[::-1]
-            parser_list.extend(next_to_parse)
-        elif isinstance(cur_expr, MOD_TYPE):
-            next_to_parse = cur_expr.args[0]
-            parser_list.append(next_to_parse)
-        elif isinstance(cur_expr, PRIM_TYPE):
-            prim_count_dict[type(cur_expr)] += 1
+    def add_codeline(self, codeline: str, codeline_type: str):
+        if codeline_type == "transform":
+            self.transform_codelines.append(codeline)
+        elif codeline_type == "prim":
+            self.prim_codelines.append(codeline)
         else:
-            raise ValueError(f"Unknown expression type {type(cur_expr)}")
-    return prim_count_dict
+            raise NotImplementedError(f"Codeline type {codeline_type} not implemented")
+
+    def add_dependency(self, func_name: str, func: Any):
+        self.dependencies[func_name] = func
+    
+    def add_prim_ref(self, prim_name: str, prim_type: Tuple[type, str, str]):
+        self.prim_dict[prim_name] = prim_type
+    
+    def compile_codelines(self, sketcher: Sketcher):
+        # Generate the transform lines. 
+        for line in self.transform_codelines:
+            self.codelines.append(line)
+        
+        # gather the transforms based on prim_dict.
+        selected_transforms = []
+        prim_type_to_transform = defaultdict(list)
+        prim_type_to_params = defaultdict(list)
+        prim_type_to_name = defaultdict(list)
+        for ind, (prim_name, prim_info) in enumerate(self.prim_dict.items()):
+            prim_type, transform, params = prim_info
+            selected_transforms.append(transform)
+            prim_type_to_transform[prim_type].append(ind)
+            prim_type_to_params[prim_type].append(params)
+            prim_type_to_name[prim_type].append(prim_name)
+        # do th.stack(selected_transforms)
+        # and then do th.einsum('ij,mj->mi', transform, coords)
+        n_dims = sketcher.n_dims
+        n_transforms = len(selected_transforms)
+        selected_transforms = ", ".join(selected_transforms)
+        code_line = f"stacked_transform = th.stack([{selected_transforms}], dim=0)"
+        self.codelines.append(code_line)
+        code_line = f"stacked_coords = coords_0.unsqueeze(0).expand({n_transforms}, -1, -1)"
+        self.codelines.append(code_line)
+        code_line = f"stacked_coords = th.matmul(stacked_coords, stacked_transform.transpose(-1, -2))"
+        self.codelines.append(code_line)
+        code_line = f"stacked_coords = stacked_coords[..., :{n_dims}] / (stacked_coords[..., {n_dims} : {n_dims + 1}] + {float(EPSILON)})"
+        self.codelines.append(code_line)
 
 
-def compile_expr(
-    expression: GLExpr, sketcher: Sketcher = None, rectify_transform=False
-):
+        # then do the grouped processing of the primitives.
+        for ind, (prim_type, prim_inds) in enumerate(prim_type_to_transform.items()):
+            params = prim_type_to_params[prim_type]
+            code_line = f"stacked_coords_{ind} = stacked_coords[{prim_inds}]"
+            self.codelines.append(code_line)
+            split_params = [param.split(",") for param in params]
+            n_params = len(split_params[0])
+            stacked_params = []
+            for param_ind in range(n_params):
+                sel_param_names = [x[param_ind] for x in split_params]
+                sel_param_names = ", ".join(sel_param_names)
+                # stack it
+                code_line = f"stacked_params_{ind}_{param_ind} = th.stack([{sel_param_names}], dim=0)"
+                self.codelines.append(code_line)
+                stacked_params.append(f"stacked_params_{ind}_{param_ind}")
+
+            stacked_params = ", ".join(stacked_params)
+            code_line = f"stacked_res_{ind} = {prim_type.__name__}(stacked_coords_{ind}, {stacked_params})"
+            self.codelines.append(code_line)
+            for prim_ind, prim_name in enumerate(prim_type_to_name[prim_type]):
+                code_line = f"{prim_name} = stacked_res_{ind}[{prim_ind}]"
+                self.codelines.append(code_line)
+
+            
+        # finally prim_codelines.
+        for line in self.prim_codelines:
+            self.codelines.append(line)
+
+
+### Create a Evaluate wrapper -> This will create the coords and may be different in different derivative languages.
+
+def compile_expression(in_expr: GLBase, sketcher: Sketcher, 
+             secondary_sketcher: Optional[Sketcher] = None,
+             varname_expr: bool = True,
+             param_mode: str = "unrolled", 
+             isolated_vars: bool = True,
+             param_mapping: Optional[Dict[str, th.Tensor]] = None,
+             *args, **kwargs) -> Tuple[Callable, ast.FunctionDef, LocalContext]:
     """
-    Compiles a GL expression into a format suitable for batch evaluation, gathering transformations,
-    primitive parameters, and handling difference and complement operations.
-
-    This function traverses the expression tree to extract and organize necessary data for
-    rendering the expression. It accounts for transformations, inversion modes, and primitive
-    parameters, and resolves any complex operations like Difference and Complement.
-
+    Evaluates a GeoLIPI expression using the provided sketcher and coordinates.
+    
     Parameters:
-        expression (GLExpr): The GL expression to be compiled.
-        sketcher (Sketcher, optional): The sketcher object used for affine transformations.
-            Defaults to None.
-        rectify_transform (bool, optional): Flag to determine if transformations should be rectified.
-            Defaults to False.
-
+        expression (SUPERSET_TYPE): The GeoLIPI expression to evaluate.
+        sketcher (Sketcher): The sketcher object used for evaluation.
+        secondary_sketcher (Sketcher, optional): A secondary sketcher for higher-order primitives.
+        coords (th.Tensor, optional): Coordinates for evaluation. If None, generated from sketcher.
+        
     Returns:
-        tuple: A tuple containing the compiled expression, primitive transformations, primitive
-        inversions, and primitive parameters. These are organized to facilitate batch evaluation
-        of the expression.
+        th.Tensor: The result of evaluating the expression.
     """
+    # PRELIMS
+    # Middle
+    if varname_expr:
+        expression, _= in_expr.get_varnamed_expr()
 
-    prim_count_dict = expr_prim_count(expression)
-    # trasforms
-    transforms_stack = [sketcher.get_affine_identity()]
-    # inversions
-    inversion_mode = False
-    inversion_stack = [inversion_mode]
-
-    prim_transforms = dict()
-    prim_inversions = dict()
-    prim_params = defaultdict(list)
-    prim_counter = {x: 0 for x in prim_count_dict.keys()}
-    for prim_type, prim_count in prim_count_dict.items():
-        prim_transforms[prim_type] = th.zeros(
-            (prim_count, sketcher.n_dims + 1, sketcher.n_dims + 1),
-            dtype=sketcher.dtype,
-            device=sketcher.device,
-        )
-        prim_inversions[prim_type] = th.zeros(
-            (prim_count), dtype=th.bool, device=sketcher.device
-        )
-        # Todo: Handle parameterized Primitives
-        # Add type annotation to functions.
-        n_params = 0  # len(inspect.signature(prim_type).parameters) # but each might not be singleton.
-        if n_params > 0:
-            prim_params[prim_type] = th.zeros(
-                (prim_count, n_params), dtype=sketcher.dtype, device=sketcher.device
-            )
-
-    execution_stack = []
-    execution_pointer_index = []
-    operator_stack = []
-    operator_nargs_stack = []
-    operator_params_stack = []
-    if rectify_transform:
-        scale_stack = [sketcher.get_scale_identity()]
-
-    parser_list = [expression]
-    while parser_list:
-        cur_expr = parser_list.pop()
-        inversion_mode = inversion_stack.pop()
-        if isinstance(cur_expr, MACRO_TYPE):
-            raise ValueError(
-                "Direct use of Macros not supported in compile_expr. \
-                Resolve with resolve_macros first"
-            )
-        elif isinstance(cur_expr, Combinator):
-            tree_branches, param_list = [], []
-            for arg in cur_expr.args:
-                if arg in cur_expr.lookup_table:
-                    param_list.append(cur_expr.lookup_table[arg])
-                else:
-                    tree_branches.append(arg)
-            n_args = len(tree_branches)
-            transform = transforms_stack.pop()
-            transform_chain = [transform.clone() for x in range(n_args)]
-            transforms_stack.extend(transform_chain)
-            if rectify_transform:
-                scale = scale_stack.pop()
-                scale_chain = [scale.clone() for x in range(n_args)]
-                scale_stack.extend(scale_chain)
-
-            if type(cur_expr) == Difference:
-                inversion_stack.append(not inversion_mode)
-            else:
-                inversion_stack.append(inversion_mode)
-
-            inversion_stack.extend([inversion_mode for x in range(n_args - 1)])
-
-            if inversion_mode:
-                current_symbol = INVERTED_MAP[type(cur_expr)]
-            else:
-                current_symbol = NORMAL_MAP[type(cur_expr)]
-            operator_stack.append(current_symbol)
-            operator_nargs_stack.append(n_args)
-            operator_params_stack.append(param_list)
-            next_to_parse = tree_branches[::-1]
-            parser_list.extend(next_to_parse)
-            execution_pointer_index.append(len(execution_stack))
-        elif isinstance(cur_expr, MOD_TYPE):
-            params = cur_expr.args[1:]
-            next_to_parse = cur_expr.args[0]
-            if params:
-                param_list = []
-                for ind, param in enumerate(params):
-                    if param in cur_expr.lookup_table:
-                        cur_param = cur_expr.lookup_table[param]
-                        param_list.append(cur_param)
-                    else:
-                        param_list.append(param)
-                params = param_list
-            # This is a hack unclear how to deal with other types)
-            if rectify_transform:
-                if isinstance(cur_expr, (TRANSLATE_TYPE, TRANSSYM_TYPE)):
-                    scale = scale_stack[-1]
-                    params[0] = params[0] / scale
-                elif isinstance(cur_expr, SCALE_TYPE):
-                    scale_stack[-1] *= params[0]
-            transform = transforms_stack.pop()
-            identity_mat = sketcher.get_affine_identity()
-            new_transform = MODIFIER_MAP[type(cur_expr)](identity_mat, *params)
-            transform = th.matmul(new_transform, transform)
-            transforms_stack.append(transform)
-            inversion_stack.append(inversion_mode)
-            parser_list.append(next_to_parse)
-        elif isinstance(cur_expr, PRIM_TYPE):
-            transform = transforms_stack.pop()
-            if rectify_transform:
-                _ = scale_stack.pop()
-            prim_type = type(cur_expr)
-            prim_id = prim_counter[prim_type]
-            prim_transforms[prim_type][prim_id] = transform
-            if inversion_mode:
-                prim_inversions[prim_type][prim_id] = True
-            param_list = []
-            params = cur_expr.args
-            if params:
-                for ind, param in enumerate(params):
-                    if param in cur_expr.lookup_table:
-                        cur_param = cur_expr.lookup_table[param]
-                        param_list.append(cur_param)
-                    else:
-                        param_list.append(param)
-                params = param_list
-            prim_params[prim_type].append(params)
-
-            prim_spec = PrimitiveSpec(prim_type, prim_id)
-            execution_stack.append(prim_spec)
-            prim_counter[prim_type] += 1
-        else:
-            raise ValueError(f"Unknown expression type {type(cur_expr)}")
-
-        while (
-            operator_stack
-            and len(execution_stack) - execution_pointer_index[-1]
-            >= operator_nargs_stack[-1]
-        ):
-            n_args = operator_nargs_stack.pop()
-            operator = operator_stack.pop()
-            _ = execution_pointer_index.pop()
-            params = operator_params_stack.pop()
-            args = execution_stack[-n_args:]
-            new_canvas = operator(*args, *params)
-            execution_stack = execution_stack[:-n_args] + [new_canvas]
-
-    for prim_type, prim_param_list in prim_params.items():
-        n_params = len(prim_param_list[0])
-        final_list = []
-        for cur_id in range(n_params):
-            cur_param_list = [x[cur_id] for x in prim_param_list]
-            final_list.append(th.stack(cur_param_list, 0))
-        prim_params[prim_type] = final_list
-
-    expression = execution_stack[0]
-    return expression, prim_transforms, prim_inversions, prim_params
-
-
-def expr_to_graph(expression):
-    """
-    Converts a sympy expression to a rustworkx graph. This is valid only for compiled graphs.
-    Used for simplifying the expression to DNF form.
-
-    Parameters:
-        expression: A sympy expression representing a mathematical or logical construct.
-
-    Returns:
-        A rustworkx PyDiGraph representing the structure of the expression.
-    """
-    graph = rx.PyDiGraph()
-    parser_list = [expression]
-    parent_ids = [None]
-    while parser_list:
-        cur_expr = parser_list.pop()
-        parent_id = parent_ids.pop()
-        if isinstance(cur_expr, Combinator):
-            node = dict(type=type(cur_expr))
-            cur_id = graph.add_node(node)
-            parser_list.extend(cur_expr.args[::-1])
-            parent_ids.extend([cur_id for x in range(len(cur_expr.args))])
-        elif isinstance(cur_expr, (PrimitiveSpec, PRIM_TYPE)):
-            node = dict(type=type(cur_expr), expr=cur_expr)
-            cur_id = graph.add_node(node)
-        if not parent_id is None:
-            graph.add_edge(parent_id, cur_id, None)
-    return graph
-
-
-def graph_to_expr(graph):
-    """
-    Converts a rustworkx graph back to a sympy expression.
-    Used to get the expression back after converting to the DNF form.
-
-    Parameters:
-        graph: A rustworkx PyDiGraph generated from a sympy expression.
-
-    Returns:
-        A sympy expression reconstructed from the graph.
-    """
-    prim_stack = []
-    prim_stack_pointer = []
-    operator_stack = []
-    operator_nargs_stack = []
-
-    parser_list = [0]
-    while parser_list:
-        cur_id = parser_list.pop()
-        cur_node = graph[cur_id]
-        c_type = cur_node["type"]
-        if issubclass(c_type, (PrimitiveSpec, PRIM_TYPE)):
-            prim_stack.append(cur_node["expr"])
-        elif issubclass(c_type, Combinator):
-            operator_stack.append(c_type)
-            next_to_parse = list(graph.successor_indices(cur_id))
-            n_args = len(next_to_parse)
-            operator_nargs_stack.append(n_args)
-            parser_list.extend(next_to_parse)
-            prim_stack_pointer.append(len(prim_stack))
-
-        while (
-            operator_stack
-            and len(prim_stack) - prim_stack_pointer[-1] >= operator_nargs_stack[-1]
-        ):
-            n_args = operator_nargs_stack.pop()
-            operator = operator_stack.pop()
-            _ = prim_stack_pointer.pop()
-            args = prim_stack[-n_args:]
-            new_canvas = operator(*args)
-            prim_stack = prim_stack[:-n_args] + [new_canvas]
-    expression = prim_stack[0]
-    return expression
-
-
-def expr_to_dnf(expression, max_expr_size=MAX_EXPR_SIZE):
-    """
-    Converts an expression to its Disjunctive Normal Form (DNF) using graph transformation rules.
-
-    Parameters:
-        expression: The expression to convert.
-        max_expr_size (int): The maximum allowed size of the expression during conversion.
-
-    Returns:
-        A sympy expression in DNF.
-    """
-    graph = expr_to_graph(expression)
-    # RULES:
-    # Intersection-> Intersection = collapse
-    # Union -> union = collapse
-    # Intersection -> Union = invert
-    # Union -> Intersection = retain
-    rule_match = None
-    while True:
-        rule_match = get_rule_match(graph, only_simplify=True)
-        if rule_match is None:
-            rule_match = get_rule_match(graph, only_simplify=False)
-            if rule_match is None:
-                break
-            else:
-                graph = resolve_rule(graph, rule_match)
-        else:
-            graph = resolve_rule(graph, rule_match)
-        if graph.num_nodes() > max_expr_size:
-            return expression
-    expression = graph_to_expr(graph)
-    return expression
-
-
-def get_rule_match(graph, only_simplify=False):
-    """
-    Identifies a rule match in a graph that represents an expression.
-
-    Parameters:
-        graph: The graph representation of the expression.
-        only_simplify (bool): If True, only simplification rules are applied.
-
-    Returns:
-        A match if a rule can be applied, else None.
-    """
-    if only_simplify:
-        rule_set = ONLY_SIMPLIFY_RULES  # ["i->i", "u->u"]
+        if param_mapping is None and param_mode == "embedded":
+            # generate param_dict directly.
+            tensor_list = in_expr.gather_tensor_list()
+            assert isinstance(tensor_list[0], th.Tensor), "Tensor list must be a list of tensors"
+            param_mapping = {f"var_{i}": (tensor if isinstance(tensor, th.Tensor) else tensor[0]) for i, tensor in enumerate(tensor_list)}
     else:
-        rule_set = ALL_RULES  # ["i->i", "u->u", "i->u"]
-    node_ids = [0]
-    rule_match = None
-    while node_ids:
-        cur_id = node_ids.pop()
-        cur_node = graph[cur_id]
-        c_type = cur_node["type"]
-        if issubclass(c_type, Combinator):
-            children = list(graph.successor_indices(cur_id))
-            node_ids.extend(children[::-1])
-            for ind, child_id in enumerate(children):
-                child_node = graph[child_id]
-                child_type = child_node["type"]
-                rel_sig = (c_type, child_type)
-                if rel_sig in rule_set:
-                    rule_match = (cur_id, child_id, rel_sig)
-        if rule_match:
-            break
+        expression = in_expr
+    local_context = CompiledLocalContext()
+    local_context.dependencies['th'] = th
+    local_context.dependencies['transform_0'] = sketcher.get_affine_identity()
 
-    return rule_match
-
-
-def resolve_rule(graph, resolve_rule):
-    """
-    Applies a rule to transform a graph representing an expression.
-
-    Parameters:
-        graph: The graph representation of the expression.
-        resolve_rule: The rule to be applied to the graph.
-
-    Returns:
-        The graph after applying the transformation rule.
-    """
-    node_a_id = resolve_rule[0]
-    node_b_id = resolve_rule[1]
-    match_type = resolve_rule[2]
-    node_a = graph[node_a_id]
-
-    if match_type in ONLY_SIMPLIFY_RULES:
-        # append the children of the child node to the parent node
-        for child_id in graph.successor_indices(node_b_id):
-            graph.add_edge(node_a_id, child_id, None)
-        graph.remove_edge(node_a_id, node_b_id)
-        # graph.remove_node(node_b_id)
-    elif match_type == (Intersection, Union):
-        node_a["type"] = Union
-        children_a = list(graph.successor_indices(node_a_id))
-        children_a_not_b = [ind for ind in children_a if ind != node_b_id]
-        children_b = list(graph.successor_indices(node_b_id))
-        for child_id in children_a:
-            graph.remove_edge(node_a_id, child_id)
-        for child_id in children_b:
-            # create n new i nodes where n is the number of children of the u node
-            node = dict(type=Intersection)
-            new_id = graph.add_node(node)
-            graph.add_edge(new_id, child_id, None)
-            for not_b_child_id in children_a_not_b:
-                graph.add_edge(new_id, not_b_child_id, None)
-            graph.add_edge(node_a_id, new_id, None)
-            # where each node has all the children of the i node <not U> and one child of the u node
-
-    return graph
-
-
-#############################################################################
-def expr_to_cnf(expression, max_expr_size=MAX_EXPR_SIZE):
-    """
-    Converts an expression to its Conjunctive Normal Form (CNF) using graph transformation rules.
-
-    Parameters:
-        expression: The expression to convert.
-        max_expr_size (int): The maximum allowed size of the expression during conversion.
-
-    Returns:
-        A sympy expression in CNF.
-    """
-    graph = expr_to_graph(expression)
-
-    while True:
-        rule_match = get_rule_match_cnf(graph, only_simplify=True)
-        if rule_match is None:
-            rule_match = get_rule_match_cnf(graph, only_simplify=False)
-            if rule_match is None:
-                break
-            else:
-                graph = resolve_rule_cnf(graph, rule_match)
-        else:
-            graph = resolve_rule_cnf(graph, rule_match)
-
-        if graph.num_nodes() > max_expr_size:
-            return expression
-
-    expression = graph_to_expr(graph)
-    return expression
-
-
-def get_rule_match_cnf(graph, only_simplify=False):
-    """
-    Identifies a rule match for CNF conversion.
-
-    Parameters:
-        graph: The graph representation of the expression.
-        only_simplify (bool): If True, only simplification rules are applied.
-
-    Returns:
-        A match if a rule can be applied, else None.
-    """
-    rule_set = ONLY_SIMPLIFY_RULES_CNF if only_simplify else ALL_RULES_CNF
-    node_ids = [0]
-
-    while node_ids:
-        cur_id = node_ids.pop()
-        cur_node = graph[cur_id]
-        c_type = cur_node["type"]
-
-        if issubclass(c_type, Combinator):
-            children = list(graph.successor_indices(cur_id))
-            node_ids.extend(children[::-1])
-
-            for child_id in children:
-                child_node = graph[child_id]
-                child_type = child_node["type"]
-                rel_sig = (c_type, child_type)
-
-                if rel_sig in rule_set:
-                    return (cur_id, child_id, rel_sig)
-
-    return None
-
-
-def resolve_rule_cnf(graph, rule):
-    """
-    Applies CNF transformation rules to the graph.
-
-    Parameters:
-        graph: The graph representing the expression.
-        rule: The matched rule to apply.
-
-    Returns:
-        The updated graph after applying the rule.
-    """
-    node_a_id, node_b_id, match_type = rule
-    node_a = graph[node_a_id]
-
-    if match_type in ONLY_SIMPLIFY_RULES_CNF:
-        # Merge nested Unions/Intersections
-        for child_id in graph.successor_indices(node_b_id):
-            graph.add_edge(node_a_id, child_id, None)
-        graph.remove_edge(node_a_id, node_b_id)
-
-    elif match_type == (Union, Intersection):
-        # Distribute Union over Intersection
-        node_a["type"] = Intersection
-        children_a = list(graph.successor_indices(node_a_id))
-        children_a_not_b = [ind for ind in children_a if ind != node_b_id]
-        children_b = list(graph.successor_indices(node_b_id))
-
-        # Remove current edges
-        for child_id in children_a:
-            graph.remove_edge(node_a_id, child_id)
-
-        # Apply distribution
-        for child_id in children_b:
-            new_node = dict(type=Union)
-            new_id = graph.add_node(new_node)
-            graph.add_edge(new_id, child_id, None)
-            for not_b_child_id in children_a_not_b:
-                graph.add_edge(new_id, not_b_child_id, None)
-            graph.add_edge(node_a_id, new_id, None)
-
-    return graph
-#############################################################################
-
-def create_compiled_expr(
-    expression,
-    sketcher,
-    resolve_to_dnf=False,
-    convert_to_cpu=True,
-    rectify_transform=False,
-):
-    """
-    Compiles an expression and optionally converts it to Disjunctive Normal Form (DNF) and to CPU.
-
-    Parameters:
-        expression: The expression to compile.
-        sketcher: The sketcher object used in compilation.
-        resolve_to_dnf (bool): If True, converts the expression to DNF.
-        convert_to_cpu (bool): If True, converts tensors to CPU tensors.
-        rectify_transform (bool): If True, rectifies transformations during compilation.
-
-    Returns:
-        A tuple containing the compiled expression, transforms, inversions, and parameters.
-    """
-    expression = resolve_macros(expression, device=sketcher.device)
-    compiled_expr = compile_expr(
-        expression, sketcher=sketcher, rectify_transform=rectify_transform
+    local_context = rec_compiled_unroll(
+        expression,
+        local_context=local_context,
+        sketcher=sketcher,
+        secondary_sketcher=secondary_sketcher, isolated_vars=isolated_vars,
+        *args, **kwargs
     )
-    expr, transforms, inversions, params = compiled_expr
+    local_context.compile_codelines(sketcher)
 
-    if resolve_to_dnf:
-        expr = expr_to_dnf(expr)
+    # 1. Extract parameter names from codelines (var_X variables)
+    import re
+    param_names = set()
+    for codeline in local_context.codelines:
+        # Find var_X references in the codeline
+        matches = re.findall(r'\bvar_(\d+)\b', codeline)
+        for match in matches:
+            param_names.add(f'var_{match}')
 
-    if convert_to_cpu:
-        transforms = {x: y.cpu() for x, y in transforms.items()}
-        inversions = {x: y.cpu() for x, y in inversions.items()}
-        for prim_type, prim_param_list in params.items():
-            params[prim_type] = [x.cpu() for x in prim_param_list]
-        # params = {x: y.cpu() for x, y in params.items()}
+    # sort param_names
+    param_names = sorted(param_names, key=lambda x: int(x.split('_')[-1]))
+    
+    # 2. Create function signature
+    if param_mode == "embedded":
+        assert param_mapping is not None, "Param mapping must be provided if inline_params is True"
+        local_context.dependencies.update(param_mapping)
+        fn_args = [ast.arg(arg='coords_0')]
+    elif param_mode == "varlist":
+        # varlist and also add varlist unpacking to codelines.
+        fn_args = [ast.arg(arg='coords_0'), ast.arg(arg='varlist')]
+        assoc_lines = []
+        for ind, param in enumerate(param_names):
+            assoc_lines.append(f"{param} = varlist[{ind}]")
+        local_context.codelines = assoc_lines + local_context.codelines
+    elif param_mode == "unrolled":
+        fn_args = [ast.arg(arg='coords_0')]
+        for param in param_names:
+            fn_args.append(ast.arg(arg=param))
+    else:
+        raise NotImplementedError(f"Param mode {param_mode} not implemented")
 
-    return expr, transforms, inversions, params
+    # 3. Parse codelines into AST statements
+    body_statements = []
+    for codeline in local_context.codelines:
+        parsed = ast.parse(codeline).body[0]
+        body_statements.append(parsed)
+    
+    # 4. Add return statement based on res_stack
+    assert len(local_context.res_stack) == 1, "There should be exactly one result in the res_stack"
+    final_result = local_context.res_stack.pop()
+    return_stmt = ast.Return(value=ast.Name(id=final_result, ctx=ast.Load()))
+    body_statements.append(return_stmt)
+    
+    # 5. Create AST function definition
+    func_def = ast.FunctionDef(
+        name="compiled_fn",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=fn_args,
+            vararg=None,
+            kwonlyargs=[], kw_defaults=[], defaults=[]
+        ),
+        body=body_statements,
+        decorator_list=[]
+    )
+    
+    # 6. Wrap in module and compile
+    module = ast.Module(body=[func_def], type_ignores=[])
+    ast.fix_missing_locations(module)
+    
+    # 7. Compile and execute
+    env = {x:y for x, y in local_context.dependencies.items()}
+
+    exec(compile(module, "<ast>", "exec"), env)
+    
+    compiled_function = env["compiled_fn"]  # type: ignore
+    return compiled_function, func_def, local_context # type: ignore
+
+@singledispatch
+def rec_compiled_unroll(expression: SUPERSET_TYPE, local_context: CompiledLocalContext, sketcher: Sketcher,
+             secondary_sketcher: Optional[Sketcher] = None, isolated_vars: bool = False,
+             *args, **kwargs) -> CompiledLocalContext:
+    raise NotImplementedError(
+        f"Expression type {type(expression)} is not supported for recursive evaluation."
+    )
+
+@rec_compiled_unroll.register
+def compiled_unroll_mod(expression: MOD_TYPE, local_context: CompiledLocalContext, sketcher: Sketcher, 
+             secondary_sketcher: Optional[Sketcher] = None, isolated_vars: bool = False,
+             *args, **kwargs) -> CompiledLocalContext:
+
+    sub_expr = expression.args[0]
+    params = expression.args[1:]
+    func_name = expression.__class__.__name__
+    params = _process_params(expression, params, local_context, sketcher)
+
+    function = MODIFIER_MAP[type(expression)]
+    # This is a hack unclear how to deal with other types)
+    if isinstance(expression, TRANSFORM_TYPE):
+        cur_transform = local_context.transform_stack.pop()
+        if isolated_vars:
+            local_context.transform_count += 1
+        new_transform = f"transform_{local_context.transform_count}"
+        code_line = f"{new_transform} = {func_name}(IDENTITY.clone(), {params})"
+        local_context.add_codeline(code_line, "transform")
+        code_line = f"{new_transform} = th.matmul({new_transform}, {cur_transform})"
+        local_context.add_codeline(code_line, "transform")
+        local_context.add_dependency(func_name, function)
+        local_context.add_dependency("IDENTITY", sketcher.get_affine_identity())
+
+        local_context.transform_stack.append(new_transform)
+        assert isinstance(sub_expr, (gls.GLFunction, gls.GLExpr)), "Sub expression must be a GLFunction or GLExpr"
+        return rec_compiled_unroll(sub_expr, local_context, sketcher, secondary_sketcher, isolated_vars, *args, **kwargs)
+    elif isinstance(expression, POSITIONALMOD_TYPE):
+        # instantiate positions and send that as input with affine set to None
+        cur_coords = local_context.coords_stack.pop()
+        # Maybe we only need to add when we are duplicating, i.e. Union etc. otherwise no.
+        if isolated_vars:
+            local_context.coords_count += 1
+        new_coords = f"coords_{local_context.coords_count}"
+        code_line = f"{new_coords} = {func_name}({cur_coords}, {params})"
+        local_context.add_codeline(code_line, "transform")
+        local_context.add_dependency(func_name, function)
+        local_context.coords_stack.append(new_coords)
+        assert isinstance(sub_expr, (gls.GLFunction, gls.GLExpr)), "Sub expression must be a GLFunction or GLExpr"
+        return rec_compiled_unroll(sub_expr, local_context, sketcher, secondary_sketcher, isolated_vars, *args, **kwargs)
+
+    elif isinstance(expression, SDFMOD_TYPE):
+        # calculate sdf then create change before returning.
+        local_context = rec_compiled_unroll(sub_expr, local_context, sketcher, secondary_sketcher, isolated_vars, *args, **kwargs)
+        cur_res = local_context.res_stack.pop()
+        if isolated_vars:
+            local_context.res_count += 1
+        new_res = f"res_{local_context.res_count}"
+        code_line = f"{new_res} = {func_name}({cur_res}, {params})"
+        local_context.add_codeline(code_line, "prim")
+        local_context.add_dependency(func_name, function)
+        local_context.res_stack.append(new_res)
+        return local_context
+    else:
+        raise NotImplementedError(f"Modifier {expression} not implemented")
+    
+@rec_compiled_unroll.register
+def compiled_unroll_prim(expression: PRIM_TYPE, local_context: CompiledLocalContext, sketcher: Sketcher,
+              secondary_sketcher: Optional[Sketcher] = None, isolated_vars: bool = False,
+              *args, **kwargs) -> CompiledLocalContext:
+    
+    if isinstance(expression, HIGERPRIM_TYPE):
+        params = expression.args[1:]
+    else:
+        params = expression.args
+
+    func_name = expression.__class__.__name__
+    params = _process_params(expression, params, local_context, sketcher)
+    # This is for correction? 
+    n_dims = sketcher.n_dims
+    function = PRIMITIVE_MAP[type(expression)]
+    if isinstance(expression, HIGERPRIM_TYPE):
+        raise NotImplementedError("Higher-order primitives not implemented")
+    else:
+        cur_transform = local_context.transform_stack.pop()
+        cur_coords = local_context.coords_stack.pop()
+        if isolated_vars:
+            local_context.coords_count += 1
+        # Keeping track of coords and transforms is a bit confusing.
+        # new_coords = f"coords_{local_context.coords_count}"
+        # code_line = f"{new_coords} = th.einsum('ij,mj->mi', {cur_transform}, {cur_coords})"
+        # instead just associate transform prim. and index.
+        # local_context.add_codeline(code_line)
+        # code_line = f"{new_coords} = {new_coords}[..., :{n_dims}] / ({new_coords}[..., {n_dims} : {n_dims + 1}] + {float(EPSILON)})"
+        # local_context.add_codeline(code_line)
+        local_context.res_count += 1
+        new_res = f"res_{local_context.res_count}"
+        # type, transform, params
+        local_context.add_prim_ref(new_res, (expression.__class__, cur_transform, params))
+        # code_line = f"{new_res} = {func_name}({new_coords}, {params});"
+        # local_context.add_codeline(code_line)
+        local_context.add_dependency(func_name, function)
+        local_context.res_stack.append(new_res)
+        return local_context
+
+
+@rec_compiled_unroll.register
+def compiled_unroll_comb(expression: COMBINATOR_TYPE, local_context: CompiledLocalContext, sketcher: Sketcher,
+              secondary_sketcher: Optional[Sketcher] = None, isolated_vars: bool = False,
+              *args, **kwargs) -> CompiledLocalContext:
+    
+    func_name = expression.__class__.__name__
+    tree_branches, param_list = [], []
+    function = COMBINATOR_MAP[type(expression)]
+    if isinstance(expression, (gls.SmoothUnion, gls.SmoothIntersection, gls.SmoothDifference)):
+        tree_branches = [arg for arg in expression.args[:-1]]
+        param_list = [expression.args[-1]]
+    else:
+        tree_branches, param_list = [], []
+        tree_branches = [arg for arg in expression.args]
+    if param_list:
+        param_list = _process_params(expression, param_list, local_context, sketcher)
+    n_children = len(tree_branches)
+    
+    cur_coords = local_context.coords_stack.pop()
+    cur_transform = local_context.transform_stack.pop()
+    for child in tree_branches:
+        if not isolated_vars: 
+            # we do a copy here of the transform and of the coords.
+            local_context.transform_count += 1
+            local_context.coords_count += 1
+            new_transform = f"transform_{local_context.transform_count}"
+            new_coords = f"coords_{local_context.coords_count}"
+            code_line = f"{new_transform} = {cur_transform}.clone()"
+            local_context.add_codeline(code_line, "transform")
+            code_line = f"{new_coords} = {cur_coords}.clone()"
+            local_context.add_codeline(code_line, "transform")
+            local_context.transform_stack.append(new_transform)
+            local_context.coords_stack.append(new_coords)
+        else:
+            local_context.transform_stack.append(cur_transform)
+            local_context.coords_stack.append(cur_coords)
+        local_context.coords_stack.append(cur_coords)
+        assert isinstance(child, (gls.GLFunction, gls.GLExpr)), "Child must be a GLFunction or GLExpr"
+        local_context = rec_compiled_unroll(child, local_context, sketcher, secondary_sketcher, isolated_vars, *args, **kwargs)
+
+    children = [local_context.res_stack.pop() for _ in range(n_children)]
+    # reverse the children
+    children = children[::-1]
+    local_context.res_count += 1
+    new_res = f"res_{local_context.res_count}"
+    input_params = ", ".join(children)
+    if param_list:
+        input_params += f", {param_list}"
+    code_line = f"{new_res} = {func_name}({input_params})"
+    local_context.add_codeline(code_line, "prim")
+    local_context.add_dependency(func_name, function)
+    local_context.res_stack.append(new_res)
+    return local_context

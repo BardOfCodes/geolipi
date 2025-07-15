@@ -7,7 +7,7 @@ import geolipi.symbolic as gls
 from .sketcher import Sketcher
 from .depreciated_eval import expr_to_sdf
 from .evaluate_expression import recursive_evaluate
-from geolipi.torch_compute.compile_expression import create_compiled_expr
+from geolipi.torch_compute.batch_compile import create_compiled_expr
 from geolipi.torch_compute.batch_evaluate_sdf import create_evaluation_batches, batch_evaluate
 
 NUM_ITERATIONS = 2000
