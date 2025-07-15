@@ -40,12 +40,6 @@ from .sympy_to_torch import SYMPY_TO_TORCH, TEXT_TO_SYMPY
 def recursive_evaluate(expression: SUPERSET_TYPE, sketcher: Sketcher, 
              secondary_sketcher: Optional[Sketcher] = None, coords: Optional[th.Tensor] = None, 
              *args, **kwargs) -> th.Tensor:
-    if coords is None:
-        coords = sketcher.get_homogenous_coords()
-    else:
-        coords_dim = coords.shape[-1]
-        if coords_dim == sketcher.n_dims:
-            coords = sketcher.make_homogenous_coords(coords)
     """
     Evaluates a GeoLIPI expression using the provided sketcher and coordinates.
     
@@ -270,22 +264,22 @@ def eval_gl_expr(expression: EXPR_TYPE, sketcher: Sketcher,
                  secondary_sketcher: Optional[Sketcher] = None, coords: Optional[th.Tensor] = None,
                  *args, **kwargs) -> th.Tensor:
     
-        evaluated_args = []
-        # print("expr args", expr.args)
-        for arg in expression.args:
-            if isinstance(arg, (GLFunction, GLExpr)):
-                output = rec_eval(arg, sketcher, secondary_sketcher, coords, *args, **kwargs)
-                evaluated_args.append(output)
-                # just use tensor symbols here
-            elif isinstance(arg, (sp.Float, sp.Integer)):
-                new_value = float(arg)
-                evaluated_args.append(new_value)
-            else:
-                print(type(arg))
-                raise NotImplementedError(f"Params for{expression} not implemented")
-        op = SYMPY_TO_TORCH[expression.func]
-        output = op(*evaluated_args)
-        return output
+    evaluated_args = []
+    # print("expr args", expr.args)
+    for arg in expression.args:
+        if isinstance(arg, (GLFunction, GLExpr)):
+            output = rec_eval(arg, sketcher, secondary_sketcher, coords, *args, **kwargs)
+            evaluated_args.append(output)
+            # just use tensor symbols here
+        elif isinstance(arg, (sp.Float, sp.Integer)):
+            new_value = float(arg)
+            evaluated_args.append(new_value)
+        else:
+            print(type(arg))
+            raise NotImplementedError(f"Params for{expression} not implemented")
+    op = SYMPY_TO_TORCH[expression.func]
+    output = op(*evaluated_args)
+    return output
 
 @rec_eval.register
 def eval_gl_param(expression: gls.Param, sketcher: Sketcher,
@@ -311,6 +305,8 @@ def eval_gl_op(expression: gls.Operator, sketcher: Sketcher,
         return output
     elif isinstance(expression, gls.VectorOperator):
         raise NotImplementedError(f"Vector Operator {expression} not implemented")
+    else:
+        raise NotImplementedError(f"Operator {expression} not implemented")
 
 @rec_eval.register
 def eval_gl_var(expression: gls.Variable, sketcher: Sketcher,
