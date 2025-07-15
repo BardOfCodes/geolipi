@@ -3,7 +3,7 @@ import sympy as sp
 import torch as th
 import _pickle as cPickle
 from abc import abstractmethod
-from typing import Dict, Tuple, Any, List
+from typing import Dict, Tuple, Any, List, Callable
 from sympy.core.basic import Basic
 from sympy import (
     Function,
@@ -94,35 +94,91 @@ class GLBase:
     lookup_table: Dict[sp.Symbol, th.Tensor]
     func: Any
 
-    def gather_tensor_list(self, type_annotate: bool =False, selected_classes: Tuple[type, ...] | None = None) -> List[th.Tensor] | List[Tuple[th.Tensor, type, int]]:
+    def gather_tensor_list(self, type_annotate: bool =False, index_annotate: bool =False,
+            selected_classes: Tuple[type, ...] | None = None,) -> List[th.Tensor] | List[Tuple[th.Tensor, type, int]]:
         if selected_classes is None:
             selected_classes = (GLBase, )
-        tensor_list, ind = self._gather_tensor_list(selected_classes=selected_classes, type_annotate=type_annotate, cur_ind=0)
+        tensor_list, ind = self._gather_tensor_list(selected_classes=selected_classes, 
+        type_annotate=type_annotate, index_annotate=index_annotate, cur_ind=0)
         return tensor_list
     
-    def _gather_tensor_list(self, selected_classes: Tuple[type, ...], type_annotate: bool =False, cur_ind: int =0):
+    def _gather_tensor_list(self, selected_classes: Tuple[type, ...], type_annotate: bool =False, index_annotate: bool =False, cur_ind: int =0):
         """
         Gathers a list of tensors present in the expression.
         Used for Parameter optimizing without converting form.
         """
         tensors = []
-        for sub_expr in self.args:
+        for local_ind, sub_expr in enumerate(self.args):
             if isinstance(sub_expr, GLBase):
-                new_tensors, cur_ind = sub_expr._gather_tensor_list(selected_classes=selected_classes, type_annotate=type_annotate, cur_ind=cur_ind)
+                new_tensors, cur_ind = sub_expr._gather_tensor_list(selected_classes=selected_classes, 
+                type_annotate=type_annotate, index_annotate=index_annotate, cur_ind=cur_ind)
                 tensors += new_tensors
             elif isinstance(sub_expr, Symbol):
                 if sub_expr in self.lookup_table.keys():
                     if not isinstance(self, selected_classes):
                         continue
                     if type_annotate:
-                        tensors.append(
-                            (self.lookup_table[sub_expr], self.__class__, cur_ind)
-                        )
+                        if index_annotate:
+                            annotation = (self.lookup_table[sub_expr], self.__class__, cur_ind, local_ind)
+                        else:
+                            annotation = (self.lookup_table[sub_expr], self.__class__, cur_ind)
+                        tensors.append(annotation)
                     else:
                         tensors.append(self.lookup_table[sub_expr])
                     cur_ind += 1
         return tensors, cur_ind
+    
+    def recursive_transform(self, transform_map: Dict[type, Callable[['GLBase'], 'GLBase']]) -> 'GLBase':
+        """
+        Recursively transforms the expression using a mapping of types to transformation functions.
+        
+        Args:
+            transform_map: Dict mapping expression types to transformation functions.
+                         Each function takes an expression and returns a transformed expression.
+                         
+        Returns:
+            A new expression with transformations applied recursively.
+        """
+        # First, recursively transform all arguments
+        new_args = []
+        for arg in self.args:
+            if isinstance(arg, GLBase):
+                # Recursively transform GLBase arguments
+                transformed_arg = arg.recursive_transform(transform_map)
+                new_args.append(transformed_arg)
+            else:
+                # Keep non-GLBase arguments as is
+                new_args.append(arg)
+        
+        # Rebuild the expression with transformed arguments
+        rebuilt_expr = self.rebuild_expr(new_args)
+        
+        # Apply transformation to the rebuilt expression if there's a matching type
+        expr_type = type(rebuilt_expr)
+        if expr_type in transform_map:
+            return transform_map[expr_type](rebuilt_expr)
+        else:
+            return rebuilt_expr
+    
 
+    def rebuild_expr(self, resolved_args: List[sp.Basic]):
+        """
+        Rebuilds the expression from the resolved arguments.
+        """
+        if isinstance(self, GLFunction):
+            new_expr = type(self)(*resolved_args)
+        elif isinstance(self, GLExpr):
+            under_expr = self.expr.func(*resolved_args)
+            new_expr = GLExpr(under_expr, self.lookup_table.copy())
+        elif isinstance(self, (AssocOp, Pow)):
+            # Will this come?
+            op = self.__class__
+            under_expr = op(*resolved_args)
+            new_expr = GLExpr(under_expr)
+        else:
+            # Fallback for other types
+            new_expr = type(self)(*resolved_args)
+        return new_expr
 
     def _inject_tensor_list(self, tensor_list: List[Tuple[th.Tensor, int]], cur_ind: int =0):
         resolved_args = []
@@ -165,22 +221,25 @@ class GLBase:
         new_expr, _ = self._inject_tensor_list(inner_tensor_list)
         return new_expr
 
+    def get_varnamed_expr(self, cur_ind = None):
+        if cur_ind is None:
+            cur_ind = 0
+        resolved_args = []
+        for sub_expr in self.args:
+            if isinstance(sub_expr, GLBase):
+                arg, cur_ind = sub_expr.get_varnamed_expr(cur_ind)
+            elif isinstance(sub_expr, Symbol):
+                if sub_expr in self.lookup_table.keys():
+                    arg = sp.Symbol(f"var_{cur_ind}")
+                    cur_ind += 1
+                else:
+                    arg = sub_expr
+            else:
+                raise ValueError(f"Cannot convert {sub_expr} to sp.")
+            resolved_args.append(arg)
 
-    def rebuild_expr(self, resolved_args: List[sp.Basic]):
-        """
-        Rebuilds the expression from the resolved arguments.
-        """
-        if isinstance(self, GLFunction):
-            new_expr = type(self)(*resolved_args)
-        elif isinstance(self, GLExpr):
-            under_expr = self.expr.func(*resolved_args)
-            new_expr = GLExpr(under_expr)
-        elif isinstance(self, (AssocOp, Pow)):
-            # Will this come?
-            op = self.__class__
-            under_expr = op(*resolved_args)
-            new_expr = GLExpr(under_expr)
-        return new_expr
+        new_expr = self.rebuild_expr(resolved_args)
+        return new_expr, cur_ind
 
     def tensor(self, dtype=th.float32, device="cuda", restrict_int: bool = False):
         resolved_args = []
@@ -362,14 +421,20 @@ class GLBase:
             else:
                 if isinstance(arg, SympyTuple):
                     # Can be a tuple of tuple But can't be an empty tuple
-                    if arg and isinstance(arg[0], SympyTuple):
+                    if arg and len(arg) > 0 and isinstance(arg[0], SympyTuple):
                         item = [f"({', '.join([f'{y:.3f}' for y in x])})" for x in arg]
-                    elif arg:
+                    elif arg and len(arg) > 0:
                         item = [f"{x:.3f}" for x in arg]
                     else:
                         item = []
                     item = ", ".join(item)
                     str_args.append(f"({item})")
+                elif isinstance(arg, th.Tensor):
+                    # Handle tensor arguments
+                    if arg.numel() == 1:
+                        str_args.append(f"{arg.item():.3f}")
+                    else:
+                        str_args.append(f"tensor({list(arg.shape)})")
                 else:
                     str_args.append(str(arg))
         if str_args:
@@ -544,7 +609,6 @@ class GLFunction(Function, GLBase):
         return instance
 
     def __str__(self, order="INFIX", with_lookup: bool = True):
-        print(f"__str__ called for GLFunction")
         args = self.args
         if with_lookup:
             replaced_args = [self.lookup_table.get(arg, arg) if isinstance(
