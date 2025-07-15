@@ -91,6 +91,8 @@ class CompiledLocalContext(LocalContext):
             prim_type_to_name[prim_type].append(prim_name)
         # do th.stack(selected_transforms)
         # and then do th.einsum('ij,mj->mi', transform, coords)
+        # Here we can reorder so that we can use slicing better. 
+
         n_dims = sketcher.n_dims
         n_transforms = len(selected_transforms)
         selected_transforms = ", ".join(selected_transforms)
@@ -109,20 +111,25 @@ class CompiledLocalContext(LocalContext):
             params = prim_type_to_params[prim_type]
             code_line = f"stacked_coords_{ind} = stacked_coords[{prim_inds}]"
             self.codelines.append(code_line)
-            split_params = [param.split(",") for param in params]
-            n_params = len(split_params[0])
-            stacked_params = []
-            for param_ind in range(n_params):
-                sel_param_names = [x[param_ind] for x in split_params]
-                sel_param_names = ", ".join(sel_param_names)
-                # stack it
-                code_line = f"stacked_params_{ind}_{param_ind} = th.stack([{sel_param_names}], dim=0)"
+            first_param = params[0]
+            if len(first_param) == 0:
+                code_line = f"stacked_res_{ind} = {prim_type.__name__}(stacked_coords_{ind})"
                 self.codelines.append(code_line)
-                stacked_params.append(f"stacked_params_{ind}_{param_ind}")
+            else:
+                split_params = [param.split(",") for param in params]
+                n_params = len(split_params[0])
+                stacked_params = []
+                for param_ind in range(n_params):
+                    sel_param_names = [x[param_ind] for x in split_params]
+                    sel_param_names = ", ".join(sel_param_names)
+                    # stack it
+                    code_line = f"stacked_params_{ind}_{param_ind} = th.stack([{sel_param_names}], dim=0)"
+                    self.codelines.append(code_line)
+                    stacked_params.append(f"stacked_params_{ind}_{param_ind}")
 
-            stacked_params = ", ".join(stacked_params)
-            code_line = f"stacked_res_{ind} = {prim_type.__name__}(stacked_coords_{ind}, {stacked_params})"
-            self.codelines.append(code_line)
+                stacked_params = ", ".join(stacked_params)
+                code_line = f"stacked_res_{ind} = {prim_type.__name__}(stacked_coords_{ind}, {stacked_params})"
+                self.codelines.append(code_line)
             for prim_ind, prim_name in enumerate(prim_type_to_name[prim_type]):
                 code_line = f"{prim_name} = stacked_res_{ind}[{prim_ind}]"
                 self.codelines.append(code_line)
