@@ -476,11 +476,11 @@ class NeoPrimitive3D(Primitive3D):
 
 
 @register_symbol
-class PreBakedPrimitive3D(Primitive3D):
+class SDFGrid3D(Primitive3D):
 
     """
-    Only for Geometry Nodes. This class is mapped to the following evaluator function(s):
-    - geometry_nodes.geonodes.create_prebaked_primitive_node_seq
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_3d.sdf3d_sdf_grid
     Read evaluator specific documentation for more.
     """
 

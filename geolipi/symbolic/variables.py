@@ -74,24 +74,30 @@ class VarSplitter(Variable):
     """
     ...
 
-class UniformFloat(Variable):
+class UniformVariable(Variable):
     """
     Apply the height field to the current height.
     """
     ...
 
-class UniformVec2(Variable):
+class UniformFloat(UniformVariable):
     """
     Apply the height field to the current height.
     """
     ...
-class UniformVec3(Variable):
+
+class UniformVec2(UniformVariable):
+    """
+    Apply the height field to the current height.
+    """
+    ...
+class UniformVec3(UniformVariable):
     """
     Apply the height field to the current height.
     """
     ...
     
-class UniformVec4(Variable):
+class UniformVec4(UniformVariable):
     """
     Apply the height field to the current height.
     """

@@ -28,6 +28,8 @@ COMBINATOR_MAP = {
     sym_comb.SmoothUnion: sdf_op_bank.sdf_smooth_union,
     sym_comb.SmoothIntersection: sdf_op_bank.sdf_smooth_intersection,
     sym_comb.SmoothDifference: sdf_op_bank.sdf_smooth_difference,
+    sym_comb.NarySmoothUnion: sdf_op_bank.sdf_smooth_union_k_variable,
+    sym_comb.NarySmoothIntersection: sdf_op_bank.sdf_smooth_intersection_k_variable,
     sym_comb.XOR: sdf_op_bank.sdf_xor,
 }
 
@@ -142,6 +144,7 @@ PRIMITIVE_MAP = {
     sym_prim3d.InexactSuperQuadrics3D: sdf3d_bank.sdf3d_inexact_super_quadrics,
     sym_prim3d.InexactAnisotropicGaussian3D: sdf3d_bank.sdf3d_inexact_anisotropic_gaussian,
     sym_prim3d.NullExpression3D: sdf_op_bank.sdf_null_op,
+    sym_prim3d.SDFGrid3D: sdf3d_bank.sdf3d_sdf_grid,
     # Higher Order
     sym_higher.LinearExtrude3D: higher_sdf_bank.sdf3d_linear_extrude,
     sym_higher.QuadraticBezierExtrude3D: higher_sdf_bank.sdf3d_quadratic_bezier_extrude,
@@ -181,6 +184,7 @@ MODIFIER_MAP = {
     sym_t3d.Dilate3D: sdf_op_bank.sdf_dilate,
     sym_t3d.Erode3D: sdf_op_bank.sdf_erode,
     sym_t3d.Onion3D: sdf_op_bank.sdf_onion,
+    sym_t3d.NegOnlyOnion3D: sdf_op_bank.sdf_neg_only_onion,
 }
 
 # use XKCD colors: https://xkcd.com/color/rgb.txt
@@ -223,7 +227,7 @@ INVERTED_MAP = {
     sym_comb.Intersection: sym_comb.Union,
     sym_comb.Difference: sym_comb.Union,
     sym_comb.Complement: sym_comb.Complement,
-    
+        
 }
 NORMAL_MAP = {
     sym_comb.Union: sym_comb.Union,

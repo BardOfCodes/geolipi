@@ -222,6 +222,11 @@ class GLBase:
         return new_expr
 
     def get_varnamed_expr(self, cur_ind = None):
+        """
+        Why only the ones in the lookup table?
+        During Compilation we treating the remaining, i.e. Symbols as constants. 
+        Other option -> 
+        """
         if cur_ind is None:
             cur_ind = 0
         resolved_args = []
@@ -240,6 +245,43 @@ class GLBase:
 
         new_expr = self.rebuild_expr(resolved_args)
         return new_expr, cur_ind
+    
+    def _get_varnamed_expr(self, cur_ind = None, var_map = None, prefix = "var", exclude_uniforms = False):
+        """
+        TBD: Support Uniform Exclusion. (Keep them as is I guess).
+        """
+        if cur_ind is None:
+            cur_ind = 0
+        if var_map is None:
+            var_map = {}
+        resolved_args = []
+        import geolipi.symbolic as gls
+        for sub_expr in self.args:
+            if isinstance(sub_expr, GLBase):
+                if exclude_uniforms and isinstance(sub_expr, gls.UniformVariable):
+                    arg = sub_expr
+                else:
+                    arg, cur_ind, var_map = sub_expr._get_varnamed_expr(cur_ind, var_map, prefix, exclude_uniforms)
+            elif isinstance(sub_expr, Symbol):
+                if sub_expr in self.lookup_table.keys():
+                    varname = f"{prefix}_{cur_ind}"
+                    arg = sp.Symbol(varname)
+                    var_map[varname] = sub_expr
+                    cur_ind += 1
+                else:
+                    # These are treated as "cosntants" - Some Issues with this.
+                    arg = sub_expr
+            elif isinstance(sub_expr, (SympyTuple, SympyInteger, SympyFloat)):
+                varname = f"{prefix}_{cur_ind}"
+                arg = sp.Symbol(varname)
+                var_map[varname] = sub_expr
+                cur_ind += 1
+            else:
+                raise ValueError(f"Cannot convert {sub_expr} to sp.")
+            resolved_args.append(arg)
+
+        new_expr = self.rebuild_expr(resolved_args)
+        return new_expr, cur_ind, var_map
 
     def tensor(self, dtype=th.float32, device="cuda", restrict_int: bool = False):
         resolved_args = []

@@ -7,8 +7,9 @@ import geolipi.symbolic as gls
 from .sketcher import Sketcher
 from .depreciated_eval import expr_to_sdf
 from .evaluate_expression import recursive_evaluate
-from geolipi.torch_compute.batch_compile import create_compiled_expr
-from geolipi.torch_compute.batch_evaluate_sdf import create_evaluation_batches, batch_evaluate
+from .batch_compile import create_compiled_expr
+from .batch_evaluate_sdf import create_evaluation_batches, batch_evaluate
+from .unroll_expression import unroll_expression
 
 NUM_ITERATIONS = 2000
 CONVERGENCE_THRESHOLD = 1e-3
@@ -39,6 +40,7 @@ class Renderer:
                  convergence_threshold=CONVERGENCE_THRESHOLD,
                  camera_params=None, light_setting=None,
                  recursive_evaluator=True, compile_expression=False,
+                 unroll_expression=False, torch_compile=False,
                  device="cuda", dtype=th.float32):
         self.dtype = th.float32
         self.device = device
@@ -83,14 +85,16 @@ class Renderer:
         self.sketcher = Sketcher(resolution=min_res, device=device,
                                  dtype=dtype, n_dims=3)
         self.recursive_evaluator = recursive_evaluator
+        self.secondary_sketcher = Sketcher(resolution=min_res, device=device,
+                                        dtype=dtype, n_dims=2)
         if recursive_evaluator:
             self.eval_func = recursive_evaluate
-            self.secondary_sketcher = Sketcher(resolution=min_res, device=device,
-                                            dtype=dtype, n_dims=2)
         else:
             self.eval_func = expr_to_sdf
             self.secondary_sketcher = None
         self.compile_expression = compile_expression
+        self.unroll_expression = unroll_expression
+        self.torch_compile = torch_compile
         if self.compile_expression:
             assert not recursive_evaluator, "Cannot compile expressions which require recursive eval."
 
@@ -151,14 +155,14 @@ class Renderer:
         Returns:
             A tensor representing the rendered image, with shape corresponding to the specified resolution.
         """
-        if convergence_threshold is None:
-            convergence_threshold = self.convergence_threshold
-        if num_iterations is None:
-            num_iterations = self.num_iterations
-        camera_position = self.get_camera_position(**self.camera_params)
-        ray_positions, ray_directions = self.get_rays(camera_position)
-        if material_setting is None:
-            material_setting = self.make_random_material()
+        self._compile_render_exprs(sdf_expression, ground_expression, material_setting, finite_difference_epsilon, convergence_threshold, num_iterations)
+        image = self._render_precompiled(sdf_expression, ground_expression, material_setting, finite_difference_epsilon, convergence_threshold, num_iterations)
+        return image
+    
+    def _compile_render_exprs(self, sdf_expression, ground_expression=None, 
+               material_setting=None, finite_difference_epsilon=None,
+               convergence_threshold=None, num_iterations=None):
+
         if ground_expression is None:
             ground_expression = self.create_ground_expr()
 
@@ -167,18 +171,53 @@ class Renderer:
         if self.compile_expression:
             compiled_obj = create_compiled_expr(overall_expression, self.sketcher, convert_to_cpu=False)
             expr_set = create_evaluation_batches([compiled_obj], convert_to_cuda=False)
-            def sdf_eval_func(ray_points): return batch_evaluate(expr_set, sketcher=self.sketcher,
-                                                                coords=ray_points).squeeze(0).unsqueeze(-1)
+            def sdf_eval_func(ray_points): 
+                return batch_evaluate(expr_set, sketcher=self.sketcher, coords=ray_points).squeeze(0).unsqueeze(-1)
         else:
-            def sdf_eval_func(ray_points): return self.eval_func(overall_expression, sketcher=self.sketcher,
+            if self.unroll_expression:
+                compiled_func, func_def, _ = unroll_expression(overall_expression, self.sketcher, param_mode="embedded")
+                compiled_func_ground, func_def_ground, _ = unroll_expression(ground_expression, self.sketcher, param_mode="embedded")
+                if self.torch_compile:
+                    compiled_func = th.compile(compiled_func, mode="max-autotune", fullgraph=True)
+                    compiled_func_ground = th.compile(compiled_func_ground, mode="max-autotune", fullgraph=True)
+                self.eval_func = compiled_func
+                self.eval_func_ground = compiled_func_ground
+                def sdf_eval_func(ray_points, *args, **kwargs): 
+                    ray_points = self.sketcher.make_homogenous_coords(ray_points)
+                    return self.eval_func(ray_points).unsqueeze(-1)
+                def ground_eval_func(ray_points, *args, **kwargs): 
+                    ray_points = self.sketcher.make_homogenous_coords(ray_points)
+                    return self.eval_func_ground(ray_points).unsqueeze(-1)
+                    # return self.eval_func(ground_expression, sketcher=self.sketcher,
+                    #                                                     secondary_sketcher=self.secondary_sketcher,
+                    #                                                     coords=ray_points).unsqueeze(-1)
+            else:
+                self.eval_func = recursive_evaluate
+                def sdf_eval_func(ray_points): return self.eval_func(overall_expression, sketcher=self.sketcher,
                                                                 secondary_sketcher=self.secondary_sketcher,
                                                                 coords=ray_points).unsqueeze(-1)
-            # We can use batching
-        def ground_eval_func(ray_points): return self.eval_func(ground_expression, sketcher=self.sketcher,
-                                                                secondary_sketcher=self.secondary_sketcher,
-                                                                coords=ray_points).unsqueeze(-1)
+                    # We can use batching
+                def ground_eval_func(ray_points): return self.eval_func(ground_expression, sketcher=self.sketcher,
+                                                                        secondary_sketcher=self.secondary_sketcher,
+                                                                        coords=ray_points).unsqueeze(-1)
+        self.sdf_eval_func = sdf_eval_func
+        self.ground_eval_func = ground_eval_func
+        image = self._render_precompiled(sdf_expression, ground_expression, material_setting, finite_difference_epsilon, convergence_threshold, num_iterations)
+    
+    def _render_precompiled(self, sdf_expression, ground_expression=None, 
+               material_setting=None, finite_difference_epsilon=None,
+               convergence_threshold=None, num_iterations=None):
 
-        image = render_expression(sdf_eval_func, ground_eval_func,
+        if convergence_threshold is None:
+            convergence_threshold = self.convergence_threshold
+        if num_iterations is None:
+            num_iterations = self.num_iterations
+        camera_position = self.get_camera_position(**self.camera_params)
+        ray_positions, ray_directions = self.get_rays(camera_position)
+        if material_setting is None:
+            material_setting = self.make_random_material()
+
+        image = render_expression(self.sdf_eval_func, self.ground_eval_func,
                                   ray_positions, ray_directions,
                                   camera_position, 
                                   light_setting=self.light_setting,
@@ -187,6 +226,8 @@ class Renderer:
                                   convergence_threshold=self.convergence_threshold,
                                   finite_difference_epsilon=finite_difference_epsilon)
         image = image.reshape(self.resolution[1], self.resolution[0], 3)
+        if self.torch_compile:
+            th._dynamo.reset()
         return image
 
     def make_random_material(self):

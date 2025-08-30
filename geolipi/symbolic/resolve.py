@@ -136,7 +136,10 @@ def resolve_macros(expr: GLFunction, device) -> GLFunction:
         subexpr = resolved_args[0]
         subexpr = resolved_args[0]
         dist = resolved_args[1]
-        n_count = resolved_args[2]
+        if isinstance(resolved_args[2], th.Tensor):
+            n_count = resolved_args[2].long()
+        else:
+            n_count = resolved_args[2]
         if isinstance(expr, PREFIXED_AXIS_SYM):
             dir = AXIS_MAPPER[expr.__class__].clone().to(device)
         elif isinstance(expr, AXIAL_PARAM_SYM):

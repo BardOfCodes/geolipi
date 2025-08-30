@@ -2,7 +2,7 @@ import numpy as np
 import torch as th
 from .common import EPSILON, ACOS_EPSILON
 from .sdf_functions_2d import ndot
-
+import torch.nn.functional as F
 COS_30 = np.cos(np.pi / 6)
 TAN_30 = np.tan(np.pi / 6)
 
@@ -1088,3 +1088,39 @@ def sdf3d_inexact_anisotropic_gaussian(points, center, axial_radii, scale_consta
     )
     base_sdf = scale_constant[..., :] * th.exp(points.sum(-1))
     return base_sdf
+
+
+def sdf3d_sdf_grid(points: th.Tensor, sdf_grid: th.Tensor, name: str = ""):
+    """
+    Sample SDF values from a 3D grid using trilinear interpolation.
+    
+    Args:
+        points: (3, N) or (N, 3) in range [-1, 1]
+        sdf_grid: (D, H, W) tensor with SDF values
+        name: unused, placeholder
+    
+    Returns:
+        sdf: (N,) interpolated SDF values
+    """
+    if points.shape[0] == 3 and points.ndim == 2:
+        points = points.T  # (N, 3)
+    assert points.shape[1] == 3, "Points should be (N, 3)"
+
+    # Clip to [-1, 1] to stay within bounds
+    points = th.clamp(points, -1.0, 1.0)
+
+    # Normalize grid to shape (1, 1, D, H, W)
+    sdf_grid = sdf_grid.unsqueeze(0).unsqueeze(0)  # (1, 1, D, H, W)
+
+    # Convert points from [-1, 1] to grid_sample normalized [-1, 1]
+    # NOTE: grid_sample expects zyx order
+    coords = points[:, [2, 1, 0]].unsqueeze(0).unsqueeze(0)  # (1, 1, N, 1, 3)
+
+    # grid_sample expects coordinates in [-1, 1]
+    sampled = F.grid_sample(sdf_grid, coords, 
+                        mode='bilinear', 
+                        padding_mode="border", 
+                        align_corners=False)
+    sdf = sampled.squeeze()  # shape (N,)
+    return sdf
+

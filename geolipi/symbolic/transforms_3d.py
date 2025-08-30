@@ -236,3 +236,12 @@ class Onion3D(SDFModifier3D):
     - torch_compute.sdf_operators.sdf_onion
     Read evaluator specific documentation for more.
     """
+
+
+@register_symbol
+class NegOnlyOnion3D(SDFModifier3D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.sdf_operators.sdf_onion
+    Read evaluator specific documentation for more.
+    """

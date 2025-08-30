@@ -127,10 +127,8 @@ def unroll_expression(in_expr: GLBase, sketcher: Sketcher,
     elif param_mode == "varlist":
         # varlist and also add varlist unpacking to codelines.
         fn_args = [ast.arg(arg='coords_0'), ast.arg(arg='varlist')]
-        assoc_lines = []
-        for ind, param in enumerate(param_names):
-            assoc_lines.append(f"{param} = varlist[{ind}]")
-        local_context.codelines = assoc_lines + local_context.codelines
+        unpack_line = f"{', '.join(param_names)} = varlist"
+        local_context.codelines = [unpack_line,] + local_context.codelines
     elif param_mode == "unrolled":
         fn_args = [ast.arg(arg='coords_0')]
         for param in param_names:
