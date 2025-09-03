@@ -1,38 +1,42 @@
 import torch as th
 import numpy as np
-from .common import EPSILON
+from .constants import EPSILON
 from .settings import Settings
 
 
-def get_affine_matrix_2D(matrix, params):
+def get_affine_matrix_2D(matrix: th.Tensor, params: th.Tensor) -> th.Tensor:
+    """
+    Parameters:
+        matrix: Affine transformation matrix
+        params: Transformation parameters
+
+    Returns:
+        Tensor: Updated transformation parameters
+    """
     # matrix = matrix @ params
     return params
 
-def get_affine_translate_2D(matrix, param):
+def get_affine_translate_2D(matrix: th.Tensor, param: th.Tensor) -> th.Tensor:
     """
-    Applies a 2D translation to the given affine transformation matrix.
-
     Parameters:
-        matrix (torch.Tensor): The affine transformation matrix to be modified.
-        param (list or torch.Tensor): The translation parameters [dx, dy].
+        matrix: Affine transformation matrix to modify
+        param: Translation parameters [dx, dy]
 
     Returns:
-        torch.Tensor: The modified affine transformation matrix.
+        Tensor: Modified affine transformation matrix
     """
     matrix[:2, 2] = -param
     return matrix
 
 
-def get_affine_scale_2D(matrix, param):
+def get_affine_scale_2D(matrix: th.Tensor, param: th.Tensor) -> th.Tensor:
     """
-    Applies a 2D scaling to the given affine transformation matrix.
-
     Parameters:
-        matrix (torch.Tensor): The affine transformation matrix to be modified.
-        param (list or torch.Tensor): The scaling factors [sx, sy].
+        matrix: Affine transformation matrix to modify
+        param: Scaling factors [sx, sy]
 
     Returns:
-        torch.Tensor: The modified affine transformation matrix.
+        Tensor: Modified affine transformation matrix
     """
     matrix[0, 0] = 1 / (EPSILON + param[0])
     matrix[1, 1] = 1 / (EPSILON + param[1])
@@ -61,16 +65,14 @@ def get_affine_reflection_2D(matrix, param):
     return matrix
 
 
-def get_affine_rotate_2D(matrix, param):
+def get_affine_rotate_2D(matrix: th.Tensor, param: th.Tensor) -> th.Tensor:
     """
-    Applies a 2D rotation to the given affine transformation matrix.
-
     Parameters:
-        matrix (torch.Tensor): The affine transformation matrix to be modified.
-        param (float or torch.Tensor): The rotation angle in radians.
+        matrix: Affine transformation matrix to modify
+        param: Rotation angle in radians
 
     Returns:
-        torch.Tensor: The modified affine transformation matrix.
+        Tensor: Modified affine transformation matrix
     """
     c = th.cos(-param)
     s = th.sin(-param)
@@ -249,31 +251,27 @@ def get_affine_rotate_matrix_3D(matrix, param):
     return matrix
 
     
-def position_distort(positions, k):
+def position_distort(positions: th.Tensor, k: th.Tensor) -> th.Tensor:
     """
-    Applies a random distortion to the given positions.
-
     Parameters:
-        positions (torch.Tensor): The original positions.
-        k (float): The magnitude of the distortion.
+        positions: Original positions
+        k: Distortion magnitude
 
     Returns:
-        torch.Tensor: The distorted positions.
+        Tensor: Distorted positions
     """
     positions = positions + th.rand_like(positions) * k
     return positions
 
 
-def position_twist(positions, k):
+def position_twist(positions: th.Tensor, k: th.Tensor) -> th.Tensor:
     """
-    Applies a twisting transformation to the given positions.
-
     Parameters:
-        positions (torch.Tensor): The original positions.
-        k (float): The twist magnitude based on the z-coordinate.
+        positions: Original positions
+        k: Twist magnitude based on z-coordinate
 
     Returns:
-        torch.Tensor: The twisted positions.
+        Tensor: Twisted positions
     """
     c = th.cos(k * positions[..., 2])
     s = th.sin(k * positions[..., 2])
@@ -284,16 +282,14 @@ def position_twist(positions, k):
     return q
 
 
-def position_cheap_bend(positions, k):
+def position_cheap_bend(positions: th.Tensor, k: th.Tensor) -> th.Tensor:
     """
-    Applies a bending transformation to the given positions.
-
     Parameters:
-        positions (torch.Tensor): The original positions.
-        k (float): The bend magnitude based on the x-coordinate.
+        positions: Original positions
+        k: Bend magnitude based on x-coordinate
 
     Returns:
-        torch.Tensor: The bent positions.
+        Tensor: Bent positions
     """
     c = th.cos(k * positions[..., 0])
     s = th.sin(k * positions[..., 0])

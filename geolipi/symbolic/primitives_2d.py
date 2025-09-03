@@ -38,102 +38,58 @@ class Primitive2D(GLFunction):
 
 @register_symbol
 class Circle2D(Primitive2D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_2d.sdf2d_circle
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class RoundedBox2D(Primitive2D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_2d.sdf2d_rounded_box
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class Box2D(Primitive2D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_2d.sdf2d_box
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class Rectangle2D(Primitive2D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_2d.sdf2d_box
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class OrientedBox2D(Primitive2D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_2d.sdf2d_oriented_box
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class Rhombus2D(Primitive2D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_2d.sdf2d_rhombus
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class Trapezoid2D(Primitive2D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_2d.sdf2d_trapezoid
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class Parallelogram2D(Primitive2D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_2d.sdf2d_parallelogram
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class EquilateralTriangle2D(Primitive2D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_2d.sdf2d_equilateral_triangle
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class IsoscelesTriangle2D(Primitive2D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_2d.sdf2d_isosceles_triangle
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class Triangle2D(Primitive2D):
 
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_2d.sdf2d_circle
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol

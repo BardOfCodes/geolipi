@@ -37,132 +37,79 @@ class Primitive3D(GLFunction):
 
 @register_symbol
 class Sphere3D(Primitive3D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_3d.sdf3d_sphere
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class Box3D(Primitive3D):
 
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_3d.sdf3d_box
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class Cuboid3D(Box3D):
 
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_3d.sdf3d_box
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class RoundedBox3D(Primitive3D):
 
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_3d.sdf3d_rounded_box
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class BoxFrame3D(Primitive3D):
 
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_3d.sdf3d_box_frame
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class Torus3D(Primitive3D):
 
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_3d.sdf3d_torus
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class CappedTorus3D(Primitive3D):
 
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_3d.sdf3d_capped_torus
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class Link3D(Primitive3D):
 
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_3d.sdf3d_link
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class InfiniteCylinder3D(Primitive3D):
 
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_3d.sdf3d_infinite_cylinder
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class Cone3D(Primitive3D):
 
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_3d.sdf3d_cone
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class InexactCone3D(Primitive3D):
 
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_3d.sdf3d_inexact_cone
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class InfiniteCone3D(Primitive3D):
 
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_3d.sdf3d_plane
-    # TODO: Add support (Used in CSGStump)
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class Plane3D(Primitive3D):
 
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_3d.sdf3d_plane
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol

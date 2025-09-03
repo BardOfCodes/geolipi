@@ -204,7 +204,7 @@ class GLBase:
 
     def inject_tensor_list(self, tensor_list: List[th.Tensor] | List[Tuple[th.Tensor, int]]):
         """
-        Injects a list of tensors into the expression, using tensor occurence order to match the tensors.
+        Injects a list of tensors into the expression, using tensor occurrence order to match the tensors.
         Used for Parameter optimizing without converting form.
         """
         if len(tensor_list) == 0:

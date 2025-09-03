@@ -2,27 +2,17 @@ from .base import GLFunction
 from .registry import register_symbol
 
 class SVGCombinator(GLFunction):
-    """
-    Base class for all SVG combinators.
-    """
+    """Base class for SVG color blending operations."""
 
 
 @register_symbol
 class DestinationIn(SVGCombinator):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.color_functions.destination_in
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class DestinationOut(SVGCombinator):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.color_functions.destination_out
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol

@@ -12,6 +12,8 @@ import geolipi.symbolic.color as sym_color
 
 import geolipi.torch_compute.sdf_operators as sdf_op_bank
 import geolipi.torch_compute.sdf_functions_2d as sdf2d_bank
+import geolipi.torch_compute.non_sdf_functions_2d as nonsdf2d_bank
+import geolipi.torch_compute.polycurve_2d as polycurve2d_bank
 import geolipi.torch_compute.sdf_functions_3d as sdf3d_bank
 import geolipi.torch_compute.transforms as transform_bank
 import geolipi.torch_compute.sdf_functions_higher as higher_sdf_bank
@@ -82,24 +84,24 @@ PRIMITIVE_MAP = {
     sym_prim2d.NoParamCircle2D: sdf2d_bank.sdf2d_no_param_circle,
     sym_prim2d.NoParamTriangle2D: sdf2d_bank.sdf2d_no_param_triangle,
     sym_prim2d.NullExpression2D: sdf_op_bank.sdf_null_op,
-    sym_prim2d.InstantiatedPrim2D: sdf2d_bank.nonsdf2d_instantiated_prim,
+    sym_prim2d.InstantiatedPrim2D: nonsdf2d_bank.nonsdf2d_instantiated_prim,
     # These should be shifted to the other repositories - based on declarations.
-    sym_prim2d.PolyLine2D: sdf2d_bank.sdf2d_polyline,
+    sym_prim2d.PolyLine2D: polycurve2d_bank.sdf2d_polyline,
     # Tile
-    sym_prim2d.TileUV2D: sdf2d_bank.nonsdf2d_tile_uv,
+    sym_prim2d.TileUV2D: nonsdf2d_bank.nonsdf2d_tile_uv,
     # SingleDim
-    sym_prim2d.SinRepeatX2D: sdf2d_bank.nonsdf2d_sin_x,
-    sym_prim2d.SinRepeatY2D: sdf2d_bank.nonsdf2d_sin_y,
-    sym_prim2d.SinAlongAxisY2D: sdf2d_bank.nonsdf2d_sin_along_axis_y,
-    sym_prim2d.SinDiagonal2D: sdf2d_bank.nonsdf2d_sin_diagonal,
-    sym_prim2d.SinDiagonalFlip2D: sdf2d_bank.nonsdf2d_sin_diagonal_flip,
-    sym_prim2d.SinRadial2D: sdf2d_bank.nonsdf2d_sin_radial,
-    sym_prim2d.SquiggleX2D: sdf2d_bank.nonsdf2d_squiggle_lines_x,
-    sym_prim2d.SquiggleY2D: sdf2d_bank.nonsdf2d_squiggle_lines_y,
-    sym_prim2d.SquiggleDiagonal2D: sdf2d_bank.nonsdf2d_squiggle_diagonal,
-    sym_prim2d.SquiggleDiagonalFlip2D: sdf2d_bank.nonsdf2d_squiggle_diagonal_flip,
-    sym_prim2d.SquiggleRadial2D: sdf2d_bank.nonsdf2d_squiggle_radial,
-    sym_prim2d.SquiggleDistortion2D: sdf2d_bank.nonsdf2d_squiggle_radial_distortion,
+    sym_prim2d.SinRepeatX2D: nonsdf2d_bank.nonsdf2d_sin_x,
+    sym_prim2d.SinRepeatY2D: nonsdf2d_bank.nonsdf2d_sin_y,
+    sym_prim2d.SinAlongAxisY2D: nonsdf2d_bank.nonsdf2d_sin_along_axis_y,
+    sym_prim2d.SinDiagonal2D: nonsdf2d_bank.nonsdf2d_sin_diagonal,
+    sym_prim2d.SinDiagonalFlip2D: nonsdf2d_bank.nonsdf2d_sin_diagonal_flip,
+    sym_prim2d.SinRadial2D: nonsdf2d_bank.nonsdf2d_sin_radial,
+    sym_prim2d.SquiggleX2D: nonsdf2d_bank.nonsdf2d_squiggle_lines_x,
+    sym_prim2d.SquiggleY2D: nonsdf2d_bank.nonsdf2d_squiggle_lines_y,
+    sym_prim2d.SquiggleDiagonal2D: nonsdf2d_bank.nonsdf2d_squiggle_diagonal,
+    sym_prim2d.SquiggleDiagonalFlip2D: nonsdf2d_bank.nonsdf2d_squiggle_diagonal_flip,
+    sym_prim2d.SquiggleRadial2D: nonsdf2d_bank.nonsdf2d_squiggle_radial,
+    sym_prim2d.SquiggleDistortion2D: nonsdf2d_bank.nonsdf2d_squiggle_radial_distortion,
     # 3D
     sym_prim3d.Sphere3D: sdf3d_bank.sdf3d_sphere,
     sym_prim3d.Box3D: sdf3d_bank.sdf3d_box,
@@ -209,7 +211,7 @@ COLOR_FUNCTIONS = {
     # These also go into Splitweave.
     sym_color.ModifyOpacity2D: color_func_bank.modify_opacity,
     sym_color.ModifyColor2D: color_func_bank.modify_color,
-    sym_color.ModifyColorTritone2D: color_func_bank.depreciated_modify_color_tritone,
+    sym_color.ModifyColorTritone2D: color_func_bank.deprecated_modify_color_tritone,
     sym_color.AlphaMask2D: color_func_bank.alpha_mask,
     sym_color.RGB2HSL: colorspace_bank.rgb2hsl_torch,
     sym_color.RGB2HSV: colorspace_bank.rgb2hsv_torch,

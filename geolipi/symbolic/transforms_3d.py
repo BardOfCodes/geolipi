@@ -22,35 +22,19 @@ class SDFModifier3D(Modifier3D):
 
 @register_symbol
 class Translate3D(Transform3D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.transforms.get_affine_translate_3D
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 @register_symbol
 class EulerRotate3D(Transform3D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.transforms.get_affine_rotate_euler_3D
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 @register_symbol
 class AxisAngleRotate3D(Transform3D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.transforms.get_affine_rotate_axis_angle_3D
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 @register_symbol
 class RotateMatrix3D(Transform3D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.transforms.get_affine_rotate_matrix_3D
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 @register_symbol
 class Scale3D(Transform3D):

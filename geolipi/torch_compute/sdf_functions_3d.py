@@ -1,22 +1,19 @@
 import numpy as np
 import torch as th
-from .common import EPSILON, ACOS_EPSILON
+from typing import Union
+from .constants import EPSILON, ACOS_EPSILON, COS_30, TAN_30
 from .sdf_functions_2d import ndot
 import torch.nn.functional as F
-COS_30 = np.cos(np.pi / 6)
-TAN_30 = np.tan(np.pi / 6)
 
 
-def sdf3d_sphere(points, radius):
+def sdf3d_sphere(points: th.Tensor, radius: th.Tensor) -> th.Tensor:
     """
-    Calculates the signed distance from 3D points to the surface of a sphere.
-
     Parameters:
-        points (torch.Tensor): A tensor of shape [batch, num_points, 3] representing 3D points.
-        radius (torch.Tensor): A tensor of shape [batch, 1] representing the radii of spheres.
+        points: 3D coordinates to evaluate, shape [batch, num_points, 3]
+        radius: Sphere radius, shape [batch, 1]
 
     Returns:
-        torch.Tensor: A tensor containing the signed distances of each point to the sphere surface.
+        Tensor: SDF values for the sphere
     """
 
     # Calculate the Euclidean norm of each point and subtract the radius for signed distance
@@ -24,16 +21,14 @@ def sdf3d_sphere(points, radius):
     return base_sdf
 
 
-def sdf3d_box(points, size):
+def sdf3d_box(points: th.Tensor, size: th.Tensor) -> th.Tensor:
     """
-    Calculates the signed distance from 3D points to the surface of an axis-aligned 3D box.
-
     Parameters:
-        points (torch.Tensor): A tensor of shape [batch, num_points, 3] representing 3D points.
-        size (torch.Tensor): A tensor of shape [batch, 3] representing the half extents of the box.
+        points: 3D coordinates to evaluate, shape [batch, num_points, 3]
+        size: Box half extents, shape [batch, 3]
 
     Returns:
-        torch.Tensor: A tensor containing the signed distances of each point to the box surface.
+        Tensor: SDF values for the box
     """
     q = th.abs(points) - size[..., None, :]
     term_1 = th.norm(th.clamp(q, min=0), dim=-1)
@@ -42,17 +37,15 @@ def sdf3d_box(points, size):
     return base_sdf
 
 
-def sdf3d_rounded_box(points, size, radius):
+def sdf3d_rounded_box(points: th.Tensor, size: th.Tensor, radius: th.Tensor) -> th.Tensor:
     """
-    Calculates the signed distance from 3D points to the surface of a rounded axis-aligned 3D box.
-
     Parameters:
-        points (torch.Tensor): A tensor of shape [batch, num_points, 3] representing 3D points.
-        size (torch.Tensor): A tensor of shape [batch, 3] representing the half extents of the box.
-        radius (torch.Tensor): A tensor of shape [batch, 1] representing the radius of rounding.
+        points: 3D coordinates to evaluate, shape [batch, num_points, 3]
+        size: Box half extents, shape [batch, 3]
+        radius: Rounding radius, shape [batch, 1]
 
     Returns:
-        torch.Tensor: A tensor containing the signed distances of each point to the rounded box surface.
+        Tensor: SDF values for the rounded box
     """
     q = th.abs(points) - size[..., None, :]
     term_1 = th.norm(th.clamp(q, min=0), dim=-1)
@@ -61,7 +54,7 @@ def sdf3d_rounded_box(points, size, radius):
     return base_sdf
 
 
-def sdf3d_box_frame(points, b, e):
+def sdf3d_box_frame(points: th.Tensor, b: th.Tensor, e: th.Tensor) -> th.Tensor:
     """
     Calculates the signed distance from 3D points to the surface of a box frame.
 
@@ -89,16 +82,14 @@ def sdf3d_box_frame(points, b, e):
     return sdf
 
 
-def sdf3d_torus(points, t):
+def sdf3d_torus(points: th.Tensor, t: th.Tensor) -> th.Tensor:
     """
-    Calculates the signed distance from 3D points to the surface of a torus.
-
     Parameters:
-        points (torch.Tensor): A tensor of shape [batch, num_points, 3] representing 3D points.
-        t (torch.Tensor): A tensor of shape [batch, 2] representing the major (first component) and minor (second component) radii of the torus.
+        points: 3D coordinates to evaluate, shape [batch, num_points, 3]
+        t: Major and minor radii, shape [batch, 2]
 
     Returns:
-        torch.Tensor: A tensor containing the signed distances of each point to the torus surface.
+        Tensor: SDF values for the torus
     """
     points = points[..., [0, 2, 1]]
     q_x = th.norm(points[..., :2], dim=-1) - t[..., None, 0]
@@ -107,7 +98,7 @@ def sdf3d_torus(points, t):
     return base_sdf
 
 
-def sdf3d_capped_torus(points, angle, ra, rb):
+def sdf3d_capped_torus(points: th.Tensor, angle: th.Tensor, ra: th.Tensor, rb: th.Tensor) -> th.Tensor:
     """
     Calculates the signed distance from 3D points to the surface of a capped torus.
 
@@ -132,7 +123,7 @@ def sdf3d_capped_torus(points, angle, ra, rb):
     return base_sdf
 
 
-def sdf3d_link(points, le, r1, r2):
+def sdf3d_link(points: th.Tensor, le: th.Tensor, r1: th.Tensor, r2: th.Tensor) -> th.Tensor:
     """
     Calculates the signed distance from 3D points to the surface of a link shape.
 
@@ -152,7 +143,7 @@ def sdf3d_link(points, le, r1, r2):
     return sdf
 
 
-def sdf3d_infinite_cylinder(points, c):
+def sdf3d_infinite_cylinder(points: th.Tensor, c: th.Tensor) -> th.Tensor:
     """
     Calculates the signed distance from 3D points to the surface of an infinite cylinder.
 
@@ -168,17 +159,15 @@ def sdf3d_infinite_cylinder(points, c):
     return base_sdf
 
 
-def sdf3d_cone(points, angle, h):
+def sdf3d_cone(points: th.Tensor, angle: th.Tensor, h: th.Tensor) -> th.Tensor:
     """
-    Calculates the signed distance from 3D points to the surface of a cone.
-
     Parameters:
-        points (torch.Tensor): A tensor of shape [batch, num_points, 3] representing 3D points.
-        angle (torch.Tensor): A tensor of shape [batch, 1] representing the cone's angle.
-        h (torch.Tensor): A tensor of shape [batch, 1] representing the cone's height.
+        points: 3D coordinates to evaluate, shape [batch, num_points, 3]
+        angle: Cone angle, shape [batch, 1]
+        h: Cone height, shape [batch, 1]
 
     Returns:
-        torch.Tensor: A tensor containing the signed distances of each point to the cone surface.
+        Tensor: SDF values for the cone
     """
     # make the points x z,y
     points = points[..., [0, 2, 1]]
@@ -248,17 +237,15 @@ def sdf3d_infinite_cone(points, angle):
     return base_sdf
 
 
-def sdf3d_plane(points, n, h):
+def sdf3d_plane(points: th.Tensor, n: th.Tensor, h: th.Tensor) -> th.Tensor:
     """
-    Calculates the signed distance from 3D points to a plane.
-
     Parameters:
-        points (torch.Tensor): A tensor of shape [batch, num_points, 3] representing 3D points.
-        n (torch.Tensor): A tensor of shape [batch, 3] representing the plane's normal vector.
-        h (torch.Tensor): A tensor of shape [batch, 1] representing the plane's offset from the origin.
+        points: 3D coordinates to evaluate, shape [batch, num_points, 3]
+        n: Plane normal vector, shape [batch, 3]
+        h: Plane offset from origin, shape [batch, 1]
 
     Returns:
-        torch.Tensor: A tensor containing the signed distances of each point to the plane.
+        Tensor: SDF values for the plane
     """
     n = n / (th.norm(n, dim=-1, keepdim=True) + EPSILON)
     base_sdf = (points * n[..., None, :]).sum(-1) + h
@@ -321,18 +308,16 @@ def sdf3d_tri_prism(points, h):
     return sdf
 
 
-def sdf3d_capsule(points, a, b, r):
+def sdf3d_capsule(points: th.Tensor, a: th.Tensor, b: th.Tensor, r: th.Tensor) -> th.Tensor:
     """
-    Calculates the signed distance from 3D points to the surface of a capsule.
-
     Parameters:
-        points (torch.Tensor): A tensor of shape [batch, num_points, 3] representing 3D points.
-        a (torch.Tensor): A tensor of shape [batch, 3] representing one end of the capsule's centerline.
-        b (torch.Tensor): A tensor of shape [batch, 3] representing the other end of the capsule's centerline.
-        r (torch.Tensor): A tensor of shape [batch, 1] representing the capsule's radius.
+        points: 3D coordinates to evaluate, shape [batch, num_points, 3]
+        a: One end of centerline, shape [batch, 3]
+        b: Other end of centerline, shape [batch, 3]
+        r: Capsule radius, shape [batch, 1]
 
     Returns:
-        torch.Tensor: A tensor containing the signed distances of each point to the capsule surface.
+        Tensor: SDF values for the capsule
     """
     pa = points - a[..., None, :]
     ba = b[..., None, :] - a[..., None, :]
@@ -345,7 +330,7 @@ def sdf3d_capsule(points, a, b, r):
     return sdf
 
 
-def sdf3d_vertical_capsule(points, h, r):
+def sdf3d_vertical_capsule(points: th.Tensor, h: th.Tensor, r: th.Tensor) -> th.Tensor:
     """
     Calculates the signed distance from 3D points to the surface of a vertically-aligned capsule.
 
@@ -807,7 +792,7 @@ def sdf3d_rhombus(points, la, lb, h, ra):
     return base_sdf
 
 
-def sdf3d_octahedron(points, s):
+def sdf3d_octahedron(points: th.Tensor, s: th.Tensor) -> th.Tensor:
     """
     Computes the signed distance field (SDF) for an octahedron shape in 3D.
 
@@ -854,7 +839,7 @@ def sdf3d_inexact_octahedron(points, s):
     return base_sdf
 
 
-def sdf3d_pyramid(points, h):
+def sdf3d_pyramid(points: th.Tensor, h: th.Tensor) -> th.Tensor:
     """
     Computes the signed distance field (SDF) for a pyramid shape in 3D.
 
@@ -994,15 +979,13 @@ def sdf3d_quadrilateral(points, a, b, c, d):
     return base_sdf
 
 
-def sdf3d_no_param_cuboid(points):
+def sdf3d_no_param_cuboid(points: th.Tensor) -> th.Tensor:
     """
-    Computes the signed distance field (SDF) for a cuboid shape with no additional parameters in 3D.
-
     Parameters:
-        points (torch.Tensor): A tensor of shape [batch, num_points, 3] representing 3D points.
+        points: 3D coordinates to evaluate, shape [batch, num_points, 3]
 
     Returns:
-        torch.Tensor: A tensor containing the signed distances of each point to the cuboid surface.
+        Tensor: SDF values for unit cuboid
     """
     points = th.abs(points)
     points -= 0.5
@@ -1012,30 +995,26 @@ def sdf3d_no_param_cuboid(points):
     return base_sdf
 
 
-def sdf3d_no_param_sphere(points):
+def sdf3d_no_param_sphere(points: th.Tensor) -> th.Tensor:
     """
-    Computes the signed distance field (SDF) for a sphere shape with no additional parameters in 3D.
-
     Parameters:
-        points (torch.Tensor): A tensor of shape [batch, num_points, 3] representing 3D points.
+        points: 3D coordinates to evaluate, shape [batch, num_points, 3]
 
     Returns:
-        torch.Tensor: A tensor containing the signed distances of each point to the sphere surface.
+        Tensor: SDF values for unit sphere
     """
     base_sdf = points.norm(dim=-1)
     base_sdf = base_sdf - 0.5
     return base_sdf
 
 
-def sdf3d_no_param_cylinder(points):
+def sdf3d_no_param_cylinder(points: th.Tensor) -> th.Tensor:
     """
-    Computes the signed distance field (SDF) for a cylinder shape with no additional parameters in 3D.
-
     Parameters:
-        points (torch.Tensor): A tensor of shape [batch, num_points, 3] representing 3D points.
+        points: 3D coordinates to evaluate, shape [batch, num_points, 3]
 
     Returns:
-        torch.Tensor: A tensor containing the signed distances of each point to the cylinder surface.
+        Tensor: SDF values for unit cylinder
     """
     points = points[..., [0, 2, 1]]
     r = 0.5
@@ -1090,37 +1069,53 @@ def sdf3d_inexact_anisotropic_gaussian(points, center, axial_radii, scale_consta
     return base_sdf
 
 
-def sdf3d_sdf_grid(points: th.Tensor, sdf_grid: th.Tensor, name: str = ""):
+def sdf3d_sdf_grid(
+    points: th.Tensor, 
+    sdf_grid: th.Tensor, 
+    name: Union[str, th.Tensor] = ""
+) -> th.Tensor:
     """
-    Sample SDF values from a 3D grid using trilinear interpolation.
+    Batch-compatible version that handles both batched and non-batched inputs.
     
-    Args:
-        points: (3, N) or (N, 3) in range [-1, 1]
-        sdf_grid: (D, H, W) tensor with SDF values
-        name: unused, placeholder
-    
+    Parameters:
+        points: 3D coordinates in range [-1, 1], shape (N, 3), (3, N), or (B, N, 3)
+        sdf_grid: SDF grid values, shape (D, H, W) or (B, D, H, W)
+        name: Unused placeholder parameter
+
     Returns:
-        sdf: (N,) interpolated SDF values
+        Tensor: Interpolated SDF values, shape (N,) or (B, N)
     """
-    if points.shape[0] == 3 and points.ndim == 2:
+    # Normalize points to (B, N, 3)
+    original_shape = points.shape
+    if points.ndim == 2 and points.shape[0] == 3:
         points = points.T  # (N, 3)
-    assert points.shape[1] == 3, "Points should be (N, 3)"
-
-    # Clip to [-1, 1] to stay within bounds
+    if points.ndim == 2:
+        points = points.unsqueeze(0)  # (1, N, 3)
+    
+    # Normalize sdf_grid to (B, D, H, W)
+    if sdf_grid.ndim == 3:
+        sdf_grid = sdf_grid.unsqueeze(0)  # (1, D, H, W)
+    
+    # Expand grids to match batch size if needed
+    batch_size = max(points.shape[0], sdf_grid.shape[0])
+    points = points.expand(batch_size, -1, -1)
+    sdf_grid = sdf_grid.expand(batch_size, -1, -1, -1)
+    
+    # Clip points to [-1, 1]
     points = th.clamp(points, -1.0, 1.0)
-
-    # Normalize grid to shape (1, 1, D, H, W)
-    sdf_grid = sdf_grid.unsqueeze(0).unsqueeze(0)  # (1, 1, D, H, W)
-
-    # Convert points from [-1, 1] to grid_sample normalized [-1, 1]
-    # NOTE: grid_sample expects zyx order
-    coords = points[:, [2, 1, 0]].unsqueeze(0).unsqueeze(0)  # (1, 1, N, 1, 3)
-
-    # grid_sample expects coordinates in [-1, 1]
-    sampled = F.grid_sample(sdf_grid, coords, 
-                        mode='bilinear', 
-                        padding_mode="border", 
-                        align_corners=False)
-    sdf = sampled.squeeze()  # shape (N,)
+    
+    # Prepare for grid_sample: (B, 1, D, H, W) and (B, N, 1, 1, 3)
+    sdf_grid = sdf_grid.unsqueeze(1)
+    coords = points[:, :, [2, 1, 0]].unsqueeze(2).unsqueeze(2)
+    
+    # Sample and squeeze
+    sampled = F.grid_sample(sdf_grid, coords, mode='bilinear', 
+                           padding_mode="border", align_corners=False)
+    sdf = sampled.squeeze(1).squeeze(-1).squeeze(-1)
+    
+    # Return original dimensionality
+    if len(original_shape) == 2:
+        sdf = sdf.squeeze(0)
+    
     return sdf
 

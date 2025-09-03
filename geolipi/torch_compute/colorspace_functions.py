@@ -3,7 +3,13 @@ import torch
 
 
 def rgb2hsl_torch(rgb: torch.Tensor) -> torch.Tensor:
-    # 
+    """
+    Parameters:
+        rgb: RGB color tensor
+
+    Returns:
+        Tensor: HSL color tensor
+    """
     cmax, cmax_idx = torch.max(rgb, dim=-1, keepdim=True)
     cmin = torch.min(rgb, dim=-1, keepdim=True)[0]
     delta = cmax - cmin
@@ -28,6 +34,13 @@ def rgb2hsl_torch(rgb: torch.Tensor) -> torch.Tensor:
 
 
 def rgb2hsv_torch(rgb: torch.Tensor) -> torch.Tensor:
+    """
+    Parameters:
+        rgb: RGB color tensor
+
+    Returns:
+        Tensor: HSV color tensor
+    """
     cmax, cmax_idx = torch.max(rgb, dim=-1, keepdim=True)
     cmin = torch.min(rgb, dim=-1, keepdim=True)[0]
     delta = cmax - cmin
@@ -44,6 +57,13 @@ def rgb2hsv_torch(rgb: torch.Tensor) -> torch.Tensor:
 
 
 def hsv2rgb_torch(hsv: torch.Tensor) -> torch.Tensor:
+    """
+    Parameters:
+        hsv: HSV color tensor
+
+    Returns:
+        Tensor: RGB color tensor
+    """
     hsv_h, hsv_s, hsv_l = hsv[..., 0:1], hsv[..., 1:2], hsv[..., 2:3]
     _c = hsv_l * hsv_s
     _x = _c * (- torch.abs(hsv_h * 6. % 2. - 1) + 1.)
@@ -63,6 +83,13 @@ def hsv2rgb_torch(hsv: torch.Tensor) -> torch.Tensor:
 
 
 def hsl2rgb_torch(hsl: torch.Tensor) -> torch.Tensor:
+    """
+    Parameters:
+        hsl: HSL color tensor
+
+    Returns:
+        Tensor: RGB color tensor
+    """
     hsl_h, hsl_s, hsl_l = hsl[..., 0:1], hsl[..., 1:2], hsl[..., 2:3]
     _c = (-torch.abs(hsl_l * 2. - 1.) + 1) * hsl_s
     _x = _c * (-torch.abs(hsl_h * 6. % 2. - 1) + 1.)
@@ -80,16 +107,14 @@ def hsl2rgb_torch(hsl: torch.Tensor) -> torch.Tensor:
     rgb += _m
     return rgb
     
-def hue_shift_torch(hsl, delta):
+def hue_shift_torch(hsl: torch.Tensor, delta: torch.Tensor) -> torch.Tensor:
     """
-    Changes the hue of an input color tensor by a specified amount.
-
     Parameters:
-        input (Tensor): Input hsl tensor.
-        delta (float): Amount to change the hue by.
+        hsl: Input HSL tensor
+        delta: Hue shift amount
 
     Returns:
-        Tensor: Color tensor with the hue changed.
+        Tensor: HSL tensor with shifted hue
     """
     hsl[..., 0] = (hsl[..., 0] + delta) % 1
     return hsl

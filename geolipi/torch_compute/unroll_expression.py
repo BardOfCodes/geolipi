@@ -23,7 +23,7 @@ from geolipi.symbolic.types import (
     TRANSFORM_TYPE,
     POSITIONALMOD_TYPE,
     SDFMOD_TYPE,
-    HIGERPRIM_TYPE,
+    HIGHER_PRIM_TYPE,
     COLOR_MOD,
     APPLY_COLOR_TYPE,
     SVG_COMBINATORS,
@@ -33,7 +33,7 @@ from geolipi.symbolic.types import (
 )
 from .sketcher import Sketcher
 from .maps import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP, COLOR_FUNCTIONS, COLOR_MAP
-from .common import EPSILON
+from .constants import EPSILON
 from .sympy_to_torch import SYMPY_TO_TORCH, TEXT_TO_SYMPY
 from .evaluate_expression import _parse_param_from_expr
 """
@@ -252,7 +252,7 @@ def unroll_prim(expression: PRIM_TYPE, local_context: LocalContext, sketcher: Sk
               secondary_sketcher: Optional[Sketcher] = None, isolated_vars: bool = False,
               *args, **kwargs) -> LocalContext:
     
-    if isinstance(expression, HIGERPRIM_TYPE):
+    if isinstance(expression, HIGHER_PRIM_TYPE):
         params = expression.args[1:]
     else:
         params = expression.args
@@ -262,7 +262,7 @@ def unroll_prim(expression: PRIM_TYPE, local_context: LocalContext, sketcher: Sk
     # This is for correction? 
     n_dims = sketcher.n_dims
     function = PRIMITIVE_MAP[type(expression)]
-    if isinstance(expression, HIGERPRIM_TYPE):
+    if isinstance(expression, HIGHER_PRIM_TYPE):
         raise NotImplementedError("Higher-order primitives not implemented")
     else:
         cur_transform = local_context.transform_stack.pop()
@@ -533,7 +533,7 @@ def unroll_gl_var(expression: gls.Variable, local_context: LocalContext, sketche
                 secondary_sketcher: Optional[Sketcher] = None, isolated_vars: bool = False,
                 *args, **kwargs) -> LocalContext:
     raise NotImplementedError(f"Variable {expression} not supported in GeoLIPI. It is supported in derivatives")
-# Need to ad eval ops for Ops. 
+# Need to add eval ops for Ops. 
 
 def _process_params(expression, params, local_context: LocalContext, sketcher: Sketcher):
     """

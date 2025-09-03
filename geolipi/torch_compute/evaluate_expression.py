@@ -21,7 +21,7 @@ from geolipi.symbolic.types import (
     TRANSFORM_TYPE,
     POSITIONALMOD_TYPE,
     SDFMOD_TYPE,
-    HIGERPRIM_TYPE,
+    HIGHER_PRIM_TYPE,
     COLOR_MOD,
     APPLY_COLOR_TYPE,
     SVG_COMBINATORS,
@@ -31,7 +31,7 @@ from geolipi.symbolic.types import (
 )
 from .sketcher import Sketcher
 from .maps import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP, COLOR_FUNCTIONS, COLOR_MAP
-from .common import EPSILON
+from .constants import EPSILON
 from .sympy_to_torch import SYMPY_TO_TORCH, TEXT_TO_SYMPY
 
 
@@ -122,7 +122,7 @@ def eval_prim(expression: PRIM_TYPE, sketcher: Sketcher,
               secondary_sketcher: Optional[Sketcher] = None, coords: th.Tensor = None,
               *args, **kwargs) -> th.Tensor:
     
-    if isinstance(expression, HIGERPRIM_TYPE):
+    if isinstance(expression, HIGHER_PRIM_TYPE):
         params = expression.args[1:]
     else:
         params = expression.args
@@ -131,7 +131,7 @@ def eval_prim(expression: PRIM_TYPE, sketcher: Sketcher,
     n_dims = sketcher.n_dims
     coords = coords[..., :n_dims] / (coords[..., n_dims : n_dims + 1] + EPSILON)
 
-    if isinstance(expression, HIGERPRIM_TYPE):
+    if isinstance(expression, HIGHER_PRIM_TYPE):
         param_points, scale_factor = PRIMITIVE_MAP[type(expression)](
             coords, *params
         )
@@ -313,7 +313,7 @@ def eval_gl_var(expression: gls.Variable, sketcher: Sketcher,
                 secondary_sketcher: Optional[Sketcher] = None, coords: Optional[th.Tensor] = None,
                 *args, **kwargs) -> th.Tensor:
     raise NotImplementedError(f"Variable {expression} not supported in GeoLIPI. It is supported in derivatives")
-# Need to ad eval ops for Ops. 
+# Need to add eval ops for Ops. 
 
 # So as to have gs.Param + have OPs on top. 
 
@@ -333,3 +333,5 @@ def _parse_param_from_expr(expression, params, sketcher: Sketcher):
                 param_list.append(param)
         params = param_list
     return params
+
+

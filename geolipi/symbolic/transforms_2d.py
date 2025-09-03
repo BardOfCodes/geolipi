@@ -19,36 +19,19 @@ class SDFModifier2D(Modifier2D):
 
 @register_symbol
 class Translate2D(Transform2D):
-
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.transforms.get_affine_translate_2D
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 @register_symbol
 class EulerRotate2D(Transform2D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.transforms.get_affine_rotate_2D
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 @register_symbol
 class Scale2D(Transform2D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.transforms.get_affine_scale_2D
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 @register_symbol
 class Shear2D(Transform2D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.transforms.get_affine_shear_2D
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 @register_symbol
 class Affine2D(Transform2D):

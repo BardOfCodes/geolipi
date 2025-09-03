@@ -6,57 +6,33 @@ class HigherOrderPrimitives3D(GLFunction):
 
 @register_symbol
 class Revolution3D(HigherOrderPrimitives3D):
-
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.sdf_functions_higher.sdf3d_revolution
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class CurvePrimitive3D(HigherOrderPrimitives3D):
-
-    """
-    Base class for Curve Extrusion based 3D primitives.
-    """
+    """Base class for curve extrusion primitives."""
 
 
 @register_symbol
 class SimpleExtrusion3D(CurvePrimitive3D):
 
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.sdf_functions_higher.sdf3d_simple_extrusion
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class LinearExtrude3D(CurvePrimitive3D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.sdf_functions_higher.sdf3d_linear_extrude
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class QuadraticBezierExtrude3D(CurvePrimitive3D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.sdf_functions_higher.sdf3d_quadratic_bezier_extrude
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
 class PolyQuadBezierExtrude3D(CurvePrimitive3D):
-    """
-    This class is mapped to the following evaluator function(s):
-    # TODO: Implement this
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 
 @register_symbol
@@ -71,32 +47,16 @@ class CubicBezierExtrude3D(CurvePrimitive3D):
 
 
 class Primitive1D(GLFunction):
-    """
-    This class is mapped to the following evaluator function(s):
-    # TODO: Implement this
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 @register_symbol
 class LinearCurve1D(Primitive1D):
-    """
-    This class is mapped to the following evaluator function(s):
-    # TODO: Implement this
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 @register_symbol
 class QuadraticCurve1D(Primitive1D):
-    """
-    This class is mapped to the following evaluator function(s):
-    # TODO: Implement this
-    Read evaluator specific documentation for more.
-    """
+    pass
 
 @register_symbol
 class PolyStraightLineCurve1D(Primitive1D):
-    """
-    This class is mapped to the following evaluator function(s):
-    # TODO: Implement this
-    Read evaluator specific documentation for more.
-    """
+    pass

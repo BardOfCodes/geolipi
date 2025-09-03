@@ -3,103 +3,59 @@ from .registry import register_symbol
 
 @register_symbol
 class Param(GLFunction):
-    """This stores evaluated tensors for a parameter."""
+    """Stores parameter values as tensors."""
 
 class Operator(GLFunction):
     ...
 
 @register_symbol
 class UnaryOperator(Operator):
-    """
-    Apply the height field to the current height.
-    """
-    ...
+    """Unary mathematical operator."""
 
 @register_symbol
 class BinaryOperator(Operator):
-    """
-    Apply the height field to the current height.
-    """
-    ...
+    """Binary mathematical operator."""
 
 @register_symbol
 class VectorOperator(Operator):
-    """
-    Apply the height field to the current height.
-    """
-    ...
+    """Vector mathematical operator."""
 
 
-"""
-The following class will be used with derivative languages. 
-"""
+# Variable classes for derivative languages
 
 class Variable(GLFunction):
-    """This stores evaluated tensors for a variable."""
+    """Base class for variable types."""
 
 
 class VecList(Variable):
-    """
-    Apply the height field to the current height.
-    """
-    ...
+    """List of vectors."""
 
 class Float(Variable):
-    """
-    Apply the height field to the current height.
-    """
-    ...
+    """Float variable."""
 
 class Vec2(Variable):
-    """
-    Apply the height field to the current height.
-    """
-    ...
+    """2D vector variable."""
 
 class Vec3(Variable):
-    """
-    Apply the height field to the current height.
-    """
-    ...
+    """3D vector variable."""
 
 class Vec4(Variable):
-    """
-    Apply the height field to the current height.
-    """
-    ...
+    """4D vector variable."""
 
 class VarSplitter(Variable):
-    """
-    Apply the height field to the current height.
-    """
-    ...
+    """Variable splitter utility."""
 
 class UniformVariable(Variable):
-    """
-    Apply the height field to the current height.
-    """
-    ...
+    """Uniform variable base class."""
 
 class UniformFloat(UniformVariable):
-    """
-    Apply the height field to the current height.
-    """
-    ...
+    """Uniform float variable."""
 
 class UniformVec2(UniformVariable):
-    """
-    Apply the height field to the current height.
-    """
-    ...
+    """Uniform 2D vector variable."""
 class UniformVec3(UniformVariable):
-    """
-    Apply the height field to the current height.
-    """
-    ...
+    """Uniform 3D vector variable."""
     
 class UniformVec4(UniformVariable):
-    """
-    Apply the height field to the current height.
-    """
-    ...
+    """Uniform 4D vector variable."""
 

@@ -5,7 +5,7 @@ import torch.nn as nn
 import numpy as np
 import geolipi.symbolic as gls
 from .sketcher import Sketcher
-from .depreciated_eval import expr_to_sdf
+from .deprecated import expr_to_sdf
 from .evaluate_expression import recursive_evaluate
 from .batch_compile import create_compiled_expr
 from .batch_evaluate_sdf import create_evaluation_batches, batch_evaluate

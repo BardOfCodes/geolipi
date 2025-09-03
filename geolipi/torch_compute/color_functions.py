@@ -1,21 +1,20 @@
 import torch as th
 
 # Color fetch
-from .common import EPSILON
+from .constants import EPSILON
 from .settings import Settings
 import skfmm
 import numpy as np
 
 # Color boolean.
-def destination_in(source, destination):
+def destination_in(source: th.Tensor, destination: th.Tensor) -> th.Tensor:
     """
-    Computes the destination-in composite of source and destination images.
-
     Parameters:
-        source, destination (Tensor): Source and destination image tensors.
+        source: Source image tensor
+        destination: Destination image tensor
 
     Returns:
-        Tensor: The result of applying the destination-in composite operation.
+        Tensor: Destination-in composite result
     """
     premult_s, premult_d = get_premultiplied_form(source, destination)
     alpha_s = premult_s[..., -1:]
@@ -177,15 +176,14 @@ def source_out(source, destination):
     return destination_out(destination, source)
 
 
-def source_over(source, destination):
+def source_over(source: th.Tensor, destination: th.Tensor) -> th.Tensor:
     """
-    Computes the source-over composite of source and destination images.
-
     Parameters:
-        source, destination (Tensor): Source and destination image tensors.
+        source: Source image tensor
+        destination: Destination image tensor
 
     Returns:
-        Tensor: The result of applying the source-over composite operation.
+        Tensor: Source-over composite result
     """
     return destination_over(destination, source)
 
@@ -203,16 +201,14 @@ def source_atop(source, destination):
     return destination_atop(destination, source)
 
 
-def apply_color(occupancy, color):
+def apply_color(occupancy: th.Tensor, color: th.Tensor) -> th.Tensor:
     """
-    Applies a color to an occupancy grid.
-
     Parameters:
-        occupancy (Tensor): An occupancy grid tensor.
-        color (Tensor): A color tensor.
+        occupancy: Occupancy grid tensor
+        color: Color tensor
 
     Returns:
-        Tensor: A colored canvas tensor.
+        Tensor: Colored canvas tensor
     """
     occ_expand = occupancy[..., None].float()
     alpha_a = occ_expand * color[..., -1:]
@@ -223,16 +219,14 @@ def apply_color(occupancy, color):
     return canvas
 
 
-def modify_opacity(color_canvas, opacity):
+def modify_opacity(color_canvas: th.Tensor, opacity: th.Tensor) -> th.Tensor:
     """
-    Modifies the opacity of a color canvas.
-
     Parameters:
-        color_canvas (Tensor): A color canvas tensor.
-        opacity (float): Desired opacity level.
+        color_canvas: Color canvas tensor
+        opacity: Desired opacity level
 
     Returns:
-        Tensor: A modified color canvas tensor.
+        Tensor: Modified color canvas tensor
     """
     color_canvas[..., 3] = color_canvas[..., 3] * opacity
     return color_canvas
@@ -259,7 +253,18 @@ def modify_color(color_canvas, new_color):
     return color_canvas
 
 
-def depreciated_modify_color_tritone(points, mid_color, black=None, white=None, mid_point = 0.5):
+def deprecated_modify_color_tritone(points: th.Tensor, mid_color: th.Tensor, black=None, white=None, mid_point: float = 0.5) -> th.Tensor:
+    """
+    Parameters:
+        points: Input color points
+        mid_color: Middle tone color
+        black: Optional black color
+        white: Optional white color
+        mid_point: Midpoint threshold
+
+    Returns:
+        Tensor: Tritone modified color
+    """
     mid_color = mid_color[..., :-1]
     n = mid_color.shape[-1]
     if black is None:
@@ -288,11 +293,27 @@ def depreciated_modify_color_tritone(points, mid_color, black=None, white=None, 
 
     return color
 
-def alpha_mask(points):
+def alpha_mask(points: th.Tensor) -> th.Tensor:
+    """
+    Parameters:
+        points: Input points with alpha channel
+
+    Returns:
+        Tensor: Alpha mask
+    """
     mask = 0.1 - points[..., -1:]
     return mask
 
-def unopt_alpha_to_sdf(points, dx, canvas_shape=None):
+def unopt_alpha_to_sdf(points: th.Tensor, dx: th.Tensor, canvas_shape=None) -> th.Tensor:
+    """
+    Parameters:
+        points: Input points with alpha values
+        dx: Grid spacing
+        canvas_shape: Optional canvas shape
+
+    Returns:
+        Tensor: SDF from alpha values
+    """
     shape = points.shape
     if not len(shape) == 3:
         # its P

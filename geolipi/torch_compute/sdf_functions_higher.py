@@ -1,29 +1,22 @@
 
 import torch as th
 import numpy as np
-from .common import EPSILON, ACOS_EPSILON
-from .sdf_functions_2d import SQRT_3
+from .constants import EPSILON, ACOS_EPSILON, SQRT_3
 # The return of a curve distance should be:
 # 1) The parameter t on the curve (0, 1) which corresponds to the closest point
 # 3) The projection of the point into the plane with normal plane_normal
 
-def sdf3d_linear_extrude(points, start_point, end_point, theta, line_plane_normal=None):
+def sdf3d_linear_extrude(points: th.Tensor, start_point: th.Tensor, end_point: th.Tensor, theta: th.Tensor, line_plane_normal=None):
     """
-    Projects 3D points onto a line defined by start_point and end_point, then performs a linear extrusion 
-    with rotation by angle theta. Optionally, a normal to the line plane can be specified.
-
     Parameters:
-        points (torch.Tensor): A tensor of shape [batch, num_points, 3] representing 3D points.
-        start_point (torch.Tensor): A tensor of shape [batch, 3] representing the start point of the line.
-        end_point (torch.Tensor): A tensor of shape [batch, 3] representing the end point of the line.
-        theta (torch.Tensor): A tensor of shape [batch, 1] representing the angle of rotation in radians.
-        line_plane_normal (torch.Tensor, optional): A tensor of shape [batch, 3] representing the normal vector 
-                                                     to the plane in which the line lies.
+        points: 3D coordinates, shape [batch, num_points, 3]
+        start_point: Line start point, shape [batch, 3]
+        end_point: Line end point, shape [batch, 3]
+        theta: Rotation angle in radians, shape [batch, 1]
+        line_plane_normal: Optional plane normal vector, shape [batch, 3]
 
     Returns:
-        tuple: 
-            - torch.Tensor representing parameterized points after projection and rotation.
-            - torch.Tensor representing the scale factor, based on the norm of the line vector.
+        tuple: (parameterized_points, scale_factor)
     """
     if len(points.shape) == 2:
         points = points.unsqueeze(0)
@@ -200,20 +193,14 @@ def sdf3d_quadratic_bezier_extrude(points, start_point, control_point, end_point
     return parameterized_points, scale_factor
 
 
-def sdf3d_revolution(points, o):
+def sdf3d_revolution(points: th.Tensor, o: th.Tensor):
     """
-    Converts 3D points into 2D points rotated about the z axis for evaluating the revolution of a 2D expression.
-
     Parameters:
-        points (torch.Tensor): A tensor of shape [batch, num_points, 3] representing 3D points.
-        o (torch.Tensor or float): The offset from the origin for the revolution, applied in the xy-plane.
+        points: 3D coordinates, shape [batch, num_points, 3]
+        o: Revolution offset from origin
 
     Returns:
-        tuple: 
-            - torch.Tensor representing parameterized points after the revolution transformation. The x-component 
-              of the resulting points is the radial distance from the z-axis, the y-component is the original z-value, 
-              and the z-component is set to one.
-            - Scalar value of 0, indicating no scale factor is applied in this transformation.
+        tuple: (parameterized_points, scale_factor)
     """
     param_x = th.norm(points[..., :2], dim=-1) - o
     param_y = points[..., 2]
@@ -222,20 +209,14 @@ def sdf3d_revolution(points, o):
     parameterized_points = th.stack([param_x, param_y, param_z], dim=-1)
     return parameterized_points, scale_factor
 
-def sdf3d_simple_extrusion(points, h):
+def sdf3d_simple_extrusion(points: th.Tensor, h: th.Tensor):
     """
-    Performs a simple extrusion transformation of 3D points along the z-axis. The transformation maintains 
-    the xy-plane coordinates and scales the z-coordinate relative to the extrusion height.
-
     Parameters:
-        points (torch.Tensor): A tensor of shape [batch, num_points, 3] representing 3D points.
-        h (torch.Tensor): A tensor of shape [batch, 1] representing the height of the extrusion.
+        points: 3D coordinates, shape [batch, num_points, 3]
+        h: Extrusion height, shape [batch, 1]
 
     Returns:
-        tuple: 
-            - torch.Tensor representing parameterized points after the extrusion transformation. The xy-plane 
-              coordinates remain unchanged, while the z-coordinate is scaled relative to the extrusion height.
-            - The height of the extrusion (h), representing the scale factor in the z-direction.
+        tuple: (parameterized_points, scale_factor)
     """
     parameterized_points = points[..., :2]
     to_scale = (points[..., 2:3] + h/2) / (h + EPSILON)
@@ -243,7 +224,16 @@ def sdf3d_simple_extrusion(points, h):
     return parameterized_points, h
 
 
-def linear_curve_1d(points, point1, point2):
+def linear_curve_1d(points: th.Tensor, point1: th.Tensor, point2: th.Tensor) -> th.Tensor:
+    """
+    Parameters:
+        points: 1D coordinates, shape [batch, num_points, 1]
+        point1: First control point, shape [batch, 2]
+        point2: Second control point, shape [batch, 2]
+
+    Returns:
+        Tensor: Linear curve values
+    """
     # points shape [batch, num_points, 1]
     # point1 shape [batch, 2]
     # point2 shape [batch, 2]
@@ -254,7 +244,17 @@ def linear_curve_1d(points, point1, point2):
     output = points[..., 0] * m + c
     return output
 
-def quadratic_curve_1d(points, param_a, param_b, param_c):
+def quadratic_curve_1d(points: th.Tensor, param_a: th.Tensor, param_b: th.Tensor, param_c: th.Tensor) -> th.Tensor:
+    """
+    Parameters:
+        points: 1D coordinates, shape [batch, num_points, 1]
+        param_a: Quadratic coefficient, shape [batch, 1]
+        param_b: Linear coefficient, shape [batch, 1]
+        param_c: Constant coefficient, shape [batch, 1]
+
+    Returns:
+        Tensor: Quadratic curve values
+    """
     # points shape [batch, num_points, 1]
     # param_a shape [batch, 1]
     # param_b shape [batch, 1]
@@ -264,7 +264,15 @@ def quadratic_curve_1d(points, param_a, param_b, param_c):
 
 
 
-def perpendicular_vectors(vec, normalize=True):
+def perpendicular_vectors(vec: th.Tensor, normalize: bool = True) -> th.Tensor:
+    """
+    Parameters:
+        vec: Input vector
+        normalize: Whether to normalize the result
+
+    Returns:
+        Tensor: Perpendicular vector
+    """
     if th.all(vec == 0):
         raise ValueError("The input vector should not be the zero vector.")
     
@@ -283,9 +291,24 @@ def perpendicular_vectors(vec, normalize=True):
     return perp_vec
 
 
-def dot2(tensor):
+def dot2(tensor: th.Tensor) -> th.Tensor:
+    """
+    Parameters:
+        tensor: Input tensor
+
+    Returns:
+        Tensor: Squared magnitude
+    """
     return th.sum(tensor * tensor, dim=-1)
 
 
-def cro(a, b):
+def cro(a: th.Tensor, b: th.Tensor) -> th.Tensor:
+    """
+    Parameters:
+        a: First 2D vector
+        b: Second 2D vector
+
+    Returns:
+        Tensor: 2D cross product
+    """
     return a[..., 0] * b[..., 1] - a[..., 1] * b[..., 0]

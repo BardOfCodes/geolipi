@@ -100,7 +100,7 @@ ROTSYM_TYPE = type_union[
 ]
 
 PRIM_TYPE = type_union[Primitive2D, Primitive3D, HigherOrderPrimitives3D]
-HIGERPRIM_TYPE = HigherOrderPrimitives3D
+HIGHER_PRIM_TYPE = HigherOrderPrimitives3D
 
 NULL_EXPR_TYPE = type_union[NullExpression2D, NullExpression3D]
 

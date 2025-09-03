@@ -1,50 +1,47 @@
 import numpy as np
 import torch as th
-from .common import EPSILON, ACOS_EPSILON
-
-SQRT_3 = np.sqrt(3, dtype=np.float32)
-SQRT_2 = np.sqrt(2, dtype=np.float32)
-PENT_VEC = np.array([0.809016994, 0.587785252, 0.726542528], dtype=np.float32)
-HEX_VEC = np.array([-0.866025404, 0.5, 0.577350269], dtype=np.float32)
-OCT_VEC = np.array([-0.9238795325, 0.3826834323, 0.4142135623], dtype=np.float32)
-HEXAGRAM_VEC = np.array(
-    [-0.5, 0.8660254038, 0.5773502692, 1.7320508076], dtype=np.float32
+from .constants import (
+    EPSILON, ACOS_EPSILON, SQRT_2, SQRT_3, 
+    PENT_VEC, HEX_VEC, OCT_VEC, HEXAGRAM_VEC, STAR_VEC
 )
-STAR_VEC = np.array([0.809016994375, -0.587785252292], dtype=np.float32)
 
 
-def ndot(vec_a, vec_b):
+def ndot(vec_a: th.Tensor, vec_b: th.Tensor) -> th.Tensor:
+    """
+    Parameters:
+        vec_a: Input vector A, shape [..., 2]
+        vec_b: Input vector B, shape [..., 2]
+    
+    Returns:
+        Tensor: Dot product result
+    """
     output = vec_a[..., 0] * vec_b[..., 0] - vec_a[..., 1] * vec_b[..., 1]
     return output
 
 
-def sdf2d_circle(points, radius):
+def sdf2d_circle(points: th.Tensor, radius: th.Tensor) -> th.Tensor:
     """
-    Computes the signed distance field for a 2D circle.
-
     Parameters:
-        points (Tensor): The coordinates at which to evaluate the SDF, shape [batch, num_points, 2].
-        radius (Tensor): The radius of the circle, shape [batch, 1].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
+        radius: Circle radius, shape [batch, 1]
 
     Returns:
-        Tensor: The calculated SDF values for each point.
+        Tensor: SDF values for each point
     """
     base_sdf = th.norm(points, dim=-1)
     base_sdf = base_sdf - radius
     return base_sdf
 
 
-def sdf2d_rounded_box(points, bounds, radius):
+def sdf2d_rounded_box(points: th.Tensor, bounds: th.Tensor, radius: th.Tensor) -> th.Tensor:
     """
-    Computes the SDF for a 2D rounded box (rectangle with rounded corners).
-
     Parameters:
-        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
-        bounds (Tensor): Dimensions of the box, shape [batch, 2].
-        radius (Tensor): Radii of the rounded corners, shape [batch, 4].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
+        bounds: Box dimensions, shape [batch, 2]
+        radius: Corner radii, shape [batch, 4]
 
     Returns:
-        Tensor: The SDF values for the rounded box.
+        Tensor: SDF values for the rounded box
     """
     # Select appropriate radii based on the sign of p
     radius = radius[..., None, :]
@@ -57,16 +54,14 @@ def sdf2d_rounded_box(points, bounds, radius):
     return sd.squeeze(-1)
 
 
-def sdf2d_box(points, size):
+def sdf2d_box(points: th.Tensor, size: th.Tensor) -> th.Tensor:
     """
-    Computes the SDF for a 2D axis-aligned rectangle.
-
     Parameters:
-        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
-        size (Tensor): Dimensions of the box, shape [batch, 2].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
+        size: Box dimensions, shape [batch, 2]
 
     Returns:
-        Tensor: The SDF values for the rectangle.
+        Tensor: SDF values for the rectangle
     """
     points = th.abs(points)
     size = size[..., None, :] / 2.0
@@ -77,18 +72,16 @@ def sdf2d_box(points, size):
     return base_sdf
 
 
-def sdf2d_oriented_box(points, start_point, end_point, thickness):
+def sdf2d_oriented_box(points: th.Tensor, start_point: th.Tensor, end_point: th.Tensor, thickness: th.Tensor) -> th.Tensor:
     """
-    Computes the SDF for a 2D oriented box (rotated rectangle).
-
     Parameters:
-        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
-        start_point (Tensor): One corner of the box, shape [batch, 2].
-        end_point (Tensor): Opposite corner of the box, shape [batch, 2].
-        thickness (Tensor): Thickness of the box, shape [batch, 1].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
+        start_point: One corner, shape [batch, 2]
+        end_point: Opposite corner, shape [batch, 2]
+        thickness: Box thickness, shape [batch, 1]
 
     Returns:
-        Tensor: The SDF values for the oriented box.
+        Tensor: SDF values for the oriented box
     """
     if len(points.shape) == 2:
         points = points.unsqueeze(0)
@@ -107,16 +100,14 @@ def sdf2d_oriented_box(points, start_point, end_point, thickness):
     return sdf
 
 
-def sdf2d_rhombus(points, size):
+def sdf2d_rhombus(points: th.Tensor, size: th.Tensor) -> th.Tensor:
     """
-    Computes the SDF for a 2D rhombus (diamond shape).
-
     Parameters:
-        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
-        size (Tensor): Dimensions of the rhombus, shape [batch, 2].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
+        size: Rhombus dimensions, shape [batch, 2]
 
     Returns:
-        Tensor: The SDF values for the rhombus.
+        Tensor: SDF values for the rhombus
     """
     p = th.abs(points)
     size = size[..., None, :]
@@ -130,18 +121,16 @@ def sdf2d_rhombus(points, size):
     return sdf
 
 
-def sdf2d_trapezoid(points, r1, r2, height):
+def sdf2d_trapezoid(points: th.Tensor, r1: th.Tensor, r2: th.Tensor, height: th.Tensor) -> th.Tensor:
     """
-    Computes the SDF for a 2D trapezoid.
-
     Parameters:
-        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
-        r1 (Tensor): Radius at one end, shape [batch, 1].
-        r2 (Tensor): Radius at the other end, shape [batch, 1].
-        height (Tensor): Height of the trapezoid, shape [batch, 1].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
+        r1: Radius at one end, shape [batch, 1]
+        r2: Radius at other end, shape [batch, 1]
+        height: Trapezoid height, shape [batch, 1]
 
     Returns:
-        Tensor: The SDF values for the trapezoid.
+        Tensor: SDF values for the trapezoid
     """
     k1 = th.stack([r2, height], -1)
     k2 = th.stack([r2 - r1, 2 * height], -1)
@@ -167,18 +156,16 @@ def sdf2d_trapezoid(points, r1, r2, height):
     return sdf
 
 
-def sdf2d_parallelogram(points, width, height, skew):
+def sdf2d_parallelogram(points: th.Tensor, width: th.Tensor, height: th.Tensor, skew: th.Tensor) -> th.Tensor:
     """
-    Computes the SDF for a 2D parallelogram.
-
     Parameters:
-        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
-        width (Tensor): Width of the parallelogram, shape [batch, 1].
-        height (Tensor): Height of the parallelogram, shape [batch, 1].
-        skew (Tensor): Skew factor, shape [batch, 1].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
+        width: Parallelogram width, shape [batch, 1]
+        height: Parallelogram height, shape [batch, 1]
+        skew: Skew factor, shape [batch, 1]
 
     Returns:
-        Tensor: The SDF values for the parallelogram.
+        Tensor: SDF values for the parallelogram
     """
     e = th.stack([skew, height], -1)
     p = th.where(points[..., 1:2] < 0, -points, points)
@@ -196,16 +183,14 @@ def sdf2d_parallelogram(points, width, height, skew):
     return sdf
 
 
-def sdf2d_equilateral_triangle(points, side_length):
+def sdf2d_equilateral_triangle(points: th.Tensor, side_length: th.Tensor) -> th.Tensor:
     """
-    Computes the SDF for a 2D equilateral triangle.
-
     Parameters:
-        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
-        side_length (Tensor): Length of each side of the triangle, shape [batch, 1].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
+        side_length: Triangle side length, shape [batch, 1]
 
     Returns:
-        Tensor: The SDF values for the equilateral triangle.
+        Tensor: SDF values for the equilateral triangle
     """
     k = th.tensor(SQRT_3).to(points.device)
     points[..., 0] = th.abs(points[..., 0].clone()) - side_length
@@ -226,16 +211,14 @@ def sdf2d_equilateral_triangle(points, side_length):
     return sdf
 
 
-def sdf2d_isosceles_triangle(points, wi_hi):
+def sdf2d_isosceles_triangle(points: th.Tensor, wi_hi: th.Tensor) -> th.Tensor:
     """
-    Computes the SDF for a 2D isosceles triangle.
-
     Parameters:
-        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
-        wi_hi (Tensor): Width and height of the triangle, shape [batch, 2].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
+        wi_hi: Triangle width and height, shape [batch, 2]
 
     Returns:
-        Tensor: The SDF values for the isosceles triangle.
+        Tensor: SDF values for the isosceles triangle
     """
     points[..., 0] = th.abs(points[..., 0].clone())
     wi_hi_ex = wi_hi[..., None, :]
@@ -269,18 +252,16 @@ def sdf2d_isosceles_triangle(points, wi_hi):
     return sdf
 
 
-def sdf2d_triangle(points, p0, p1, p2):
+def sdf2d_triangle(points: th.Tensor, p0: th.Tensor, p1: th.Tensor, p2: th.Tensor) -> th.Tensor:
     """
-    Computes the SDF for a general 2D triangle specified by three points.
-
     Parameters:
-        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
-        p0 (Tensor): First vertex of the triangle, shape [batch, 2].
-        p1 (Tensor): Second vertex of the triangle, shape [batch, 2].
-        p2 (Tensor): Third vertex of the triangle, shape [batch, 2].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
+        p0: First vertex, shape [batch, 2]
+        p1: Second vertex, shape [batch, 2]
+        p2: Third vertex, shape [batch, 2]
 
     Returns:
-        Tensor: The SDF values for the triangle.
+        Tensor: SDF values for the triangle
     """
     e0 = p1 - p0
     e1 = p2 - p1
@@ -842,16 +823,14 @@ def sdf2d_rounded_x(points, w, r):
     return sdf
 
 
-def sdf2d_polygon(points, verts):
+def sdf2d_polygon(points: th.Tensor, verts: th.Tensor) -> th.Tensor:
     """
-    Computes the SDF for a general 2D polygon.
-
     Parameters:
-        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
-        verts (Tensor): Vertices of the polygon, shape [batch, num_vertices, 2].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
+        verts: Polygon vertices, shape [batch, num_vertices, 2]
 
     Returns:
-        Tensor: The SDF values for the polygon.
+        Tensor: SDF values for the polygon
     """
     if len(points.shape) == 2:
         #     points = points.unsqueeze(0)
@@ -888,16 +867,14 @@ def sdf2d_polygon(points, verts):
     return s * th.sqrt(d + EPSILON)
 
 
-def sdf2d_ellipse(points, ab):
+def sdf2d_ellipse(points: th.Tensor, ab: th.Tensor) -> th.Tensor:
     """
-    Computes the SDF for a 2D ellipse.
-
     Parameters:
-        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
-        ab (Tensor): Dimensions (semi-axes lengths) of the ellipse, shape [batch, 2].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
+        ab: Semi-axes lengths, shape [batch, 2]
 
     Returns:
-        Tensor: The SDF values for the ellipse.
+        Tensor: SDF values for the ellipse
     """
     sqrt_3 = th.tensor(SQRT_3).to(points.device)
     points = th.abs(points)
@@ -1353,15 +1330,13 @@ def sdf2d_segment(points, start_point, end_point):
 
 
 # Simple parameter less primitives.
-def sdf2d_no_param_rectangle(points):
+def sdf2d_no_param_rectangle(points: th.Tensor) -> th.Tensor:
     """
-    Computes the SDF for a unit rectangle centered at the origin in 2D.
-
     Parameters:
-        points (Tensor): Input points to evaluate the SDF, shape [batch, num_points, 2].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
 
     Returns:
-        Tensor: The SDF values of the unit rectangle at the input points.
+        Tensor: SDF values for unit rectangle
     """
     points = th.abs(points)
     points = points - 0.5
@@ -1371,30 +1346,26 @@ def sdf2d_no_param_rectangle(points):
     return base_sdf
 
 
-def sdf2d_no_param_circle(points):
+def sdf2d_no_param_circle(points: th.Tensor) -> th.Tensor:
     """
-    Computes the SDF for a unit circle centered at the origin in 2D.
-
     Parameters:
-        points (Tensor): Input points to evaluate the SDF, shape [batch, num_points, 2].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
 
     Returns:
-        Tensor: The SDF values of the unit circle at the input points.
+        Tensor: SDF values for unit circle
     """
     base_sdf = points.norm(dim=-1)
     base_sdf = base_sdf - 0.5
     return base_sdf
 
 
-def sdf2d_no_param_triangle(points):
+def sdf2d_no_param_triangle(points: th.Tensor) -> th.Tensor:
     """
-    Computes the SDF for an equilateral triangle in 2D.
-
     Parameters:
-        points (Tensor): Input points to evaluate the SDF, shape [batch, num_points, 2].
+        points: Coordinates to evaluate, shape [batch, num_points, 2]
 
     Returns:
-        Tensor: The SDF values of the equilateral triangle at the input points.
+        Tensor: SDF values for equilateral triangle
     """
     k = th.tensor(SQRT_3).to(points.device)
     r = 0.5
@@ -1412,353 +1383,3 @@ def sdf2d_no_param_triangle(points):
     points[..., 0] = points[..., 0] - th.clamp(points[..., 0], -2 * r, 0)
     sdf = -th.norm(points, dim=-1) * th.sign(points[..., 1])
     return sdf
-
-### Functions useful for 2D pattern creation.
-# Function Documentation TBD
-
-def nonsdf2d_tile_uv(points, tile, height=None, width=None, mode="bicubic"):
-    """
-    Splat the Tile over the points. 
-    
-    Parameters:
-        points (Tensor): Input points to evaluate the SDF, shape [batch, num_points, 2].
-        tile (Tensor): The tile to splat, shape [Batch, height, width, n_channel].
-    """
-    # using torch.nn.functional.grid_sample
-    # rearrange points in B,H,W,2 format
-    squeeze_out = False
-    if len(points.shape) == 2:
-        points = points.unsqueeze(0)
-        squeeze_out = True
-    if len(tile.shape) == 3:
-        tile = tile.unsqueeze(0)
-    ps = points.shape
-    bs = ps[0]
-    if height is None:
-        height = np.sqrt(ps[1]).astype(int)
-        width = height
-    # Doesn't handle the case where one is given    
-    cur_points = points.reshape(bs, height, width, 2)
-    cur_tile = tile.permute(0, 3, 1, 2)
-    output = th.nn.functional.grid_sample(cur_tile, cur_points, align_corners=True, mode=mode)
-    output = output.permute(0, 2, 3, 1)
-    output = output.reshape(bs, ps[1], -1)
-    if squeeze_out:
-        output = output.squeeze(0)
-    return output
-
-def nonsdf2d_sin_x(points, freq, phase_shift):
-    base_sdf = th.sin(2 * np.pi * freq * points[..., 0] + phase_shift)
-    return base_sdf
-
-def nonsdf2d_sin_y(points, freq, phase_shift):
-    base_sdf = th.sin(2 * np.pi * freq * points[..., 1] + phase_shift)
-    return base_sdf
-
-def nonsdf2d_sin_diagonal(points, freq, phase_shift):
-    base_sdf = th.sin(2 * np.pi * freq * (points[..., 1] + points[..., 0]) + phase_shift)
-    return base_sdf
-
-def nonsdf2d_sin_diagonal_flip(points, freq, phase_shift):
-    base_sdf = th.sin(2 * np.pi * freq * (points[..., 1] - points[..., 0]) + phase_shift)
-    return base_sdf
-
-def nonsdf2d_sin_radial(points, freq, phase_shift):
-    base_sdf = th.sin(2 * np.pi * freq * (th.norm(points, dim=-1)) + phase_shift)
-    return base_sdf
-
-def nonsdf2d_squiggle_lines_y(points, freq, phase_shift, shift_amount, freq_2, phase_shift_2):
-    
-    shift = shift_amount * th.sin(2 * np.pi * freq_2 * points[..., 0] + phase_shift_2)
-    base_sdf = th.sin(2 * np.pi * freq * (points[..., 1] + shift) + phase_shift)
-    return base_sdf
-
-
-def nonsdf2d_squiggle_lines_x(points, freq, phase_shift, shift_amount, freq_2, phase_shift_2):
-    
-    shift = shift_amount * th.sin(2 * np.pi * freq_2 * points[..., 1] + phase_shift_2)
-    base_sdf = th.sin(2 * np.pi * freq * (points[..., 0] + shift) + phase_shift)
-    return base_sdf
-
-
-def nonsdf2d_squiggle_diagonal(points, freq, phase_shift, shift_amount, freq_2, phase_shift_2):
-    
-    shift = shift_amount * th.sin(2 * np.pi * freq_2 * (points[..., 0] + points[..., 1]) + phase_shift_2)
-    base_sdf = th.sin(2 * np.pi * freq * ((points[..., 0] - points[..., 1]) + shift) + phase_shift)
-    return base_sdf
-
-
-def nonsdf2d_squiggle_diagonal_flip(points, freq, phase_shift, shift_amount, freq_2, phase_shift_2):
-    
-    shift = shift_amount * th.sin(2 * np.pi * freq_2 * (points[..., 0] - points[..., 1]) + phase_shift_2)
-    base_sdf = th.sin(2 * np.pi * freq * ((points[..., 0] + points[..., 1]) + shift) + phase_shift)
-    return base_sdf
-
-def nonsdf2d_squiggle_radial(points, freq, phase_shift, shift_amount, freq_2, phase_shift_2):
-    theta = th.atan2(points[..., 1], points[..., 0])
-    shift = shift_amount * th.sin(freq_2 * theta + phase_shift_2)
-    base_sdf = th.sin(2 * np.pi * freq * (th.norm(points, dim=-1) + shift) + phase_shift)
-    return base_sdf
-
-def nonsdf2d_squiggle_radial_distortion(points, freq, phase_shift, shift_amount, freq_2, phase_shift_2):
-    theta = th.atan2(points[..., 1:2], points[..., 0:1])
-    shift = shift_amount * th.sin(freq_2 * theta + phase_shift_2)
-    base_sdf = th.sin(2 * np.pi * freq * (th.norm(points + shift, dim=-1)) + phase_shift)
-    return base_sdf
-
-def nonsdf2d_sin_along_axis_y(points, freq, phase_shift, scale):
-    
-    target = (1 +  th.sin(2 * np.pi * freq * points[..., 1] + phase_shift)) * scale
-    base_sdf = th.abs(points[..., 0]) - target 
-    return base_sdf
-
-def nonsdf2d_instantiated_prim(points, instance, height=None, width=None, mode="bicubic"):
-    return instance
-
-########## POLYLINE SDF
-
-def helper_polyline_sdf_arc(points, sc, ra):
-    p = th.cat([th.abs(points[..., 0:1]), points[..., 1:2]], -1)
-    # p[..., 0] = p[..., 0].abs()
-    if sc[0, 0] < 0.0:
-        d = -sc * ra
-    else:
-        d = sc * ra
-        
-    dist_1 = th.norm(p - d, dim=-1) 
-    dist_2 = th.abs(th.norm(p, dim=-1) - ra)
-    sdf = th.where(sc[0, 1] * p[..., 0] > sc[0, 0] * p[..., 1], dist_1, dist_2)
-    return sdf
-
-def helper_polyline_sc_from_ht(tan_half_x):
-    tan_half_sq = tan_half_x * tan_half_x
-    denom = 1.0 + tan_half_sq
-    # sc = th.stack([1.0 - tan_half_sq, 2.0 * tan_half_x], -1) / denom
-    sc = th.stack([(2.0 * tan_half_x), (1.0 - tan_half_sq)], -1) / denom
-    return sc
-
-def helper_polyline_bulge_arc(points, a, b, bulge):
-    """
-    points: (N, 2)
-    a: (1, 2)
-    b: (1, 2)
-    bulge: (1,)
-    """
-    ba = b - a 
-    l = th.norm(ba, dim=-1)
-    ortho_ba = th.stack([ba[..., 1], -ba[..., 0]], -1)
-    if l < EPSILON:
-        l = l + EPSILON
-    orth_ba = ortho_ba / (l)
-    div = 1 - bulge * bulge
-    div = th.where(div < EPSILON, div + EPSILON, div)
-    tan_tby2 = 2.0 * bulge / (div)
-    h = l / (2.0 * tan_tby2)
-    center = (a + b) * 0.5 + orth_ba * h
-
-    theta = -th.atan2(ba[..., 1], ba[..., 0])
-    # theta = th.atan(ba[..., 1]/ba[..., 0])
-    cos_theta = th.cos(-theta)
-    sin_theta = th.sin(-theta)
-    rot_mat = th.stack([cos_theta, sin_theta, -sin_theta, cos_theta], -1).view(-1, 2, 2)
-    relative_p = points - center
-    # relative_p is size (N, 2), rotmat is size (1, 2, 2)
-    rot_points = th.einsum("bij,nj->ni", rot_mat, relative_p)
-
-    radius = th.norm(a - center, dim=-1)
-    sc = helper_polyline_sc_from_ht(bulge)
-
-    d = helper_polyline_sdf_arc(rot_points, sc, radius)
-
-    min_y = th.min(a[..., 1], b[..., 1])
-    max_y = th.max(a[..., 1], b[..., 1])
-    in_range =  (points[..., 1] > min_y) & (points[..., 1] < max_y)
-    in_circ = th.norm(relative_p, dim=-1) <= radius
-
-    # first part
-    pa = points - a
-    cond_1 = points[..., 1] >= a[0, 1]
-    cond_2 = points[..., 1] < b[0, 1]
-    cond_3 = ba[0, 0] * pa[..., 1] - ba[0, 1] * pa[..., 0] > 0
-    left_ba = (cond_1 & cond_2 & cond_3) | (~cond_1 & ~cond_2 & ~cond_3)
-    positive_arc = (b[0, 1] >= a[0, 1] and bulge > 0.0) or (b[0, 1] < a[0, 1] and bulge < 0.0)
-    mul_1 = th.where(left_ba & (~in_circ), -1.0, 1.0)
-    mul_2 = th.where(left_ba | in_circ, -1.0, 1.0)
-    mul = th.where(positive_arc, mul_1, mul_2) 
-
-    # next part
-    consider = th.stack([a[0, 1], b[0, 1], a[0, 1], b[0, 1]], -1)
-    maxy = center[..., 1] + radius
-    miny = center[..., 1] - radius
-    ac = a - center
-    bc = b - center
-    start = th.where(bulge >= 0.0, bc, ac)
-    end = th.where(bulge >= 0.0, ac, bc)
-    c = start[..., 0] * end[..., 1] - start[..., 1] * end[..., 0]
-    c1 = -start[..., 0]
-    c2 = -end[..., 0]
-    consider[2] = th.where(c > 0.0, th.where(c1 < 0.0 and c2 > 0.0, maxy, a[0, 1]), th.where(c1 < 0.0 or c2 > 0.0, maxy, a[0, 1]))
-    
-    c1 = start[..., 0]
-    c2 = end[..., 0]
-    consider[3] = th.where(c > 0.0, th.where(c1 < 0.0 and c2 > 0.0, miny, a[0, 1]), th.where(c1 < 0.0 or c2 > 0.0, miny, a[0, 1]))
-    arc_max_y = th.max(consider)
-    arc_min_y = th.min(consider)
-    in_arc_range = (points[..., 1] > arc_min_y) & (points[..., 1] < arc_max_y)
-    mul_3 = th.where(in_circ & in_arc_range, -1.0, 1.0)
-
-    final_mul = th.where(in_range, mul, mul_3)
-    out = th.stack([d * d, final_mul], -1)
-    return out
-
-
-def helper_polyline_line(points, a, b):
-    """
-    points: (N, 2)
-    a: (1, 2)
-    b: (1, 2)
-    """
-    pa = points - a # (N, 2)
-    ba = b - a # (1, 2)
-    div = (ba * ba).sum(-1, keepdim=True)
-    div = th.where(div < EPSILON, div + EPSILON, div)
-    h = th.clamp((pa * ba).sum(-1, keepdim=True) / div, 0.0, 1.0)
-    val = pa - ba * h
-    sdf = (val * val).sum(-1)
-    cond_1 = points[..., 1] >= a[0, 1]
-    cond_2 = points[..., 1] < b[0, 1]
-    # cond 3 - cross of ba, pa > 0
-    cond_3 = ba[0, 0] * pa[..., 1] - ba[0, 1] * pa[..., 0] > 0
-    cond = (cond_1 & cond_2 & cond_3) | (~cond_1 & ~cond_2 & ~cond_3)
-    sign = th.where(cond, -1.0, 1.0)
-    out = th.stack([sdf, sign], -1)
-    return out
-
-
-def helper_polyline_line_parallel(points, a_set, b_set):
-    """
-    TBD
-    points: (N, 2)
-    a_set: (k, 2)
-    b_set: (k, 2)
-    """
-    points = points.unsqueeze(1)
-    a_set = a_set.unsqueeze(0)
-    b_set = b_set.unsqueeze(0)
-    pa = points - a_set # (N, 2)
-    ba = b_set - a_set # (1, 2)
-    h = th.clamp((pa * ba).sum(-1, keepdim=True) / ((ba * ba).sum(-1, keepdim=True) + EPSILON), 0.0, 1.0)
-    val = pa - ba * h
-    sdf = (val * val).sum(-1)
-    cond_1 = points[..., 1] >= a_set[..., 1]
-    cond_2 = points[..., 1] < b_set[..., 1]
-    # cond 3 - cross of ba, pa > 0
-    cond_3 = ba[..., 0] * pa[..., 1] - ba[..., 1] * pa[..., 0] > 0
-    cond = (cond_1 & cond_2 & cond_3) | (~cond_1 & ~cond_2 & ~cond_3)
-    sign = th.where(cond, -1.0, 1.0)
-    out = th.stack([sdf, sign], -1)
-    return out
-
-def helper_polyline_bulge_arc_parallel(points, a_set, b_set):
-    """
-    TBD
-    points: (N, 2)
-    a_set: (k, 2)
-    b_set: (k, 2)
-    """
-
-
-# def sdf2d_polyline(points, vertices):
-#     """
-#     Computes the SDF for a polyline in 2D.
-#     vertices is a list of (x, y, bulge) format of size (k, 3).
-#     points are (x, y) points on which SDF is to be computed, of size (N, 2).
-#     """
-#     # Ideally, gather all ther vertices where bulge = 0
-#     # and similarly compute all ther vertices where bulge != 0
-#     # then in parallel for all the points compute both the sign and distance
-#     # Final distance will be min of the distances, and final sign will be multiplication of all the signs. 
-#     n_points = vertices.shape[0]
-#     a = vertices[0:1, :2]
-#     b = vertices[1:2, :2]
-#     d = points[..., 0:1] * 0.0 + 100.0
-#     s = th.ones_like(d)
-#     ds = th.cat([d, s], -1)
-#     for i in range(n_points):
-#         a = vertices[i:i+1, :2]
-#         next = (i + 1) % n_points
-#         b = vertices[next: next + 1, :2]
-#         dist = th.norm(b - a, dim=-1)
-#         if dist < EPSILON:
-#             # This is a hack
-#             # measure distance from just one of the points
-#             d_sq = th.sum((points - a) * (points - a), dim=-1)
-#             sign = th.ones_like(d_sq)
-#             ds = th.stack([d_sq, sign], -1)
-#         if vertices[i, 2] == 0.0:
-#             ds = helper_polyline_line(points, a, b)
-#         else:
-#             ds = helper_polyline_bulge_arc(points, a, b, -vertices[i:i+1, 2])
-#         d = th.minimum(d, ds[..., 0:1])
-#         s = s * ds[..., 1:2]
-#     d = th.where(d > EPSILON, d, EPSILON)
-#     return s[..., 0] * th.sqrt(d[..., 0])
-
-def sdf2d_polyline(points, vertices):
-    """
-    Computes the SDF for a polyline in 2D.
-    vertices is a list of (x, y, bulge) format of size (k, 3).
-    points are (x, y) points on which SDF is to be computed, of size (N, 2).
-    """
-    # Ideally, gather all ther vertices where bulge = 0
-    # and similarly compute all ther vertices where bulge != 0
-    # then in parallel for all the points compute both the sign and distance
-    # Final distance will be min of the distances, and final sign will be multiplication of all the signs. 
-    n_points = vertices.shape[0]
-    a = vertices[0:1, :2]
-    b = vertices[1:2, :2]
-    d = th.zeros_like(points[..., 0:1]) + 100.0
-    s = th.ones_like(d)
-    ds = th.cat([d, s], -1)
-    for i in range(n_points):
-        a = vertices[i:i+1, :2]
-        next = (i + 1) % n_points
-        b = vertices[next: next + 1, :2]
-        if vertices[i, 2] == 0.0:
-            ds = helper_polyline_line(points, a, b)
-        else:
-            ds = helper_polyline_bulge_arc(points, a, b, -vertices[i:i+1, 2])
-        d = th.minimum(d, ds[..., 0:1])
-        s = s * ds[..., 1:2]
-    # Make gradients proper.
-    sel_d =  d[..., 0]
-    d_sim = th.where(sel_d > ACOS_EPSILON, sel_d, ACOS_EPSILON)
-    d_sqrt = th.sqrt(d_sim)
-    return s[..., 0] * d_sqrt
-
-
-def nonsdf2d_polyline_smooth(points, vertices, smoothness):
-    """
-    Computes the SDF for a polyline in 2D.
-    vertices is a list of (x, y, bulge) format of size (k, 3).
-    points are (x, y) points on which SDF is to be computed, of size (N, 2).
-    """
-    # Ideally, gather all ther vertices where bulge = 0
-    # and similarly compute all ther vertices where bulge != 0
-    # then in parallel for all the points compute both the sign and distance
-    # Final distance will be min of the distances, and final sign will be multiplication of all the signs. 
-    d = points[..., 0] * 0.0 + 100.0
-    vertices_a = vertices[:, :2]
-    # roll
-    vertices_b = th.roll(vertices_a, -1, 0)
-    # Do the parallel computation. 
-    ds = helper_polyline_line_parallel(points, vertices_a, vertices_b)
-    # Ds should be N, k, 2
-    distances = ds[..., 0]
-    signs = ds[..., 1]
-    # TO make it differentiable -> convert it into a temperature guided summation.
-    d = th.amin(distances, 1)
-    s = th.prod(signs, 1)
-    
-    d = th.where(d > EPSILON, d, EPSILON)
-    return s * th.sqrt(d)

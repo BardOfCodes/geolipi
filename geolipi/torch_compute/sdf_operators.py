@@ -1,46 +1,40 @@
 import numpy as np
 import torch as th
-from .common import EPSILON
+from .constants import EPSILON
 
 
-def sdf_union(*args):
+def sdf_union(*args: th.Tensor) -> th.Tensor:
     """
-    Computes the union of multiple SDFs. The union operation finds the minimum SDF value at each point.
-
     Parameters:
-        *args (tuple of torch.Tensor): An arbitrary number of SDF tensors to be united.
+        *args: SDF tensors to be united
 
     Returns:
-        torch.Tensor: The resulting SDF representing the union of the input SDFs.
+        Tensor: Union SDF (minimum values)
     """
     sdf = th.amin(th.stack(args, dim=-1), dim=-1)
     return sdf
 
 
-def sdf_intersection(*args):
+def sdf_intersection(*args: th.Tensor) -> th.Tensor:
     """
-    Computes the intersection of multiple SDFs. The intersection operation finds the maximum SDF value at each point.
-
     Parameters:
-        *args (tuple of torch.Tensor): An arbitrary number of SDF tensors to be intersected.
+        *args: SDF tensors to be intersected
 
     Returns:
-        torch.Tensor: The resulting SDF representing the intersection of the input SDFs.
+        Tensor: Intersection SDF (maximum values)
     """
     sdf = th.amax(th.stack(args, dim=-1), dim=-1)
     return sdf
 
 
-def sdf_difference(sdf_a, sdf_b):
+def sdf_difference(sdf_a: th.Tensor, sdf_b: th.Tensor) -> th.Tensor:
     """
-    Computes the difference between two SDFs (sdf_a - sdf_b).
-
     Parameters:
-        sdf_a (torch.Tensor): The SDF from which the second SDF is subtracted.
-        sdf_b (torch.Tensor): The SDF to be subtracted from the first SDF.
+        sdf_a: SDF from which to subtract
+        sdf_b: SDF to subtract
 
     Returns:
-        torch.Tensor: The resulting SDF representing the difference between sdf_a and sdf_b.
+        Tensor: Difference SDF (sdf_a - sdf_b)
     """
     sdf = th.maximum(sdf_a, -sdf_b)
     return sdf
@@ -74,20 +68,27 @@ def sdf_complement(sdf_a):
     sdf = -sdf_a
     return sdf
 
-def mix(x, y, a):
-    return x * (1 - a) + y * a
-
-def sdf_smooth_union(sdf_a, sdf_b, k):
+def mix(x: th.Tensor, y: th.Tensor, a: th.Tensor) -> th.Tensor:
     """
-    Computes a smooth union of two SDFs using a smoothing parameter k.
-
     Parameters:
-        sdf_a (torch.Tensor): The first SDF.
-        sdf_b (torch.Tensor): The second SDF.
-        k (float): The smoothing parameter.
+        x: First tensor
+        y: Second tensor
+        a: Mixing factor
 
     Returns:
-        torch.Tensor: The resulting SDF representing the smooth union of sdf_a and sdf_b.
+        Tensor: Linear interpolation result
+    """
+    return x * (1 - a) + y * a
+
+def sdf_smooth_union(sdf_a: th.Tensor, sdf_b: th.Tensor, k: th.Tensor) -> th.Tensor:
+    """
+    Parameters:
+        sdf_a: First SDF
+        sdf_b: Second SDF
+        k: Smoothing parameter
+
+    Returns:
+        Tensor: Smooth union SDF
     """
     h = th.clamp(0.5 + 0.5 * (sdf_b - sdf_a) / (k + EPSILON), min=0.0, max=1.0)
     # h = th.clamp(k - th.abs(sdf_b - sdf_a), min=0.0)
@@ -125,8 +126,8 @@ def sdf_smooth_difference(sdf_a, sdf_b, k):
     Returns:
         torch.Tensor: The resulting SDF representing the smooth difference of sdf_a and sdf_b.
     """
-    h = th.clamp(0.5 - 0.5 * (sdf_b - sdf_a) / (k + EPSILON), min=0.0, max=1.0)
-    sdf = mix(sdf_a, -sdf_b, h) + k * h * (1 - h);
+    h = th.clamp(0.5 - 0.5 * (sdf_b + sdf_a) / (k + EPSILON), min=0.0, max=1.0)
+    sdf = mix(sdf_b, -sdf_a, h) + k * h * (1 - h);
     return sdf
 
 def sdf_smooth_union_k_variable(*args,):
@@ -167,16 +168,14 @@ def sdf_smooth_intersection_k_variable(*args):
     return -sdf_smooth_union_k_variable(*negated_sdfs, k_tensor)
 
 
-def sdf_dilate(sdf_a, k):
+def sdf_dilate(sdf_a: th.Tensor, k: th.Tensor) -> th.Tensor:
     """
-    Dilates an SDF by a factor k.
-
     Parameters:
-        sdf_a (torch.Tensor): The SDF to be dilated.
-        k (float): The dilation factor.
+        sdf_a: SDF to dilate
+        k: Dilation factor
 
     Returns:
-        torch.Tensor: The resulting SDF after dilation.
+        Tensor: Dilated SDF
     """
     return sdf_a - k
 
@@ -211,22 +210,25 @@ def sdf_neg_only_onion(sdf_a, k):
     return out
 
 
-def sdf_onion(sdf_a, k):
+def sdf_onion(sdf_a: th.Tensor, k: th.Tensor) -> th.Tensor:
     """
-    Creates an "onion" effect on an SDF by subtracting a constant k from the absolute value of the SDF.
+    Parameters:
+        sdf_a: SDF to transform
+        k: Onion thickness factor
+
+    Returns:
+        Tensor: Onion SDF
     """
     return th.abs(sdf_a) - k
     
 
-def sdf_null_op(points):
+def sdf_null_op(points: th.Tensor) -> th.Tensor:
     """
-    A null operation for SDFs.
-
     Parameters:
-        points (torch.Tensor): A tensor representing points in space.
+        points: Input points
 
     Returns:
-        torch.Tensor: A tensor of zeros with a shape matching the first dimension of the input points.
+        Tensor: Null SDF (small positive values)
     """
     return th.zeros_like(points[..., 0]) + EPSILON
 
