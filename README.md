@@ -2,22 +2,6 @@
 
 ![banner](assets/banner_3.png)
 
-## Update: June 22
-
-GOAL Refactor and make it more usable with ASMBLR.
-
-1. Refactor Recursive Evaluate.
-    Question: Do we need Existing Canvas? (just give the canvas as a Tile UV or something)
-  
-2. Keep only 2D and 3D SDF functions.
-    Question - what about Color? Keep it as well.
-
-3. Simple usecase:
-    Create tiny packaged shaders. Quick shader to visualize shape in Jupyternotebook?
-
-4. Link to the other libraries: ParSEL, SplitWeave, MXG, & [redacted].
-
----
 
 GeoLIPI is a Language for modelling 2D/3D geometric objects. This is to be treated as a meta-language, from which visual programming languages can be derived. Some of the languages/visual programs that can be executed in this framework are:
 
@@ -32,6 +16,8 @@ and many more. Check out `languages.md` for more details. The banner image shows
 3. (mid-left) Batched Execution of expressions - speedy data generation.
 4. (lower) Parameter Optimization for a 3D target shape.
 5. (bottom) Parameter Optimization for 2D shapes.
+
+This repository acts as the backbone for some other DSLs: SplitWeave, CISL
 
 ## Important: Research Code - Use at your own risk
 
@@ -87,7 +73,7 @@ mix_expr = gls.SourceOver(circle_expr,
 
 
 # Convert to pytorch tensors for evaluation
-mix_expr.tensor()
+# mix_expr.tensor()
 
 output = recursive_evaluate(mix_expr.tensor(), sketcher_2d)
 
@@ -110,14 +96,6 @@ Here is an example of optimizing such expressions. Check out other examples in `
 ## Remaining TODOs
 
 1) 3D data DiffOpt with primitive soup.
-
-## Future TODOs
-
-1) REVL (Read-Eval-Visualize-Loop) using ASMBLR.
-2) Add DiffVG executor (for correct diff Opt of SVG)
-3) Add SDS optimization example -> Connecting it to natural language directly.
-4) Add differentiable CSG operation and draw operations (probability over types).
-5) Stochastic primitives?
 
 ## High level issues
 

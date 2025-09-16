@@ -27,35 +27,48 @@ class Variable(GLFunction):
     """Base class for variable types."""
 
 
+@register_symbol
 class VecList(Variable):
     """List of vectors."""
 
+@register_symbol
 class Float(Variable):
     """Float variable."""
 
+@register_symbol
 class Vec2(Variable):
     """2D vector variable."""
 
+@register_symbol
 class Vec3(Variable):
     """3D vector variable."""
 
+@register_symbol
 class Vec4(Variable):
     """4D vector variable."""
 
+@register_symbol
 class VarSplitter(Variable):
     """Variable splitter utility."""
 
+@register_symbol
 class UniformVariable(Variable):
     """Uniform variable base class."""
 
+@register_symbol
 class UniformFloat(UniformVariable):
     """Uniform float variable."""
 
+@register_symbol
 class UniformVec2(UniformVariable):
     """Uniform 2D vector variable."""
+
+
+@register_symbol
 class UniformVec3(UniformVariable):
     """Uniform 3D vector variable."""
     
+@register_symbol
 class UniformVec4(UniformVariable):
     """Uniform 4D vector variable."""
 
