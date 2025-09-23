@@ -7,7 +7,11 @@ class Combinator(GLFunction):
 
 @register_symbol
 class Union(Combinator):
-    pass
+    @classmethod
+    def default_spec(cls):
+        return {
+            "expr": {"type": "Expr", "varadic": True}
+        }
 
 @register_symbol
 class JoinUnion(Union):
@@ -15,40 +19,93 @@ class JoinUnion(Union):
 
 @register_symbol
 class Intersection(Combinator):
-    pass
+    @classmethod
+    def default_spec(cls):
+        return {
+            "expr": {"type": "Expr", "varadic": True}
+        }
 
 @register_symbol
 class Complement(Combinator):
-    pass
+    @classmethod
+    def default_spec(cls):
+        return {
+            "expr": {"type": "Expr"}
+        }
 
 @register_symbol
 class Difference(Combinator):
-    pass
+    @classmethod
+    def default_spec(cls):
+        return {
+            "expr_0": {"type": "Expr"},
+            "expr_1": {"type": "Expr"}
+        }
 
 @register_symbol
 class SwitchedDifference(Combinator):
-    pass
+    @classmethod
+    def default_spec(cls):
+        return {
+            "expr_0": {"type": "Expr"},
+            "expr_1": {"type": "Expr"}
+        }
 
 @register_symbol
 class SmoothUnion(Combinator):
-    pass
+    @classmethod
+    def default_spec(cls):
+        return {
+            "expr_0": {"type": "Expr"},
+            "expr_1": {"type": "Expr"},
+            "k": {"type": "float"}
+        }
 
 @register_symbol
 class SmoothIntersection(Combinator):
-    pass
+    @classmethod
+    def default_spec(cls):
+        return {
+            "expr_0": {"type": "Expr"},
+            "expr_1": {"type": "Expr"},
+            "k": {"type": "float"}
+        }
 
 @register_symbol
 class SmoothDifference(Combinator):
-    pass
+    @classmethod
+    def default_spec(cls):
+        return {
+            "expr_0": {"type": "Expr"},
+            "expr_1": {"type": "Expr"},
+            "k": {"type": "float"}
+        }
 
 @register_symbol
 class NarySmoothUnion(Combinator):
-    pass
+    @classmethod
+    def default_spec(cls):
+        return {
+            "expr_0": {"type": "Expr"},
+            "expr_1": {"type": "Expr"},
+            "k": {"type": "float"}
+        }
 
 @register_symbol
 class NarySmoothIntersection(Combinator):
-    pass
+    @classmethod
+    def default_spec(cls):
+        return {
+            "expr_0": {"type": "Expr"},
+            "expr_1": {"type": "Expr"},
+            "k": {"type": "float"}
+        }
 
 @register_symbol
 class XOR(Combinator):
-    pass
+    @classmethod
+    def default_spec(cls):
+        return {
+            "expr_0": {"type": "Expr"},
+            "expr_1": {"type": "Expr"}
+        }

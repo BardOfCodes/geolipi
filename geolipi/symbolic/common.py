@@ -17,12 +17,3 @@ axis_selector = (
     Symbol("AY3D"),
     Symbol("AZ3D"),
 )
-
-
-def sig_check(sig_tuple_list):
-    # return True
-    # Ref: https://stackoverflow.com/questions/55503673/how-do-i-check-if-a-value-matches-a-type-in-python
-    for arg, arg_type in sig_tuple_list:
-        if not isinstance(arg, arg_type):
-            return False
-    return True

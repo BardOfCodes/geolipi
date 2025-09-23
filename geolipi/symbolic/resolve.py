@@ -2,7 +2,7 @@ import torch as th
 from typing import Union as type_union, Tuple
 from .base import GLExpr, GLFunction
 from sympy import Symbol, Tuple as SympyTuple, Integer as SympyInteger
-from .types import (
+from .symbol_types import (
     ALL_REFLECTS,
     PREFIXED_AXIS_REFLECT,
     AXIAL_REFLECT,

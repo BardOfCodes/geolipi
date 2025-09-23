@@ -698,15 +698,15 @@ class GLFunction(Function, GLBase):
     ##: TODO: This is for type checking. TBD.
     @classmethod
     def eval(cls, *args, **kwargs):
+        return None
+
+    @classmethod
+    def default_spec(cls) -> Dict[str, Dict[str, Any]]:
         """
-        TODO: To be used for type checking.
+        Default node parameter specification.
+        Override in subclasses to declare canonical inputs.
         """
-        if cls._signature_1(*args, **kwargs):
-            return None
-        else:
-            class_sig = inspect.signature(cls._signature_1)
-            error_message = f"Invalid arguments for the function. Here is the function signature: {str(class_sig)}"
-            raise TypeError(error_message)
+        raise NotImplementedError(f"default_spec() not defined for {cls.__name__}")
 
     @classmethod
     def _signature_1(cls, *args, **kwargs):
