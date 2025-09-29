@@ -113,3 +113,4 @@ EXPR_TYPE = type_union[GLExpr, sp.core.operations.AssocOp, sp.core.power.Pow]
 
 SUPERSET_TYPE  = type_union[EXPR_TYPE, GLFunction]
 
+

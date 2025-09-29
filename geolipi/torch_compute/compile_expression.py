@@ -1,5 +1,4 @@
 
-from sqlite3 import paramstyle
 import sys
 import sympy as sp
 import ast
@@ -16,7 +15,7 @@ from geolipi.symbolic.base import GLExpr, GLFunction, GLBase
 import geolipi.symbolic as gls
 from geolipi.symbolic.resolve import resolve_macros
 from geolipi.symbolic import Revolution3D
-from geolipi.symbolic.types import (
+from geolipi.symbolic.symbol_types import (
     MACRO_TYPE,
     MOD_TYPE,
     PRIM_TYPE,

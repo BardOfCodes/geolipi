@@ -5,7 +5,7 @@ import rustworkx as rx
 
 from geolipi.symbolic import Combinator, Difference, Intersection, Union
 from geolipi.symbolic.base import GLExpr
-from geolipi.symbolic.types import (
+from geolipi.symbolic.symbol_types import (
     MACRO_TYPE,
     MOD_TYPE,
     TRANSLATE_TYPE,

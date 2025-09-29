@@ -108,7 +108,7 @@ class ApplyColor2D(ColorModifier2D):
     """
     @classmethod
     def default_spec(cls):
-        return {"expr": {"type": "Expr"}, "color": {"type": "Union[Vector[4]|str]"}}
+        return {"expr": {"type": "Expr"}, "color": {"type": "Union[Vector[4]|str]", "variant": "RGBA"}}
 
 @register_symbol
 class ModifyOpacity2D(ColorModifier2D):
@@ -130,7 +130,7 @@ class ModifyColor2D(ColorModifier2D):
     """
     @classmethod
     def default_spec(cls):
-        return {"canvas": {"type": "Expr"}, "color": {"type": "Union[Vector[4]|str]"}}
+        return {"canvas": {"type": "Expr"}, "color": {"type": "Union[Vector[4]|str]", "variant": "RGBA"}}
 
 @register_symbol
 class ModifyColorTritone2D(ColorModifier2D):
