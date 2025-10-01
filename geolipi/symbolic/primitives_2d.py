@@ -733,14 +733,17 @@ class InstantiatedPrim2D(Primitive2D):
     - torch_compute.primitives_2d.sdf2d_instantiated_primitive
     Read evaluator specific documentation for more.
     """
+    @classmethod
+    def default_spec(cls):
+        return {"primitive": {"type": "str"}}
 
 @register_symbol
-class PolyLine2D(Primitive2D):
+class PolyArc2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_2d.sdf2d_polyline
+    - torch_compute.primitives_2d.sdf2d_polycurve_2d
     Read evaluator specific documentation for more.
     """
     @classmethod
     def default_spec(cls):
-        return {"vertices": {"type": "List[Vector[3]]"}}
+        return {"points": {"type": "List[Vector[3]]"}}

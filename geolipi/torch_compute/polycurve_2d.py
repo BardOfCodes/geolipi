@@ -158,7 +158,7 @@ def helper_polyline_bulge_arc_parallel(points, a_set, b_set):
     pass
 
 
-def sdf2d_polyline(points: th.Tensor, vertices: th.Tensor) -> th.Tensor:
+def sdf2d_polyarc_2d(points: th.Tensor, vertices: th.Tensor) -> th.Tensor:
     """
     Parameters:
         points: Coordinates to evaluate, shape (N, 2)

@@ -55,7 +55,7 @@ def expr_to_sdf(
         Tensor: The generated SDF corresponding to the input expression.
     """
     from geolipi.symbolic.resolve import resolve_macros
-    from geolipi.symbolic.types import (
+    from geolipi.symbolic.symbol_types import (
         MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE, 
         TRANSSYM_TYPE, COMBINATOR_TYPE
     )
@@ -160,7 +160,7 @@ def expr_to_colored_canvas(
     """
     from sympy import Symbol
     from geolipi.symbolic.resolve import resolve_macros
-    from geolipi.symbolic.types import (
+    from geolipi.symbolic.symbol_types import (
         MACRO_TYPE, MOD_TYPE, TRANSLATE_TYPE, SCALE_TYPE, PRIM_TYPE, 
         TRANSSYM_TYPE, COMBINATOR_TYPE, APPLY_COLOR_TYPE
     )

@@ -86,7 +86,7 @@ PRIMITIVE_MAP = {
     sym_prim2d.NullExpression2D: sdf_op_bank.sdf_null_op,
     sym_prim2d.InstantiatedPrim2D: nonsdf2d_bank.nonsdf2d_instantiated_prim,
     # These should be shifted to the other repositories - based on declarations.
-    sym_prim2d.PolyLine2D: polycurve2d_bank.sdf2d_polyline,
+    sym_prim2d.PolyArc2D: polycurve2d_bank.sdf2d_polyarc_2d,
     # Tile
     sym_prim2d.TileUV2D: nonsdf2d_bank.nonsdf2d_tile_uv,
     # SingleDim
