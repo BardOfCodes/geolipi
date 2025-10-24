@@ -3,7 +3,7 @@ import sympy as sp
 import torch as th
 import _pickle as cPickle
 from abc import abstractmethod
-from typing import Dict, Tuple, Any, List, Callable
+from typing import Dict, Tuple, Any, List, Callable, Union as type_union
 from sympy.core.basic import Basic
 from sympy import (
     Function,
@@ -95,7 +95,7 @@ class GLBase:
     func: Any
 
     def gather_tensor_list(self, type_annotate: bool =False, index_annotate: bool =False,
-            selected_classes: Tuple[type, ...] | None = None,) -> List[th.Tensor] | List[Tuple[th.Tensor, type, int]]:
+            selected_classes: type_union[Tuple[type, ...], None] = None,) -> type_union[List[th.Tensor], List[Tuple[th.Tensor, type, int]]]:
         if selected_classes is None:
             selected_classes = (GLBase, )
         tensor_list, ind = self._gather_tensor_list(selected_classes=selected_classes, 
@@ -202,7 +202,7 @@ class GLBase:
         new_expr = self.rebuild_expr(resolved_args)
         return new_expr, cur_ind
 
-    def inject_tensor_list(self, tensor_list: List[th.Tensor] | List[Tuple[th.Tensor, int]]):
+    def inject_tensor_list(self, tensor_list: type_union[List[th.Tensor], List[Tuple[th.Tensor, int]]]):
         """
         Injects a list of tensors into the expression, using tensor occurrence order to match the tensors.
         Used for Parameter optimizing without converting form.
@@ -334,7 +334,7 @@ class GLBase:
         raise NotImplementedError("Numpy is deprecated. Use tensor instead.")
          
          
-    def to(self, device: str | th.device):
+    def to(self, device: type_union[str, th.device]):
         """convert the expression to cuda or cpu"""
         resolved_args = []
         for sub_expr in self.args:
@@ -388,7 +388,7 @@ class GLBase:
 
 
     @property
-    def device(self) -> str | th.device | None:
+    def device(self) -> type_union[str, th.device, None]:
         """
         Returns:
             - torch.device if all tensors are on the same device
@@ -416,7 +416,7 @@ class GLBase:
         return "MIX"
   
     @property
-    def paramtype(self) -> str | None:
+    def paramtype(self) -> type_union[str, None]:
         """
         Returns:
             - torch if all params are torch tensors
@@ -582,13 +582,20 @@ class GLBase:
             else:
                 length += 0
         return length
+    
+    def get_arg(self, index):
+        arg = self.args[index]
+        if arg in self.lookup_table:
+            return self.lookup_table[arg]
+        else:
+            return arg
 
 
 @magic_method_decorator(base_class=Expr)
 class GLExpr(GLBase):
     __sympy__ = True  # To avoid sympifying the expression which raises errors.
 
-    def __init__(self, expr: Expr, lookup_table: Dict[sp.Symbol, th.Tensor] | None = None):
+    def __init__(self, expr: Expr, lookup_table: type_union[Dict[sp.Symbol, th.Tensor], None] = None):
         self.expr = expr
         if lookup_table is None:
             self.lookup_table = {}

@@ -548,7 +548,10 @@ class SDFGrid3D(Primitive3D):
     """
     @classmethod
     def default_spec(cls):
-        return {"sdf_grid": {"type": "Tensor[float, (D,H,W)]"}}
+        return {"sdf_grid": {"type": "Tensor[float, (D,H,W)]"},
+                 "name": {"type": "string"}, 
+                 "bound_threshold": {"type": "float", "optional": True}
+                 }
 
 
 @register_symbol

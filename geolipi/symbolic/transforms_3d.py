@@ -21,6 +21,16 @@ class SDFModifier3D(Modifier3D):
     """Base Class for all 3D SDF modifiers."""
 
 @register_symbol
+class Affine3D(Transform3D):
+    @classmethod
+    def default_spec(cls):
+        return {
+            "expr": {"type": "Expr"},
+            "matrix": {"type": "Matrix[4,4]"}
+        }
+
+
+@register_symbol
 class Translate3D(Transform3D):
     @classmethod
     def default_spec(cls):

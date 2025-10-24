@@ -137,8 +137,8 @@ class Sketcher:
         return coords
 
     def make_homogenous_coords(self, coords):
-        pad = th.ones_like(coords[:, :1])
-        points_homog = th.cat([coords, pad], dim=1)
+        pad = th.ones_like(coords[..., -1:])
+        points_homog = th.cat([coords, pad], dim=-1)
         return points_homog
 
     def empty_sdf(self):

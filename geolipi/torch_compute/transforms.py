@@ -83,6 +83,11 @@ def get_affine_rotate_2D(matrix: th.Tensor, param: th.Tensor) -> th.Tensor:
     matrix[1, 1] = c
     return matrix
 
+def get_affine_matrix_3D(matrix, param):
+    """
+    Applies a given affine transformation matrix.
+    """
+    return param
 
 def get_affine_translate_3D(matrix, param):
     """
@@ -136,27 +141,6 @@ def get_affine_reflection_3D(matrix, param):
     matrix[:3, :3] = reflection_matrix
     return matrix
 
-
-def get_affine_rotate_euler_3D(matrix, param):
-    """
-    Applies a 3D rotation to the given affine transformation matrix using Euler angles.
-
-    Parameters:
-        matrix (torch.Tensor): The affine transformation matrix to be modified.
-        param (list or torch.Tensor): The Euler angles for rotation.
-
-    Returns:
-        torch.Tensor: The modified affine transformation matrix.
-    """
-    matrices = [
-        _axis_angle_rotation_3D(c, e) for c, e in zip(Settings.ROT_ORDER, th.unbind(param, -1))
-    ]
-    rotation_matrix = th.matmul(th.matmul(matrices[0], matrices[1]), matrices[2])
-
-    matrix[:3, :3] = rotation_matrix
-    return matrix
-
-
 def get_affine_shear_3D(matrix, param):
     """
     Applies a 3D shear transformation to the given affine matrix.
@@ -191,6 +175,27 @@ def get_affine_shear_2D(matrix, param):
     shear_matrix[0, 1] = param
     matrix[:2, :2] = shear_matrix
     return matrix
+
+def get_affine_rotate_euler_3D(matrix, param):
+    """
+    Applies a 3D rotation to the given affine transformation matrix using Euler angles.
+
+    Parameters:
+        matrix (torch.Tensor): The affine transformation matrix to be modified.
+        param (list or torch.Tensor): The Euler angles for rotation.
+
+    Returns:
+        torch.Tensor: The modified affine transformation matrix.
+    """
+    matrices = [
+        _axis_angle_rotation_3D(c, e) for c, e in zip(Settings.ROT_ORDER, th.unbind(param, -1))
+    ]
+    rotation_matrix = th.matmul(th.matmul(matrices[0], matrices[1]), matrices[2])
+
+    matrix[:3, :3] = rotation_matrix
+    return matrix
+
+
 
 
 # Source: https://github.com/facebookresearch/pytorch3d/blob/main/pytorch3d/transforms/rotation_conversions.py#L461
@@ -298,3 +303,4 @@ def position_cheap_bend(positions: th.Tensor, k: th.Tensor) -> th.Tensor:
         [th.bmm(m, positions[..., :2, None])[..., 0], positions[..., 2:]], dim=-1
     )
     return q
+

@@ -101,7 +101,7 @@ def eval_mod(expression: MOD_TYPE, sketcher: Sketcher,
         identity_mat = sketcher.get_affine_identity()
         new_transform = MODIFIER_MAP[type(expression)](identity_mat, *params)
         coords = th.einsum("ij,mj->mi", new_transform, coords)
-        return rec_eval(sub_expr, sketcher,secondary_sketcher,coords,
+        return rec_eval(sub_expr, sketcher, secondary_sketcher, coords,
                         *args, **kwargs)
     elif isinstance(expression, POSITIONALMOD_TYPE):
         # instantiate positions and send that as input with affine set to None
