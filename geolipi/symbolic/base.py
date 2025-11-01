@@ -128,6 +128,22 @@ class GLBase:
                     cur_ind += 1
         return tensors, cur_ind
     
+    def get_params(self, index_annotate: bool = False, cur_ind: int = 0):
+        param_list = []
+        for local_ind, sub_expr in enumerate(self.args):
+            if isinstance(sub_expr, GLBase):
+                new_params, cur_ind = sub_expr.get_params(index_annotate=index_annotate, cur_ind=cur_ind)
+                param_list += new_params
+            else:
+                if index_annotate:
+                    annotation = (sub_expr, self.__class__, cur_ind, local_ind)
+                else:
+                    annotation = sub_expr
+                param_list.append(annotation)
+                cur_ind += 1
+        return param_list, cur_ind
+        
+    
     def recursive_transform(self, transform_map: Dict[type, Callable[['GLBase'], 'GLBase']]) -> 'GLBase':
         """
         Recursively transforms the expression using a mapping of types to transformation functions.
@@ -282,6 +298,7 @@ class GLBase:
 
         new_expr = self.rebuild_expr(resolved_args)
         return new_expr, cur_ind, var_map
+    
 
     def tensor(self, dtype=th.float32, device="cuda", restrict_int: bool = False):
         resolved_args = []
@@ -589,6 +606,10 @@ class GLBase:
             return self.lookup_table[arg]
         else:
             return arg
+
+    def get_args(self):
+        arg_list = [self.get_arg(i) for i in range(len(self.args))]
+        return arg_list
 
 
 @magic_method_decorator(base_class=Expr)
