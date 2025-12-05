@@ -48,7 +48,7 @@ def validate_spec(spec: dict) -> list:
         # basic normalize to ensure parsability
         _ = normalize_type(t)
         # flags must be booleans if present
-        for flag in ("optional", "varadic"):
+        for flag in ("optional", "variadic"):
             if flag in entry and not isinstance(entry[flag], bool):
                 errors.append(f"invalid-flag-{flag}:{key}")
     return errors

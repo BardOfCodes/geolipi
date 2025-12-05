@@ -2,9 +2,9 @@ import torch as th
 from .constants import EPSILON, ACOS_EPSILON
 
 
-########## POLYLINE SDF
+########## POLYARC SDF
 
-def helper_polyline_sdf_arc(points, sc, ra):
+def helper_polyarc_sdf_arc(points, sc, ra):
     p = th.cat([th.abs(points[..., 0:1]), points[..., 1:2]], -1)
     # p[..., 0] = p[..., 0].abs()
     if sc[0, 0] < 0.0:
@@ -17,14 +17,14 @@ def helper_polyline_sdf_arc(points, sc, ra):
     sdf = th.where(sc[0, 1] * p[..., 0] > sc[0, 0] * p[..., 1], dist_1, dist_2)
     return sdf
 
-def helper_polyline_sc_from_ht(tan_half_x):
+def helper_polyarc_sc_from_ht(tan_half_x):
     tan_half_sq = tan_half_x * tan_half_x
     denom = 1.0 + tan_half_sq
     # sc = th.stack([1.0 - tan_half_sq, 2.0 * tan_half_x], -1) / denom
     sc = th.stack([(2.0 * tan_half_x), (1.0 - tan_half_sq)], -1) / denom
     return sc
 
-def helper_polyline_bulge_arc(points, a, b, bulge):
+def helper_polyarc_bulge_arc(points, a, b, bulge):
     """
     points: (N, 2)
     a: (1, 2)
@@ -53,9 +53,9 @@ def helper_polyline_bulge_arc(points, a, b, bulge):
     rot_points = th.einsum("bij,nj->ni", rot_mat, relative_p)
 
     radius = th.norm(a - center, dim=-1)
-    sc = helper_polyline_sc_from_ht(bulge)
+    sc = helper_polyarc_sc_from_ht(bulge)
 
-    d = helper_polyline_sdf_arc(rot_points, sc, radius)
+    d = helper_polyarc_sdf_arc(rot_points, sc, radius)
 
     min_y = th.min(a[..., 1], b[..., 1])
     max_y = th.max(a[..., 1], b[..., 1])
@@ -99,7 +99,7 @@ def helper_polyline_bulge_arc(points, a, b, bulge):
     return out
 
 
-def helper_polyline_line(points, a, b):
+def helper_polyarc_line(points, a, b):
     """
     points: (N, 2)
     a: (1, 2)
@@ -122,7 +122,7 @@ def helper_polyline_line(points, a, b):
     return out
 
 
-def helper_polyline_line_parallel(points, a_set, b_set):
+def helper_polyarc_line_parallel(points, a_set, b_set):
     """
     TBD
     points: (N, 2)
@@ -146,7 +146,7 @@ def helper_polyline_line_parallel(points, a_set, b_set):
     out = th.stack([sdf, sign], -1)
     return out
 
-def helper_polyline_bulge_arc_parallel(points, a_set, b_set):
+def helper_polyarc_bulge_arc_parallel(points, a_set, b_set):
     """
     TBD
     points: (N, 2)
@@ -165,7 +165,7 @@ def sdf2d_polyarc_2d(points: th.Tensor, vertices: th.Tensor) -> th.Tensor:
         vertices: Polyline vertices (x, y, bulge), shape (k, 3)
 
     Returns:
-        Tensor: SDF values for the polyline
+        Tensor: SDF values for the polyarc
     """
     # Ideally, gather all ther vertices where bulge = 0
     # and similarly compute all ther vertices where bulge != 0
@@ -182,9 +182,9 @@ def sdf2d_polyarc_2d(points: th.Tensor, vertices: th.Tensor) -> th.Tensor:
         next = (i + 1) % n_points
         b = vertices[next: next + 1, :2]
         if vertices[i, 2] == 0.0:
-            ds = helper_polyline_line(points, a, b)
+            ds = helper_polyarc_line(points, a, b)
         else:
-            ds = helper_polyline_bulge_arc(points, a, b, -vertices[i:i+1, 2])
+            ds = helper_polyarc_bulge_arc(points, a, b, -vertices[i:i+1, 2])
         d = th.minimum(d, ds[..., 0:1])
         s = s * ds[..., 1:2]
     # Make gradients proper.
@@ -194,9 +194,9 @@ def sdf2d_polyarc_2d(points: th.Tensor, vertices: th.Tensor) -> th.Tensor:
     return s[..., 0] * d_sqrt
 
 
-def nonsdf2d_polyline_smooth(points, vertices, smoothness):
+def nonsdf2d_polyarc_smooth(points, vertices, smoothness):
     """
-    Computes the SDF for a polyline in 2D.
+    Computes the SDF for a polyarc in 2D.
     vertices is a list of (x, y, bulge) format of size (k, 3).
     points are (x, y) points on which SDF is to be computed, of size (N, 2).
     """
@@ -209,7 +209,7 @@ def nonsdf2d_polyline_smooth(points, vertices, smoothness):
     # roll
     vertices_b = th.roll(vertices_a, -1, 0)
     # Do the parallel computation. 
-    ds = helper_polyline_line_parallel(points, vertices_a, vertices_b)
+    ds = helper_polyarc_line_parallel(points, vertices_a, vertices_b)
     # Ds should be N, k, 2
     distances = ds[..., 0]
     signs = ds[..., 1]

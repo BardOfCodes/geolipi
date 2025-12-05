@@ -70,6 +70,7 @@ class Sketcher:
                 raise ValueError("Invalid scale value.")
             
         self.coords = coords
+
     def adapt_coords_from_bounds(self, min_xy, max_xy):
         scale = tuple((max_xy[i] - min_xy[i]) / 2.0 for i in range(self.n_dims))
         origin = tuple((max_xy[i] + min_xy[i]) / 2.0 for i in range(self.n_dims))
@@ -94,7 +95,6 @@ class Sketcher:
         canvas = th.ones_like(self.coords[..., :1]).repeat(1, 4)
         return canvas
 
-    
     def create_bound_coords(self):
         res = self.resolution
         mesh_grid_inp = [range(res),] * self.n_dims
@@ -145,3 +145,38 @@ class Sketcher:
         coords = self.get_base_coords()
         sdf = th.norm(coords, dim=-1)
         return sdf
+
+    def set_non_square_coords(self, scale, origin):
+        self.coords, _ = self.create_non_square_coords(scale, origin)
+
+    def create_non_square_coords(self, scale, origin):
+        res = self.resolution
+        # resolution is a scalar; voxel size = 2 / resolution
+        voxel_size = 2.0 / self.resolution     # with resolution=2 → voxel_size = 1.0
+
+        # --- normalize scale & origin ---
+        if isinstance(scale, (int, float)):
+            scale = [scale] * self.n_dims
+        scale = np.array(scale, dtype=np.float32)
+
+        if isinstance(origin, (int, float)):
+            origin = [origin] * self.n_dims
+        origin = np.array(origin, dtype=np.float32)
+
+        # number of points along each axis = scale / voxel_size
+        dims = (scale / voxel_size).astype(int)   # e.g. (2,4)
+
+        # build voxel index grid
+        axes = [np.arange(n, dtype=np.float32) for n in dims]
+        grid = np.stack(np.meshgrid(*axes, indexing='ij'), axis=-1)   # (2,4,2)
+
+        # convert voxel indices to world coords:
+        # center grid around origin, then multiply by voxel size
+        # grid spans [-(dims[i]-1)/2 ... +(dims[i]-1)/2]
+        pts = (grid - (dims - 1)/2) * voxel_size + origin
+
+        # flatten to (N, n_dims)
+        shape = pts.shape[:-1]
+        pts = pts.reshape(-1, self.n_dims)
+
+        return th.from_numpy(pts).to(self.device), shape

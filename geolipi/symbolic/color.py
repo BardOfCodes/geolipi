@@ -150,7 +150,7 @@ class SourceOverSequence(SVGCombinator):
     """
     @classmethod
     def default_spec(cls):
-        return {"canvas": {"type": "Expr", "varadic": True}}
+        return {"canvas": {"type": "Expr", "variadic": True}}
 
 @register_symbol
 class AlphaMask2D(SVGCombinator):

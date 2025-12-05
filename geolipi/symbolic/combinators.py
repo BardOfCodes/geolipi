@@ -10,7 +10,7 @@ class Union(Combinator):
     @classmethod
     def default_spec(cls):
         return {
-            "expr": {"type": "Expr", "varadic": True}
+            "expr": {"type": "Expr", "variadic": True}
         }
 
 @register_symbol
@@ -22,7 +22,7 @@ class Intersection(Combinator):
     @classmethod
     def default_spec(cls):
         return {
-            "expr": {"type": "Expr", "varadic": True}
+            "expr": {"type": "Expr", "variadic": True}
         }
 
 @register_symbol

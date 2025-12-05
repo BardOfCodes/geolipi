@@ -137,6 +137,13 @@ class Plane3D(Primitive3D):
     def default_spec(cls):
         return {"n": {"type": "Vector[3]"}, "h": {"type": "float"}}
 
+@register_symbol
+class PlaneV23D(Primitive3D):
+
+    @classmethod
+    def default_spec(cls):
+        return {"origin": {"type": "Vector[3]"}, "normal": {"type": "Vector[3]"}}
+
 
 @register_symbol
 class HexPrism3D(Primitive3D):
@@ -529,13 +536,6 @@ class InexactAnisotropicGaussian3D(Primitive3D):
     @classmethod
     def default_spec(cls):
         return {"center": {"type": "Vector[3]"}, "axial_radii": {"type": "Vector[3]"}, "scale_constant": {"type": "float"}}
-
-class NeoPrimitive3D(Primitive3D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_3d.sdf3d_neo_primitive
-    Read evaluator specific documentation for more.
-    """
 
 
 @register_symbol
