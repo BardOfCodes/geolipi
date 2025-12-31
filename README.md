@@ -2,6 +2,8 @@
 
 ![banner](assets/banner_3.png)
 
+> [!TIP]
+> **Check out [SySL](https://github.com/BardOfCodes/sysl)** — a complementary repository that compiles GeoLiPI expressions into GLSL shader code for native visualization in Jupyter notebooks and standalone HTML pages!
 
 GeoLIPI is a Language for modelling 2D/3D geometric objects. This is to be treated as a meta-language, from which visual programming languages can be derived. Some of the languages/visual programs that can be executed in this framework are:
 

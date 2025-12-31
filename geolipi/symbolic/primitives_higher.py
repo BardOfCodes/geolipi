@@ -5,14 +5,13 @@ class HigherOrderPrimitives3D(GLFunction):
     """Functions for declaring higher order Primitives."""
 
 @register_symbol
-class Revolution3D(HigherOrderPrimitives3D):
+class SimpleRevolution3D(HigherOrderPrimitives3D):
     @classmethod
     def default_spec(cls):
         return {
             "input": {"type": "Expr"},
             "radius": {"type": "float", "min": 0.0}
         }
-
 
 @register_symbol
 class CurvePrimitive3D(HigherOrderPrimitives3D):

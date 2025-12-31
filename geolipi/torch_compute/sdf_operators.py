@@ -127,7 +127,7 @@ def sdf_smooth_difference(sdf_a, sdf_b, k):
         torch.Tensor: The resulting SDF representing the smooth difference of sdf_a and sdf_b.
     """
     h = th.clamp(0.5 - 0.5 * (sdf_b + sdf_a) / (k + EPSILON), min=0.0, max=1.0)
-    sdf = mix(sdf_b, -sdf_a, h) + k * h * (1 - h);
+    sdf = mix(sdf_a, -sdf_b, h) + k * h * (1 - h);
     return sdf
 
 def sdf_smooth_union_k_variable(*args,):

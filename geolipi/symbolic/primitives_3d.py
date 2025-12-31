@@ -276,7 +276,7 @@ class CappedCone3D(Primitive3D):
 
 
 @register_symbol
-class ArbitraryCappedCone(Primitive3D):
+class ArbitraryCappedCone3D(Primitive3D):
 
     """
     This class is mapped to the following evaluator function(s):

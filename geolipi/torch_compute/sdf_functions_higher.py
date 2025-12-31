@@ -193,7 +193,7 @@ def sdf3d_quadratic_bezier_extrude(points, start_point, control_point, end_point
     return parameterized_points, scale_factor
 
 
-def sdf3d_revolution(points: th.Tensor, o: th.Tensor):
+def sdf3d_simple_revolution(points: th.Tensor, o: th.Tensor):
     """
     Parameters:
         points: 3D coordinates, shape [batch, num_points, 3]

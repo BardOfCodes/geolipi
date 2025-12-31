@@ -12,7 +12,7 @@ else:
 from geolipi.symbolic.base import GLExpr, GLFunction
 import geolipi.symbolic as gls
 from geolipi.symbolic.resolve import resolve_macros
-from geolipi.symbolic import Revolution3D
+from geolipi.symbolic import SimpleRevolution3D
 from geolipi.symbolic.symbol_types import (
     MACRO_TYPE,
     MOD_TYPE,
@@ -132,6 +132,8 @@ def eval_prim(expression: PRIM_TYPE, sketcher: Sketcher,
     coords = coords[..., :n_dims] / (coords[..., n_dims : n_dims + 1] + EPSILON)
 
     if isinstance(expression, HIGHER_PRIM_TYPE):
+        # HACK?
+        coords = coords[..., [0, 2, 1]]
         param_points, scale_factor = PRIMITIVE_MAP[type(expression)](
             coords, *params
         )
@@ -147,7 +149,7 @@ def eval_prim(expression: PRIM_TYPE, sketcher: Sketcher,
         assert isinstance(in_plane_distance, th.Tensor), "In-plane distance must be a tensor"
         in_plane_distance = in_plane_distance / scale_t
         # TODO: Very Unclean.
-        if isinstance(expression, Revolution3D):
+        if isinstance(expression, SimpleRevolution3D):
             sdf = in_plane_distance
         else:
             height = (param_points[..., 2].clone() - 0.5) * scale_factor

@@ -27,3 +27,10 @@ HEXAGRAM_VEC = np.array(
     [-0.5, 0.8660254038, 0.5773502692, 1.7320508076], dtype=np.float32
 )
 STAR_VEC = np.array([0.809016994375, -0.587785252292], dtype=np.float32)
+# v1 = ( k1x, -k1y), v2 = (-k1x, -k1y), v3 = ( k2x, -k2y)
+
+
+PENTAGRAM_V1 = np.array([ 0.809016994, -0.587785252], dtype=np.float32).reshape(1, 1, 2)
+PENTAGRAM_V2 = np.array([-0.809016994, -0.587785252], dtype=np.float32).reshape(1, 1, 2)
+PENTAGRAM_V3 = np.array([ 0.309016994, -0.951056516], dtype=np.float32).reshape(1, 1, 2)
+PENTAGRAM_K1Z = 0.726542528  # tan(pi/5)

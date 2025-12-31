@@ -2,7 +2,8 @@ import numpy as np
 import torch as th
 from .constants import (
     EPSILON, ACOS_EPSILON, SQRT_2, SQRT_3, 
-    PENT_VEC, HEX_VEC, OCT_VEC, HEXAGRAM_VEC, STAR_VEC
+    PENT_VEC, HEX_VEC, OCT_VEC, HEXAGRAM_VEC, STAR_VEC,
+    PENTAGRAM_V1, PENTAGRAM_V2, PENTAGRAM_V3, PENTAGRAM_K1Z
 )
 
 
@@ -301,7 +302,7 @@ def sdf2d_uneven_capsule(points, r1, r2, h):
         Tensor: The SDF values for the uneven capsule.
     """
     points[..., 0] = th.abs(points[..., 0])
-    points[..., 1] = points[..., 1] + (h + r2 - r1) / 2
+    # points[..., 1] = points[..., 1] + (h + r2 - r1) / 2
     b = (r1 - r2) / (h + EPSILON)
     a = th.sqrt(th.clamp(1 - b * b, min=EPSILON))
     k = points[..., 0] * (-b) + points[..., 1] * a
@@ -424,43 +425,44 @@ def sdf2d_hexagram(points, r):
     sdf = th.norm(points, dim=-1) * th.sign(points[..., 1])
     return sdf
 
+def sdf2d_pentagram(points: th.Tensor, r: th.Tensor) -> th.Tensor:
 
-def sdf2d_star_5(points, r, rf):
-    """
-    Computes the SDF for a 2D five-pointed star.
+    squeeze = (points.dim() == 2)
+    p = points.unsqueeze(0) if squeeze else points  # [B,N,2]
+    B = p.size(0)
 
-    Parameters:
-        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
-        r (Tensor): Outer radius of the star, shape [batch, 1].
-        rf (Tensor): Factor to control the inner radius, shape [batch, 1].
+    assert r.size(0) in (1, B), "r must be [1,1] or [B,1]"
+    rB = r.expand(B, 1)  # [B,1]
 
-    Returns:
-        Tensor: The SDF values for the five-pointed star.
-    """
-    k = th.tensor(STAR_VEC).to(points.device)
-    k2 = k.clone()
-    k2[0] = k2[0] * -1
-    points[..., 0] = th.abs(points[..., 0])
-    points = points - 2 * th.clamp((points * k).sum(-1), min=0.0)[..., None] * k[..., :]
-    points = (
-        points - 2 * th.clamp((points * k2).sum(-1), min=0.0)[..., None] * k2[..., :]
-    )
-    points[..., 0] = th.abs(points[..., 0])
-    points[..., 1] = points[..., 1] - r
-    ba = k2.clone() * -1
-    ba = rf * ba.unsqueeze(0)
-    ba[:, 1] = ba[:, 1] - 1
-    ba = ba[..., None, :]
-    h = th.clamp(
-        th.clamp((points * ba).sum(-1) / ((ba * ba).sum(-1) + EPSILON), min=0.0), max=r
-    )
-    sdf = th.norm(points - ba * h[..., :, None], dim=-1) * th.sign(
-        points[..., 1] * ba[..., :, 0] - points[..., 0] * ba[..., :, 1]
-    )
-    if sdf.shape[0] == 1:
-        sdf = sdf[0, ...]
-    return sdf
+    # constants (np -> torch), already [1,1,2]
+    v1 = th.from_numpy(PENTAGRAM_V1).to(device=p.device, dtype=p.dtype)
+    v2 = th.from_numpy(PENTAGRAM_V2).to(device=p.device, dtype=p.dtype)
+    v3 = th.from_numpy(PENTAGRAM_V3).to(device=p.device, dtype=p.dtype)
+    k1z = th.as_tensor(PENTAGRAM_K1Z, device=p.device, dtype=p.dtype)
 
+    # p.x = abs(p.x)
+    p = th.stack((p[..., 0].abs(), p[..., 1]), dim=-1)
+
+    # p -= 2*max(dot(v,p),0)*v  for v in {v1,v2}
+    p = p - 2.0 * th.clamp((p * v1).sum(dim=-1, keepdim=True), min=0.0) * v1
+    p = p - 2.0 * th.clamp((p * v2).sum(dim=-1, keepdim=True), min=0.0) * v2
+
+    # p.x = abs(p.x); p.y -= r
+    p = th.stack((p[..., 0].abs(), p[..., 1] - rB[:, None, 0]), dim=-1)
+
+    # t = clamp(dot(p,v3), 0, k1z*r)
+    t = (p * v3).sum(dim=-1, keepdim=True)          # [B,N,1]
+    t = th.clamp(t, min=0.0)                        # ok: scalar min
+    tmax = (k1z * rB)[:, None, :]                   # [B,1,1]
+    t = th.minimum(t, tmax)                         # broadcast over N
+
+    q = p - v3 * t
+
+    dist = th.linalg.norm(q, dim=-1)                # [B,N]
+    sgn  = th.sign(p[..., 1] * v3[..., 0] - p[..., 0] * v3[..., 1])
+    out  = dist * sgn
+
+    return out.squeeze(0) if squeeze else out
 
 def sdf2d_regular_star(points, r, n, m):
     """
@@ -492,18 +494,21 @@ def sdf2d_regular_star(points, r, n, m):
     return sdf
 
 
-def sdf2d_pie(points, c, r):
+def sdf2d_pie(points, angle, r):
     """
     Computes the SDF for a 2D pie (circular sector).
 
     Parameters:
         points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
-        c (Tensor): Central angle of the sector, shape [batch, 2].
+        angle (Tensor): Central angle of the sector, shape [batch, 1].
         r (Tensor): Radius of the pie, shape [batch, 1].
 
     Returns:
         Tensor: The SDF values for the pie.
     """
+    c_sin = th.sin(angle)
+    c_cos = th.cos(angle)
+    c = th.cat([c_sin, c_cos], -1)
     c = c[..., None, :]
     points[..., 0] = th.abs(points[..., 0])
     l = th.norm(points, dim=-1) - r
@@ -583,7 +588,7 @@ def sdf2d_horse_shoe(points, angle, r, w):
     """
     if len(points.shape) == 2:
         points = points.unsqueeze(0)
-    c = th.cat([th.cos(angle), th.sin(angle)], -1)
+    c = th.cat([th.sin(angle), th.cos(angle)], -1)
     points[..., 0] = th.abs(points[..., 0])
     l = th.norm(points, dim=-1)
     mat = th.stack([-c[..., 0], c[..., 1], c[..., 1], c[..., 0]], -1).view(-1, 2, 2)
@@ -657,7 +662,10 @@ def sdf2d_oriented_vesica(points, a, b, w):
         th.zeros_like(cond, dtype=th.float32).unsqueeze(-1),
         th.stack([-d, th.zeros_like(d, dtype=th.float32), d + w], dim=-1),
     )
-    return th.norm(q - h[..., :2], dim=-1) - h[..., 2]
+    out_sdf = th.norm(q - h[..., :2], dim=-1) - h[..., 2]
+    if out_sdf.shape[0] == 1:
+        out_sdf = out_sdf[0, ...]
+    return out_sdf
 
 
 def sdf2d_moon(points, d, ra, rb):
@@ -717,38 +725,50 @@ def sdf2d_rounded_cross(points, h):
     return sdf
 
 
-def sdf2d_egg(points, ra, rb):
+def sdf2d_egg(points, he, ra, rb, bu):
     """
-    Computes the SDF for a 2D egg shape.
+    Egg2D SDF (port of GLSL Egg2D).
 
-    Parameters:
-        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
-        ra (Tensor): Radius along one axis, shape [batch, 1].
-        rb (Tensor): Radius along the other axis, shape [batch, 1].
-
-    Returns:
-        Tensor: The SDF values for the egg shape.
+    points: [B,N,2] (or [N,2])
+    he, ra, rb, bu: [B,1] (or [1,1])
+    returns: [B,N] (or [N])
     """
-    k = th.tensor(SQRT_3).to(points.device)
-    points[..., 0] = th.abs(points[..., 0])
-    r = ra - rb
-    cond_1 = points[..., 1] < 0.0
-    cond_2 = k * (points[..., 0] + r) < points[..., 1]
-    p2 = points.clone()
-    p2[..., 1] = p2[..., 1] - (k * r)
-    p3 = points.clone()
-    p3[..., 0] = p3[..., 0] + r
-    all_p = th.stack([points, p2, p3], -1)
-    all_norm = th.norm(all_p, dim=-2)
+    squeeze = (points.dim() == 2)
+    if squeeze:
+        points = points.unsqueeze(0)
 
-    sdf = th.where(
-        cond_1,
-        all_norm[..., 0] - r,
-        th.where(cond_2, all_norm[..., 1], all_norm[..., 2] - 2.0 * r),
-    )
-    sdf = sdf - rb
-    return sdf
+    B = points.size(0)
+    assert points.dim() == 3 and points.size(-1) == 2
+    assert he.shape[-1] == 1 and ra.shape[-1] == 1 and rb.shape[-1] == 1 and bu.shape[-1] == 1
+    assert he.size(0) in (1, B) and ra.size(0) in (1, B) and rb.size(0) in (1, B) and bu.size(0) in (1, B)
 
+    he = he.expand(B, 1)
+    ra = ra.expand(B, 1)
+    rb = rb.expand(B, 1)
+    bu = bu.expand(B, 1)
+
+    # --- precompute (per shape / per batch) ---
+    r  = 0.5 * (he + ra + rb) / bu                      # [B,1]
+    da = r - ra                                         # [B,1]
+    db = r - rb                                         # [B,1]
+    y  = (db*db - da*da - he*he) / (2.0 * he)           # [B,1]
+    x  = th.sqrt(th.clamp(da*da - y*y, min=0.0))        # [B,1]
+
+    # --- per point eval ---
+    p = points.clone()
+    p[..., 0] = p[..., 0].abs()
+
+    k = p[..., 1] * x[:, None, 0] - p[..., 0] * y[:, None, 0]   # [B,N]
+    cond = (k > 0.0) & (k < he[:, None, 0] * (p[..., 0] + x[:, None, 0]))
+
+    d_branch = th.norm(p + th.stack([x[:, None, 0], y[:, None, 0]], dim=-1), dim=-1) - r[:, None, 0]
+
+    d0 = th.norm(p, dim=-1) - ra[:, None, 0]
+    d1 = th.norm(th.stack([p[..., 0], p[..., 1] - he[:, None, 0]], dim=-1), dim=-1) - rb[:, None, 0]
+    d_else = th.minimum(d0, d1)
+
+    out = th.where(cond, d_branch, d_else)
+    return out.squeeze(0) if squeeze else out
 
 def sdf2d_heart(points):
     """
@@ -760,7 +780,7 @@ def sdf2d_heart(points):
     Returns:
         Tensor: The SDF values for the heart shape.
     """
-    points[..., 1] += 0.5
+    # points[..., 1] += 0.5
     points[..., 0] = th.abs(points[..., 0])
 
     cond = points[..., 1] + points[..., 0] > 1.0
@@ -989,7 +1009,7 @@ def sdf2d_blobby_cross(points, he):
     Returns:
         Tensor: The SDF values for the blobby cross.
     """
-    points = th.abs(points) * 2
+    points = th.abs(points)#  * 2
     pos = (
         th.stack(
             [
@@ -1382,4 +1402,74 @@ def sdf2d_no_param_triangle(points: th.Tensor) -> th.Tensor:
     points = th.where(condition.unsqueeze(-1), new_points, points)
     points[..., 0] = points[..., 0] - th.clamp(points[..., 0], -2 * r, 0)
     sdf = -th.norm(points, dim=-1) * th.sign(points[..., 1])
+    return sdf
+
+# Deprecated.
+def dep_sdf2d_star_5(points, r, rf):
+    """
+    Computes the SDF for a 2D five-pointed star.
+
+    Parameters:
+        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
+        r (Tensor): Outer radius of the star, shape [batch, 1].
+        rf (Tensor): Factor to control the inner radius, shape [batch, 1].
+
+    Returns:
+        Tensor: The SDF values for the five-pointed star.
+    """
+    k = th.tensor(STAR_VEC).to(points.device)
+    k2 = k.clone()
+    k2[0] = k2[0] * -1
+    points[..., 0] = th.abs(points[..., 0])
+    points = points - 2 * th.clamp((points * k).sum(-1), min=0.0)[..., None] * k[..., :]
+    points = (
+        points - 2 * th.clamp((points * k2).sum(-1), min=0.0)[..., None] * k2[..., :]
+    )
+    points[..., 0] = th.abs(points[..., 0])
+    points[..., 1] = points[..., 1] - r
+    ba = k2.clone() * -1
+    ba = rf * ba.unsqueeze(0)
+    ba[:, 1] = ba[:, 1] - 1
+    ba = ba[..., None, :]
+    h = th.clamp(
+        th.clamp((points * ba).sum(-1) / ((ba * ba).sum(-1) + EPSILON), min=0.0), max=r
+    )
+    sdf = th.norm(points - ba * h[..., :, None], dim=-1) * th.sign(
+        points[..., 1] * ba[..., :, 0] - points[..., 0] * ba[..., :, 1]
+    )
+    if sdf.shape[0] == 1:
+        sdf = sdf[0, ...]
+    return sdf
+
+
+def dep_sdf2d_egg(points, ra, rb):
+    """
+    Computes the SDF for a 2D egg shape.
+
+    Parameters:
+        points (Tensor): Coordinates for evaluation, shape [batch, num_points, 2].
+        ra (Tensor): Radius along one axis, shape [batch, 1].
+        rb (Tensor): Radius along the other axis, shape [batch, 1].
+
+    Returns:
+        Tensor: The SDF values for the egg shape.
+    """
+    k = th.tensor(SQRT_3).to(points.device)
+    points[..., 0] = th.abs(points[..., 0])
+    r = ra - rb
+    cond_1 = points[..., 1] < 0.0
+    cond_2 = k * (points[..., 0] + r) < points[..., 1]
+    p2 = points.clone()
+    p2[..., 1] = p2[..., 1] - (k * r)
+    p3 = points.clone()
+    p3[..., 0] = p3[..., 0] + r
+    all_p = th.stack([points, p2, p3], -1)
+    all_norm = th.norm(all_p, dim=-2)
+
+    sdf = th.where(
+        cond_1,
+        all_norm[..., 0] - r,
+        th.where(cond_2, all_norm[..., 1], all_norm[..., 2] - 2.0 * r),
+    )
+    sdf = sdf - rb
     return sdf

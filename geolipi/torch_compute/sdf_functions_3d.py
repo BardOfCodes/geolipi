@@ -47,7 +47,7 @@ def sdf3d_rounded_box(points: th.Tensor, size: th.Tensor, radius: th.Tensor) -> 
     Returns:
         Tensor: SDF values for the rounded box
     """
-    q = th.abs(points) - size[..., None, :]
+    q = th.abs(points) - size[..., None, :] + radius[..., None, :]
     term_1 = th.norm(th.clamp(q, min=0), dim=-1)
     term_2 = th.clamp(th.amax(q, -1), max=0) - radius
     base_sdf = term_1 + term_2
@@ -111,7 +111,7 @@ def sdf3d_capped_torus(points: th.Tensor, angle: th.Tensor, ra: th.Tensor, rb: t
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the capped torus surface.
     """
-    sc = th.stack([th.cos(angle), th.sin(angle)], dim=-1)
+    sc = th.stack([th.sin(angle), th.cos(angle)], dim=-1)
     points[..., 0] = th.abs(points[..., 0])
     term_1 = (points[..., :2] * sc).sum(-1)
     term_2 = th.norm(points[..., :2], dim=-1)
@@ -171,7 +171,7 @@ def sdf3d_cone(points: th.Tensor, angle: th.Tensor, h: th.Tensor) -> th.Tensor:
     """
     # make the points x z,y
     points = points[..., [0, 2, 1]]
-    c = th.stack([th.cos(angle), th.sin(angle)], dim=-1)
+    c = th.stack([th.sin(angle), th.cos(angle)], dim=-1)
     c = th.where(c == 0, EPSILON, c)
     q = h[..., None, :] * th.stack(
         [c[..., 0] / c[..., 1], -th.ones_like(c[..., 0])], dim=-1
@@ -207,7 +207,7 @@ def sdf3d_inexact_cone(points, angle, h):
         torch.Tensor: A tensor containing the approximate signed distances of each point to the cone surface.
     """
     points = points[..., [0, 2, 1]]
-    c = th.stack([th.cos(angle), th.sin(angle)], dim=-1)
+    c = th.stack([th.sin(angle), th.cos(angle)], dim=-1)
     q = th.norm(points[..., :2], dim=-1)
     base_sdf = th.maximum(
         (c * th.stack([q, points[..., 2]], dim=-1)).sum(-1), -h - points[..., 2]
@@ -227,7 +227,7 @@ def sdf3d_infinite_cone(points, angle):
         torch.Tensor: A tensor containing the signed distances of each point to the infinite cone surface.
     """
     points = points[..., [0, 2, 1]]
-    c = th.stack([th.cos(angle), th.sin(angle)], dim=-1)
+    c = th.stack([th.sin(angle), th.cos(angle)], dim=-1)
     q = th.norm(points[..., :2], dim=-1)
     q = th.stack([q, points[..., 2]], dim=-1)
     d = th.norm(q - c * th.clamp((q * c).sum(-1, keepdim=True), min=0.0), dim=-1)
@@ -405,6 +405,8 @@ def sdf3d_arbitrary_capped_cylinder(points, a, b, r):
         torch.Tensor: A tensor containing the signed distances of each point to the arbitrarily oriented capped cylinder surface.
     """
     points = points[..., [0, 2, 1]]
+    a = a[..., [0, 2, 1]]
+    b = b[..., [0, 2, 1]]
     ba = b - a
     ba = ba[..., None, :]
     pa = points - a[..., None, :]
@@ -502,6 +504,8 @@ def sdf3d_arbitrary_capped_cone(points, a, b, ra, rb):
         torch.Tensor: A tensor containing the signed distances of each point to the arbitrarily oriented capped cone surface.
     """
     points = points[..., [0, 2, 1]]
+    a = a[..., [0, 2, 1]]
+    b = b[..., [0, 2, 1]]
     ra = ra[..., None, :]
     rb = rb[..., None, :]
     rba = rb - ra
@@ -537,7 +541,7 @@ def sdf3d_solid_angle(points, angle, ra):
         torch.Tensor: A tensor containing the signed distances of each point to the solid angle surface.
     """
     points = points[..., [0, 2, 1]]
-    c = th.stack([th.cos(angle), th.sin(angle)], dim=-1)
+    c = th.stack([th.sin(angle), th.cos(angle)], dim=-1)
     q = th.stack([th.norm(points[..., :2], dim=-1), points[..., 2]], dim=-1)
     l = th.norm(q, dim=-1) - ra
     m = th.norm(
@@ -856,7 +860,7 @@ def sdf3d_pyramid(points: th.Tensor, h: th.Tensor) -> th.Tensor:
     cond = abs_points[..., 1:2] > abs_points[..., 0:1]
     swapped_points = th.where(cond, abs_points[..., [1, 0]], abs_points[..., :2])
     mod_points = swapped_points - 0.5
-    z_coord = points[..., 2:3] + 0.5
+    z_coord = points[..., 2:3]#  + 0.5
     points = th.cat([mod_points, z_coord], dim=-1)
     q = th.stack(
         [
@@ -1040,6 +1044,7 @@ def sdf3d_inexact_super_quadrics(points, skew_vec, epsilon_1, epsilon_2):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the superquadric surface.
     """
+    points = points[..., [0, 2, 1]]
     points = th.abs(points)
     out_0 = (points[..., 0] / skew_vec[..., 0:1]) ** (2 / (epsilon_2 + EPSILON))
     out_1 = (points[..., 1] / skew_vec[..., 1:2]) ** (2 / (epsilon_2 + EPSILON))

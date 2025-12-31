@@ -14,7 +14,6 @@ else:
 from geolipi.symbolic.base import GLExpr, GLFunction, GLBase
 import geolipi.symbolic as gls
 from geolipi.symbolic.resolve import resolve_macros
-from geolipi.symbolic import Revolution3D
 from geolipi.symbolic.symbol_types import (
     MACRO_TYPE,
     MOD_TYPE,

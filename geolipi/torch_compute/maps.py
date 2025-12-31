@@ -53,7 +53,7 @@ PRIMITIVE_MAP = {
     sym_prim2d.RegularHexagon2D: sdf2d_bank.sdf2d_regular_hexagon,
     sym_prim2d.RegularOctagon2D: sdf2d_bank.sdf2d_regular_octagon,
     sym_prim2d.Hexagram2D: sdf2d_bank.sdf2d_hexagram,
-    sym_prim2d.Star2D: sdf2d_bank.sdf2d_star_5,
+    sym_prim2d.Pentagram2D: sdf2d_bank.sdf2d_pentagram,
     sym_prim2d.RegularStar2D: sdf2d_bank.sdf2d_regular_star,
     sym_prim2d.Pie2D: sdf2d_bank.sdf2d_pie,
     sym_prim2d.CutDisk2D: sdf2d_bank.sdf2d_cut_disk,
@@ -89,7 +89,7 @@ PRIMITIVE_MAP = {
     sym_prim2d.PolyArc2D: polycurve2d_bank.sdf2d_polyarc_2d,
     # Tile
     sym_prim2d.TileUV2D: nonsdf2d_bank.nonsdf2d_tile_uv,
-    # SingleDim
+    # SingleDim - shift to SplitWeave?
     sym_prim2d.SinRepeatX2D: nonsdf2d_bank.nonsdf2d_sin_x,
     sym_prim2d.SinRepeatY2D: nonsdf2d_bank.nonsdf2d_sin_y,
     sym_prim2d.SinAlongAxisY2D: nonsdf2d_bank.nonsdf2d_sin_along_axis_y,
@@ -125,7 +125,7 @@ PRIMITIVE_MAP = {
     sym_prim3d.ArbitraryCappedCylinder3D: sdf3d_bank.sdf3d_arbitrary_capped_cylinder,
     sym_prim3d.RoundedCylinder3D: sdf3d_bank.sdf3d_rounded_cylinder,
     sym_prim3d.CappedCone3D: sdf3d_bank.sdf3d_capped_cone,
-    sym_prim3d.ArbitraryCappedCone: sdf3d_bank.sdf3d_arbitrary_capped_cone,
+    sym_prim3d.ArbitraryCappedCone3D: sdf3d_bank.sdf3d_arbitrary_capped_cone,
     sym_prim3d.SolidAngle3D: sdf3d_bank.sdf3d_solid_angle,
     sym_prim3d.CutSphere3D: sdf3d_bank.sdf3d_cut_sphere,
     sym_prim3d.CutHollowSphere: sdf3d_bank.sdf3d_cut_hollow_sphere,
@@ -150,7 +150,7 @@ PRIMITIVE_MAP = {
     # Higher Order
     sym_higher.LinearExtrude3D: higher_sdf_bank.sdf3d_linear_extrude,
     sym_higher.QuadraticBezierExtrude3D: higher_sdf_bank.sdf3d_quadratic_bezier_extrude,
-    sym_higher.Revolution3D: higher_sdf_bank.sdf3d_revolution,
+    sym_higher.SimpleRevolution3D: higher_sdf_bank.sdf3d_simple_revolution,
     sym_higher.SimpleExtrusion3D: higher_sdf_bank.sdf3d_simple_extrusion,
     sym_higher.LinearCurve1D: higher_sdf_bank.linear_curve_1d,
     sym_higher.QuadraticCurve1D: higher_sdf_bank.quadratic_curve_1d,

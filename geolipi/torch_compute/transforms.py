@@ -278,6 +278,7 @@ def position_twist(positions: th.Tensor, k: th.Tensor) -> th.Tensor:
     Returns:
         Tensor: Twisted positions
     """
+    k = -k
     c = th.cos(k * positions[..., 2])
     s = th.sin(k * positions[..., 2])
     rot = th.stack([c, -s, s, c], dim=-1).reshape(*c.shape, 2, 2)

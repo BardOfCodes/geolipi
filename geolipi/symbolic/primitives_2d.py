@@ -215,16 +215,16 @@ class Hexagram2D(Primitive2D):
 
 
 @register_symbol
-class Star2D(Primitive2D):
+class Pentagram2D(Primitive2D):
 
     """
     This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_2d.sdf2d_star_5
+    - torch_compute.primitives_2d.sdf2d_pentagram
     Read evaluator specific documentation for more.
     """
     @classmethod
     def default_spec(cls):
-        return {"r": {"type": "float"}, "rf": {"type": "float"}}
+        return {"r": {"type": "float"}}
 
 
 @register_symbol
@@ -727,17 +727,6 @@ class SquiggleDistortion2D(Primitive2D):
     """
 
 @register_symbol
-class InstantiatedPrim2D(Primitive2D):
-    """
-    This class is mapped to the following evaluator function(s):
-    - torch_compute.primitives_2d.sdf2d_instantiated_primitive
-    Read evaluator specific documentation for more.
-    """
-    @classmethod
-    def default_spec(cls):
-        return {"primitive": {"type": "str"}}
-
-@register_symbol
 class PolyArc2D(Primitive2D):
     """
     This class is mapped to the following evaluator function(s):
@@ -747,3 +736,15 @@ class PolyArc2D(Primitive2D):
     @classmethod
     def default_spec(cls):
         return {"points": {"type": "List[Vector[3]]"}}
+
+
+@register_symbol
+class InstantiatedPrim2D(Primitive2D):
+    """
+    This class is mapped to the following evaluator function(s):
+    - torch_compute.primitives_2d.sdf2d_instantiated_primitive
+    Read evaluator specific documentation for more.
+    """
+    @classmethod
+    def default_spec(cls):
+        return {"primitive": {"type": "str"}}
