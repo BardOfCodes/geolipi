@@ -103,7 +103,7 @@ class Sketcher:
         points = (points / (res - 1) - 0.5) * 2
         points = points * self.coord_scale
         points = th.from_numpy(points)
-        points = th.reshape(points, (-1, self.n_dims)).to(self.device)
+        points = th.reshape(points, (-1, self.n_dims)).to(self.device).to(self.dtype)
         return points
     
     def create_centered_coords(self):
@@ -114,7 +114,7 @@ class Sketcher:
         points = (points / res - (res-1)/(2*res)) * 2
         points = points * self.coord_scale
         points = th.from_numpy(points)
-        points = th.reshape(points, (-1, self.n_dims)).to(self.device)
+        points = th.reshape(points, (-1, self.n_dims)).to(self.device).to(self.dtype)
         return points
 
     def get_coords(self, transform, points):
