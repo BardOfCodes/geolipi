@@ -39,8 +39,8 @@ class Sketcher:
         self.mode = mode
         self.n_dims = n_dims
         self.coord_scale = coord_scale
-        self.homogeneous_identity = th.eye(n_dims + 1, device=self.device)
-        self.zero_mat = th.zeros(n_dims, n_dims, device=self.device)
+        self.homogeneous_identity = th.eye(n_dims + 1, device=self.device, dtype=self.dtype)
+        self.zero_mat = th.zeros(n_dims, n_dims, device=self.device, dtype=self.dtype)
         if Settings.COORD_MODE == "bound":
             self.create_coords = self.create_bound_coords
         elif Settings.COORD_MODE == "centered":
