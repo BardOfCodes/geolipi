@@ -35,7 +35,7 @@ PRIMITIVE_MAP = {
     gls.PreBakedPrimitive3D: create_prebaked_primitive_node_seq,
     gls.Cone3D: create_cone_node_seq,
     # Calculated using SDFs
-    gls.InexactSuperQuadrics3D: create_inexact_super_quadrics_node_seq,
+    gls.InexactSuperQuadric3D: create_inexact_super_quadrics_node_seq,
     gls.Plane3D: create_plane_node_seq,
     gls.InfiniteCylinder3D: create_inf_cylinder_node_seq,
     gls.InfiniteCone3D: create_inf_cone_node_seq,

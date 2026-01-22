@@ -262,7 +262,7 @@ class GLBase:
         new_expr = self.rebuild_expr(resolved_args)
         return new_expr, cur_ind
     
-    def _get_varnamed_expr(self, cur_ind = None, var_map = None, prefix = "var", exclude_uniforms = False):
+    def _get_varnamed_expr(self, cur_ind = None, var_map = None, prefix = "var", exclude_uniforms = False, exclude_class_set = None):
         """
         TBD: Support Uniform Exclusion. (Keep them as is I guess).
         """
@@ -276,8 +276,10 @@ class GLBase:
             if isinstance(sub_expr, GLBase):
                 if exclude_uniforms and isinstance(sub_expr, gls.UniformVariable):
                     arg = sub_expr
+                elif exclude_class_set is not None and isinstance(sub_expr, exclude_class_set):
+                    arg = sub_expr
                 else:
-                    arg, cur_ind, var_map = sub_expr._get_varnamed_expr(cur_ind, var_map, prefix, exclude_uniforms)
+                    arg, cur_ind, var_map = sub_expr._get_varnamed_expr(cur_ind, var_map, prefix, exclude_uniforms, exclude_class_set)
             elif isinstance(sub_expr, Symbol):
                 if sub_expr in self.lookup_table.keys():
                     varname = f"{prefix}_{cur_ind}"
@@ -522,11 +524,13 @@ class GLBase:
         state = {
             "expr_str": expr_str,
             "symbol_tensor_map": tensor_lookup,
+            "GLFunction": True,
         }
         return state
         
     @classmethod
     def from_state(cls, state):
+        # assert state["GLFunction"] is True
         expr_str = state["expr_str"]
         tensor_lookup = state["symbol_tensor_map"]
 
@@ -735,7 +739,13 @@ class GLFunction(Function, GLBase):
         Override in subclasses to declare canonical inputs.
         """
         raise NotImplementedError(f"default_spec() not defined for {cls.__name__}")
-
+    
+    @classmethod
+    def display_specs(cls):
+        specs = cls.default_specs()
+        for key, value in specs.items():
+            print(f"{key}: {value}")
+            
     @classmethod
     def _signature_1(cls, *args, **kwargs):
         # TODO: Find if type checking can be done cheaply.

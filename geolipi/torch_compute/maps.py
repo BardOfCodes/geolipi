@@ -143,7 +143,7 @@ PRIMITIVE_MAP = {
     sym_prim3d.NoParamCuboid3D: sdf3d_bank.sdf3d_no_param_cuboid,
     sym_prim3d.NoParamSphere3D: sdf3d_bank.sdf3d_no_param_sphere,
     sym_prim3d.NoParamCylinder3D: sdf3d_bank.sdf3d_no_param_cylinder,
-    sym_prim3d.InexactSuperQuadrics3D: sdf3d_bank.sdf3d_inexact_super_quadrics,
+    sym_prim3d.InexactSuperQuadric3D: sdf3d_bank.sdf3d_inexact_super_quadrics,
     sym_prim3d.InexactAnisotropicGaussian3D: sdf3d_bank.sdf3d_inexact_anisotropic_gaussian,
     sym_prim3d.NullExpression3D: sdf_op_bank.sdf_null_op,
     sym_prim3d.SDFGrid3D: sdf3d_bank.sdf3d_sdf_grid,

@@ -513,7 +513,7 @@ class NoParamCylinder3D(Primitive3D):
 
 
 @register_symbol
-class InexactSuperQuadrics3D(Primitive3D):
+class InexactSuperQuadric3D(Primitive3D):
 
     """
     This class is mapped to the following evaluator function(s):
