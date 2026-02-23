@@ -522,7 +522,9 @@ class InexactSuperQuadric3D(Primitive3D):
     """
     @classmethod
     def default_spec(cls):
-        return {"skew_vec": {"type": "Vector[3]"}, "epsilon_1": {"type": "float", "min": 0.0}, "epsilon_2": {"type": "float", "min": 0.0}}
+        return {"skew_vec": {"type": "Vector[3]"}, 
+                "epsilon_1": {"type": "float", "min": 0.0}, 
+                "epsilon_2": {"type": "float", "min": 0.0}}
 
 
 @register_symbol

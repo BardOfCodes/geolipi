@@ -135,13 +135,13 @@ def sdf2d_trapezoid(points: th.Tensor, r1: th.Tensor, r2: th.Tensor, height: th.
     """
     k1 = th.stack([r2, height], -1)
     k2 = th.stack([r2 - r1, 2 * height], -1)
-    points[..., 0] = th.abs(points[..., 0])
+    points = th.cat([th.abs(points[..., 0:1]), points[..., 1:]], dim=-1)
     ca = th.stack(
         [
             points[..., 0]
             - th.minimum(points[..., 0], th.where(points[..., 1] < 0, r1, r2)),
             th.abs(points[..., 1]) - height,
-        ],
+        ], 
         -1,
     )
     cb = (

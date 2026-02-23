@@ -10,6 +10,7 @@ import numpy as np
 # Numerical precision constants
 EPSILON = 1e-9
 ACOS_EPSILON = 1e-7
+SQ_EPSILON = 1e-5
 
 # Basic mathematical constants
 SQRT_2 = np.sqrt(2, dtype=np.float32)

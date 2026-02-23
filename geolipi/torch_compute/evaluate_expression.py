@@ -314,8 +314,22 @@ def eval_gl_op(expression: gls.Operator, sketcher: Sketcher,
 def eval_gl_var(expression: gls.Variable, sketcher: Sketcher,
                 secondary_sketcher: Optional[Sketcher] = None, coords: Optional[th.Tensor] = None,
                 *args, **kwargs) -> th.Tensor:
-    raise NotImplementedError(f"Variable {expression} not supported in GeoLIPI. It is supported in derivatives")
-# Need to add eval ops for Ops. 
+    if isinstance(expression, gls.VecList):
+        raise NotImplementedError(f"VecList {expression} not implemented")
+    elif isinstance(expression, gls.UniformVariable):
+        args = expression.get_args()
+        # Return default value
+        return args[1]
+    elif isinstance(expression, (gls.Float, gls.Vec2, gls.Vec3, gls.Vec4)):
+        args = expression.get_args()
+        new_tensor = th.stack(args, dim=-1)
+        return new_tensor
+    elif isinstance(expression, gls.VarSplitter):
+        args = expression.get_args()
+        return args[0][args[1]]
+    else:
+        raise NotImplementedError(f"Variable {expression} not supported in GeoLIPI. It is supported in derivatives")
+    
 
 # So as to have gs.Param + have OPs on top. 
 

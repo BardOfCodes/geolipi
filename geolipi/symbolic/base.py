@@ -307,6 +307,28 @@ class GLBase:
         for sub_expr in self.args:
             if isinstance(sub_expr, GLBase):
                 arg = sub_expr.tensor(dtype=dtype, device=device, restrict_int=restrict_int)
+            elif isinstance(sub_expr, AssocOp) or isinstance(sub_expr, Pow):
+                # Recursively tensor inside SymPy composite expressions (Add, Mul, Pow)
+                new_args = []
+                for a in sub_expr.args:
+                    if isinstance(a, GLBase):
+                        new_args.append(a.tensor(dtype=dtype, device=device, restrict_int=restrict_int))
+                    elif isinstance(a, Symbol):
+                        if a in self.lookup_table.keys():
+                            new_args.append(self.lookup_table[a].to(dtype=dtype, device=device))
+                        else:
+                            new_args.append(a)
+                    elif isinstance(a, (SympyTuple, SympyFloat, SympyInteger)):
+                        local_dtype = dtype
+                        if restrict_int:
+                            if isinstance(a, SympyInteger):
+                                local_dtype = th.int64
+                            elif isinstance(a, SympyTuple) and isinstance(a[0], SympyInteger):
+                                local_dtype = th.int64
+                        new_args.append(th.tensor(a, dtype=local_dtype, device=device))
+                    else:
+                        new_args.append(a)
+                arg = sub_expr.func(*new_args)
             elif isinstance(sub_expr, Symbol):
                 if sub_expr in self.lookup_table.keys():
                     arg = self.lookup_table[sub_expr].to(dtype=dtype, device=device)
@@ -631,6 +653,16 @@ class GLExpr(GLBase):
     @property
     def args(self):
         return self.expr.args
+
+    def __getattr__(self, name):
+        """
+        Delegate missing attributes to the underlying SymPy expression.
+
+        This allows GLExpr instances to participate in SymPy's internal checks
+        (e.g., accessing properties like ``is_Add``, ``is_Mul``, etc.) by
+        forwarding those attribute lookups to ``self.expr``.
+        """
+        return getattr(self.expr, name)
 
     def __str__(self, order="INFIX", with_lookup: bool = True):
         arg_exprs = []

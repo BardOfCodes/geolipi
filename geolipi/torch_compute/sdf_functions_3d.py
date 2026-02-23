@@ -1,7 +1,7 @@
 import numpy as np
 import torch as th
 from typing import Union
-from .constants import EPSILON, ACOS_EPSILON, COS_30, TAN_30
+from .constants import EPSILON, ACOS_EPSILON, COS_30, TAN_30, SQ_EPSILON
 from .sdf_functions_2d import ndot
 import torch.nn.functional as F
 
@@ -1029,6 +1029,11 @@ def sdf3d_no_param_cylinder(points: th.Tensor) -> th.Tensor:
     base_sdf = th.amax(vec2, -1) + th.norm(th.clip(vec2, min=0.0) + EPSILON, -1)
     return base_sdf
 
+def safe_pow_pos(base, exp, base_min=1e-12, exp_clip=80.0):
+    # base must be non-negative here
+    b = th.clamp(base, min=base_min)
+    e = th.clamp(exp, min=-exp_clip, max=exp_clip)
+    return th.exp(e * th.log(b))
 
 def sdf3d_inexact_super_quadrics(points, skew_vec, epsilon_1, epsilon_2):
     """
@@ -1044,13 +1049,31 @@ def sdf3d_inexact_super_quadrics(points, skew_vec, epsilon_1, epsilon_2):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the superquadric surface.
     """
-    points = points[..., [0, 2, 1]]
-    points = th.abs(points)
-    out_0 = (points[..., 0] / skew_vec[..., 0:1]) ** (2 / (epsilon_2 + EPSILON))
-    out_1 = (points[..., 1] / skew_vec[..., 1:2]) ** (2 / (epsilon_2 + EPSILON))
-    out_2 = (points[..., 2] / skew_vec[..., 2:3]) ** (2 / (epsilon_1 + EPSILON))
-    inside_term = (th.abs(out_0 + out_1) + EPSILON) ** (epsilon_2 / (epsilon_1 + EPSILON))
-    base_sdf = 1 - (th.abs(inside_term + out_2) + EPSILON) ** (-epsilon_1 / 2.0)
+    points = points[..., [0, 2, 1]].abs()
+
+    epsilon_1 = epsilon_1 + SQ_EPSILON
+    epsilon_2 = epsilon_2 + SQ_EPSILON
+    
+    x = points[..., 0] / skew_vec[..., 0:1]
+    y = points[..., 1] / skew_vec[..., 1:2]
+    z = points[..., 2] / skew_vec[..., 2:3]
+
+    # exponents
+    a2 = 2.0 / epsilon_2
+    a1 = 2.0 / epsilon_1
+    
+    out0 = safe_pow_pos(x, a2)
+    out1 = safe_pow_pos(y, a2)
+    out2 = safe_pow_pos(z, a1)
+    
+    # inside term
+    sxy = th.clamp(out0 + out1, min=1e-12)
+    inside = safe_pow_pos(sxy, epsilon_2 / epsilon_1)
+
+    s = th.clamp(inside + out2, min=1e-12)
+    tail_exp = th.clamp(-epsilon_1 / 2.0, min=-80.0, max=80.0)
+    base_sdf = 1.0 - th.exp(tail_exp * th.log(s))
+
     return base_sdf
 
 
