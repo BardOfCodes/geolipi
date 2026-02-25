@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=69", "setuptools_scm[toml]>=8", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "geolipi"
+dynamic = ["version"]
+description = "A DSL for implicit geometric modeling with symbolic and torch execution backends."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Aditya Ganeshan" }
+]
+requires-python = ">=3.10"
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering",
+]
+dependencies = [
+  "numpy>=1.23",
+  "sympy>=1.12",
+  "torch>=2.0",
+  "matplotlib>=3.7",
+  "plotly>=5.0",
+  "rustworkx>=0.13",
+  "scikit-fmm>=2023.4.2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "build>=1.2.0",
+]
+docs = [
+  "sphinx>=7.0",
+  "sphinx-rtd-theme>=2.0",
+  "myst-parser>=2.0",
+]
+viz = [
+  "matplotlib>=3.7",
+  "plotly>=5.0",
+]
+blender = [
+  "bpy>=4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/BardOfCodes/geolipi"
+Repository = "https://github.com/BardOfCodes/geolipi"
+Documentation = "https://bardofcodes.github.io/geolipi/index.html"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["geolipi*"]
+
+[tool.setuptools.package-data]
+geolipi = ["torch_compute/*.txt"]
+
+[tool.setuptools_scm]
+version_scheme = "guess-next-dev"
+local_scheme = "node-and-date"

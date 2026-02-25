@@ -37,17 +37,33 @@ Mainly, GeoLIPI attempts to embed a generic visual language in python, making it
 
 ## Installation
 
-Currently, there is no use actually "installing" the package. Just clone the repo and add it to your PYTHONPATH.
+### From PyPI (recommended)
+
+GeoLIPI is published as a Python package:
 
 ```bash
-git clone git@github.com:BardOfCodes/geolipi.git
-# Add path to your PYTHONPATH
-export PYTHONPATH=$PYTHONPATH:/path/to/geolipi
+pip install geolipi
 ```
 
-## Examples
+This installs the core symbolic language and PyTorch execution backend.
 
-Here is a basic example of using the language to create an SVG image.
+### From source
+
+```bash
+git clone https://github.com/BardOfCodes/geolipi.git
+cd geolipi
+
+# Optional: create and activate a virtual environment
+
+pip install -r requirements.txt
+pip install -e .
+```
+
+For development (tests, linting): `pip install -e ".[dev]"`.
+
+## Quickstart example
+
+Here is a basic example of using the language to create an SVG-like image:
 
 ```python
 
@@ -87,7 +103,7 @@ plt.imshow(image)
 plt.axis('off')
 ```
 
-This results in this output.
+This results in an image like:
 
 ![Example svg](assets/example_svg.png)
 
