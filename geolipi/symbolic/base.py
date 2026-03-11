@@ -41,6 +41,15 @@ INFIX_OPERATORS = {
     sp.Pow: "**",
 }
 
+
+def _format_tuple_elem(x):
+    """Format a single tuple element for pretty_print. Handles bool, int, float, Sympy types."""
+    if isinstance(x, (bool, SympyBoolean)):
+        return str(x)
+    if isinstance(x, (int, float, SympyInteger, SympyFloat)):
+        return f"{float(x):.3f}"
+    return str(x)
+
 def magic_method_decorator(base_class=Expr):
     """
     Decorates a class with binary magic methods for symbolic combination.
@@ -340,6 +349,12 @@ class GLBase:
                     elif isinstance(sub_expr, SympyTuple) and isinstance(sub_expr[0], SympyInteger):
                         dtype = th.int64
                 arg = th.tensor(sub_expr, dtype=dtype, device=device)
+            elif isinstance(sub_expr, (bool, SympyBoolean)):
+                arg = th.tensor(float(bool(sub_expr)), dtype=dtype, device=device)
+            elif isinstance(sub_expr, str):
+                arg = sub_expr  # pass through (mode, recolor_type, etc.)
+            elif isinstance(sub_expr, (int, float)):
+                arg = th.tensor(sub_expr, dtype=dtype, device=device)
             else:
                 raise ValueError(f"Cannot convert {sub_expr} to sp.")
             resolved_args.append(arg)
@@ -487,33 +502,47 @@ class GLBase:
         return "MIX"
 
 
-    def pretty_print(self, tabs=0, tab_str="\t"):
+    def pretty_print(self, tabs=0, tab_str="\t", max_tensor_numel=9):
         """
         Returns a formatted string representation of the function and its arguments for pretty
         printing.
+
+        Args:
+            tabs: Indentation level.
+            tab_str: String used for each indentation level.
+            max_tensor_numel: If a tensor has more than this many elements, print its symbol
+                name instead of the full tensor. Default 9.
         """
         args = self.args
         n_tabs = tab_str * tabs
-        replaced_args = [self.lookup_table.get(arg, arg) if isinstance(
-            arg, Symbol) else arg for arg in args]
+        # Keep (original_arg, resolved_value) to recover symbol when tensor is too big
+        resolved = [
+            (arg, self.lookup_table.get(arg, arg) if isinstance(arg, Symbol) else arg)
+            for arg in args
+        ]
         str_args = []
-        for arg in replaced_args:
+        for orig_arg, arg in resolved:
             if isinstance(arg, GLBase):
-                str_args.append(arg.pretty_print(tabs=tabs + 1, tab_str=tab_str))
+                str_args.append(arg.pretty_print(tabs=tabs + 1, tab_str=tab_str, max_tensor_numel=max_tensor_numel))
             else:
                 if isinstance(arg, SympyTuple):
                     # Can be a tuple of tuple But can't be an empty tuple
                     if arg and len(arg) > 0 and isinstance(arg[0], SympyTuple):
-                        item = [f"({', '.join([f'{y:.3f}' for y in x])})" for x in arg]
+                        item = [
+                            f"({', '.join([_format_tuple_elem(y) for y in x])})"
+                            for x in arg
+                        ]
                     elif arg and len(arg) > 0:
-                        item = [f"{x:.3f}" for x in arg]
+                        item = [_format_tuple_elem(x) for x in arg]
                     else:
                         item = []
                     item = ", ".join(item)
                     str_args.append(f"({item})")
                 elif isinstance(arg, th.Tensor):
-                    # Handle tensor arguments
-                    if arg.numel() == 1:
+                    # Handle tensor arguments: use symbol if too big
+                    if arg.numel() > max_tensor_numel and isinstance(orig_arg, Symbol):
+                        str_args.append(str(orig_arg))
+                    elif arg.numel() == 1:
                         str_args.append(f"{arg.item():.3f}")
                     else:
                         str_args.append(f"tensor({list(arg.shape)})")

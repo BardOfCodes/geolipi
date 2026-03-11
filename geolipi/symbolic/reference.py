@@ -1,8 +1,9 @@
 import torch as th
-from sympy import Tuple as SympyTuple
-from .base import GLExpr, GLFunction
+from sympy import Symbol, Tuple as SympyTuple
+from .base import GLExpr, GLFunction, _format_tuple_elem
 from .primitives_higher import LinearExtrude3D, QuadraticBezierExtrude3D
 from .registry import register_symbol
+
 
 @register_symbol
 class Point3D(GLFunction):
@@ -23,25 +24,31 @@ class PointRef(GLFunction):
         replaced_args = [expr_hash] + [self.lookup_table.get(arg, arg) for arg in args]
         return f"{self.func.__name__}({', '.join(map(str, replaced_args))})"
 
-    def pretty_print(self, tabs=0, tab_str="\t"):
+    def pretty_print(self, tabs=0, tab_str="\t", max_tensor_numel=9):
         args = self.args[1:]
-        n_tabs = tab_str * tabs
         expr_hash = hash(args[0])
-        replaced_args = [expr_hash] + [self.lookup_table.get(arg, arg) for arg in args]
+        resolved = [(None, expr_hash)] + [
+            (arg, self.lookup_table.get(arg, arg) if isinstance(arg, Symbol) else arg)
+            for arg in args
+        ]
         str_args = []
-        for arg in replaced_args:
+        for orig_arg, arg in resolved:
             if isinstance(arg, (GLExpr, GLFunction)):
-                str_args.append(arg.pretty_print(tabs=tabs + 1, tab_str=tab_str))
+                str_args.append(arg.pretty_print(tabs=tabs + 1, tab_str=tab_str, max_tensor_numel=max_tensor_numel))
             else:
                 if isinstance(arg, SympyTuple):
-                    item = [f"{x:.3f}" for x in arg]
-                    item = ", ".join(item)
+                    item = ", ".join([_format_tuple_elem(x) for x in arg])
                     str_args.append(f"({item})")
+                elif isinstance(arg, th.Tensor):
+                    if arg.numel() > max_tensor_numel and isinstance(orig_arg, Symbol):
+                        str_args.append(str(orig_arg))
+                    elif arg.numel() == 1:
+                        str_args.append(f"{arg.item():.3f}")
+                    else:
+                        str_args.append(f"tensor({list(arg.shape)})")
                 else:
                     str_args.append(str(arg))
         if str_args:
-            n_tabs_1 = tab_str * (tabs + 1)
-            # str_args = [""] + str_args
             str_args = f", ".join(str_args)
             final = f"{self.func.__name__}({str_args})"
         else:

@@ -48,36 +48,139 @@ class Sketcher:
         self.coords = self.create_coords()
         self.scale_identity = th.ones(n_dims, dtype=self.dtype, device=self.device)
         self.translate_identity = th.zeros(n_dims, dtype=self.dtype, device=self.device)
+        self.frame_origin = th.zeros(n_dims, dtype=self.dtype, device=self.device)
+        self.frame_scale = th.ones(n_dims, dtype=self.dtype, device=self.device)
 
     def adapt_coords(self, scale, origin=None):
         coords = self.create_coords()
-        
-        if isinstance(scale, (int, float)):
-            coords = coords * scale
-        elif isinstance(scale, (tuple, list)):
-            for i in range(self.n_dims):
-                coords[:, i] = coords[:, i] * scale[i]
-        else:
-            raise ValueError("Invalid scale value.")
-        
-        if not origin is None:
-            if isinstance(origin, (int, float)):
-                coords = coords + origin
-            elif isinstance(origin, (tuple, list)):
-                for i in range(self.n_dims):
-                    coords[:, i] = coords[:, i] + origin[i]
-            else:
-                raise ValueError("Invalid scale value.")
-            
-        self.coords = coords
 
-    def adapt_coords_from_bounds(self, min_xy, max_xy):
-        scale = tuple((max_xy[i] - min_xy[i]) / 2.0 for i in range(self.n_dims))
-        origin = tuple((max_xy[i] + min_xy[i]) / 2.0 for i in range(self.n_dims))
-        self.adapt_coords(scale=scale, origin=origin)
+        frame_scale = self.process_scale(scale)
+        coords = coords * frame_scale
+
+        frame_origin = self.process_origin(origin)
+        if frame_origin is not None:
+            coords = coords + frame_origin
+
+        self.coords = coords
+        self.frame_scale = frame_scale
+        self.frame_origin = frame_origin
+
+
+    def process_scale(self, scale):
+        """
+        Normalize `scale` into a 1D tensor of length `n_dims` on the correct device/dtype.
+
+        Accepted types:
+        - int, float, numpy scalar → isotropic scale (same in all dimensions)
+        - tuple / list / 1D numpy array / 1D tensor of length `n_dims`
+        - scalar tensor / 0D or 1-element numpy array → isotropic scale
+        """
+        # Handle numpy types early
+        if isinstance(scale, np.ndarray):
+            if scale.ndim == 0:
+                scale = float(scale)
+            else:
+                scale = th.from_numpy(scale)
+        elif np.isscalar(scale):
+            scale = float(scale)
+
+        # Python scalar → isotropic
+        if isinstance(scale, (int, float)):
+            return th.full(
+                (self.n_dims,),
+                float(scale),
+                dtype=self.dtype,
+                device=self.device,
+            )
+
+        # Sequence → tensor
+        if isinstance(scale, (tuple, list)):
+            scale = th.tensor(scale, dtype=self.dtype, device=self.device)
+
+        # Tensor (from torch or converted from numpy/sequence)
+        if isinstance(scale, th.Tensor):
+            scale = scale.to(device=self.device, dtype=self.dtype)
+
+            if scale.numel() == 1:
+                # Broadcast scalar tensor
+                return th.full(
+                    (self.n_dims,),
+                    float(scale.item()),
+                    dtype=self.dtype,
+                    device=self.device,
+                )
+
+            # Expect last dimension to match n_dims
+            if scale.shape[-1] != self.n_dims:
+                raise ValueError(
+                    f"Scale tensor must have last dimension {self.n_dims}, "
+                    f"got shape {tuple(scale.shape)}."
+                )
+            return scale
+
+        raise ValueError(f"Invalid scale value: {scale!r}")
+
+
+    def process_origin(self, origin):
+        """
+        Normalize `origin` into a 1D tensor of length `n_dims` on the correct device/dtype.
+
+        Accepted types:
+        - None → returns None
+        - int, float, numpy scalar → same translation in all dimensions
+        - tuple / list / 1D numpy array / 1D tensor of length `n_dims`
+        - scalar tensor / 0D or 1-element numpy array → same translation in all dimensions
+        """
+        if origin is None:
+            return None
+
+        # Handle numpy types early
+        if isinstance(origin, np.ndarray):
+            if origin.ndim == 0:
+                origin = float(origin)
+            else:
+                origin = th.from_numpy(origin)
+        elif np.isscalar(origin):
+            origin = float(origin)
+
+        # Python scalar → isotropic translation
+        if isinstance(origin, (int, float)):
+            return th.full(
+                (self.n_dims,),
+                float(origin),
+                dtype=self.dtype,
+                device=self.device,
+            )
+
+        # Sequence → tensor
+        if isinstance(origin, (tuple, list)):
+            origin = th.tensor(origin, dtype=self.dtype, device=self.device)
+
+        # Tensor (from torch or converted from numpy/sequence)
+        if isinstance(origin, th.Tensor):
+            origin = origin.to(device=self.device, dtype=self.dtype)
+
+            if origin.numel() == 1:
+                return th.full(
+                    (self.n_dims,),
+                    float(origin.item()),
+                    dtype=self.dtype,
+                    device=self.device,
+                )
+
+            # Expect last dimension to match n_dims
+            if origin.shape[-1] != self.n_dims:
+                raise ValueError(
+                    f"Origin tensor must have last dimension {self.n_dims}, "
+                    f"got shape {tuple(origin.shape)}."
+                )
+            return origin
+        raise ValueError(f"Invalid origin value: {origin!r}")
         
     def reset_coords(self):
-        self.adapt_coords((1.0, 1.0), (0.0, 0.0))
+        self.frame_origin = th.zeros(self.n_dims, dtype=self.dtype, device=self.device)
+        self.frame_scale = th.ones(self.n_dims, dtype=self.dtype, device=self.device)
+        self.coords = self.create_coords()
         
     def get_scale_identity(self):
         """Return an identity scale matrix."""
