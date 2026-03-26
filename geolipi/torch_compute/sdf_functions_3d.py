@@ -1049,7 +1049,8 @@ def sdf3d_inexact_super_quadrics(points, skew_vec, epsilon_1, epsilon_2):
     Returns:
         torch.Tensor: A tensor containing the signed distances of each point to the superquadric surface.
     """
-    points = points[..., [0, 2, 1]].abs()
+    # points = points[..., [0, 2, 1]].abs()
+    points = points.abs()
 
     epsilon_1 = epsilon_1 + SQ_EPSILON
     epsilon_2 = epsilon_2 + SQ_EPSILON
@@ -1071,8 +1072,11 @@ def sdf3d_inexact_super_quadrics(points, skew_vec, epsilon_1, epsilon_2):
     inside = safe_pow_pos(sxy, epsilon_2 / epsilon_1)
 
     s = th.clamp(inside + out2, min=1e-12)
-    tail_exp = th.clamp(-epsilon_1 / 2.0, min=-80.0, max=80.0)
-    base_sdf = 1.0 - th.exp(tail_exp * th.log(s))
+    # tail_exp = th.clamp(-epsilon_1 / 2.0, min=-80.0, max=80.0)
+    # base_sdf = 1.0 - th.exp(tail_exp * th.log(s))
+    tail_exp = th.clamp(epsilon_1 / 2.0, min=-80.0, max=80.0)
+    base_sdf = th.exp(tail_exp * th.log(s)) - 1.0
+
 
     return base_sdf
 
